@@ -16,24 +16,20 @@
 
 package manifold.api.properties;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Locale;
-import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
 import manifold.api.fs.IFile;
+import manifold.api.gen.AbstractSrcClass.Kind;
 import manifold.api.gen.SrcClass;
-import manifold.api.gen.SrcExpression;
+import manifold.api.gen.SrcConstructor;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
+import manifold.api.gen.SrcParameter;
 import manifold.api.gen.SrcRawExpression;
-import manifold.api.gen.SrcReturnStatement;
 import manifold.api.gen.SrcStatementBlock;
-import manifold.api.gen.SrcType;
 import manifold.api.util.cache.FqnCache;
-import manifold.api.util.cache.FqnCacheNode;
-import manifold.util.ReflectUtil;
 
 /**
  *
@@ -47,9 +43,20 @@ class ResourceBundelCodeGen extends CommonCodeGen
     super(model, file, fqn);
   }
 
+  @Override
+  protected void extendLeafClass(SrcClass leafClass) {
+    leafClass
+        .addMethod( new SrcMethod( leafClass )
+            .returns( "String" )
+            .modifiers( Modifier.PUBLIC )
+            .name( "formatted" )
+            .addParam( new SrcParameter("args", "Object..." ) )
+            .body( "return toString().formatted(args);" ) );
+  }
+
   protected void extendSrcClass( SrcClass srcClass, FqnCache<SrcRawExpression> model )
   {
-    srcClass.imports( ResourceBundle.class, Locale.class, Field.class, Modifier.class , ReflectUtil.class);
+    srcClass.imports( ResourceBundle.class, Locale.class, Modifier.class);
 
     // Initialize the ResourceBundle with the default locale.
     srcClass.addField(
@@ -76,32 +83,5 @@ class ResourceBundelCodeGen extends CommonCodeGen
             .modifiers( Modifier.PUBLIC | Modifier.STATIC )
             .returns( Locale.class )
             .body( "return " + FIELD_RESOURCE_BUNDLE + ".getLocale();" ) );
-  }
-
-  @Override
-  protected SrcExpression createPropertyValueField( FqnCacheNode<SrcRawExpression> node ) {
-    return new SrcRawExpression("\"\"");
-  }
-
-  @Override
-  protected void addRegularGetter( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
-  {
-    for( FqnCacheNode<SrcRawExpression> childNode: node.getChildren() )
-    {
-      if (childNode.getUserData() != null && childNode.getChildren().isEmpty() ) {
-        srcClass.addMethod(
-            new SrcMethod(srcClass)
-                .name(createGetterForPropertyName(childNode.getName()))
-                .modifiers(Modifier.PUBLIC | (isRootProperty(childNode) ? Modifier.STATIC : 0))
-                .returns(new SrcType("String"))
-                .body(
-                    new SrcStatementBlock()
-                        .addStatement(new SrcReturnStatement(childNode.getUserData()))));
-      }
-    }
-  }
-
-  public static String createGetterForPropertyName(String name) {
-    return "get" + name.substring(0, 1).toUpperCase() + name.substring(1);
   }
 }

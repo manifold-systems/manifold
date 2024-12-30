@@ -38,10 +38,10 @@ class ResourceBundleTest
   {
     assertThat(Message.getLocale()).isEqualTo(Locale.ROOT);
     assertThat(Message.foo).hasToString("foo");
-    assertThat(Message.App.Hello).isEqualTo("Hello");
-    assertThat(Message.foo.bar.test).isEqualTo("bar");
-    assertThat(Message.getValueByName("foo.bar.test")).isEqualTo("bar");
-    assertThat(Message.foo.getValueByName("bar.test")).isEqualTo("bar");
+    assertThat(Message.App.Hello).hasToString("Hello");
+    assertThat(Message.foo.bar.test).hasToString("bar");
+    assertThat(Message.getValueByName("foo.bar.test")).hasToString("bar");
+    assertThat(Message.foo.getValueByName("bar.test")).hasToString("bar");
   }
 
   /**
@@ -59,10 +59,10 @@ class ResourceBundleTest
 
     assertThat(Message.getLocale()).isEqualTo(locale);
     assertThat(Message.foo).hasToString("foo_" + languageTag);
-    assertThat(Message.App.Hello).isEqualTo("Hello_" + languageTag);
-    assertThat(Message.foo.bar.test).isEqualTo("bar_" + languageTag);
-    assertThat(Message.getValueByName("foo.bar.test")).isEqualTo("bar_" + languageTag);
-    assertThat(Message.foo.getValueByName("bar.test")).isEqualTo("bar_" + languageTag);
+    assertThat(Message.App.Hello).hasToString("Hello_" + languageTag);
+    assertThat(Message.foo.bar.test).hasToString("bar_" + languageTag);
+    assertThat(Message.getValueByName("foo.bar.test")).hasToString("bar_" + languageTag);
+    assertThat(Message.foo.getValueByName("bar.test")).hasToString("bar_" + languageTag);
   }
 
   /**
@@ -77,10 +77,10 @@ class ResourceBundleTest
 
     assertThat(Message.getLocale()).isEqualTo(Locale.forLanguageTag("nl-BE"));
     assertThat(Message.foo).hasToString("foo_nl-BE");
-    assertThat(Message.App.Hello).isEqualTo("Hello_nl-BE");
-    assertThat(Message.foo.bar.test).isEqualTo("bar_nl-BE");
-    assertThat(Message.getValueByName("foo.bar.test")).isEqualTo("bar_nl-BE");
-    assertThat(Message.foo.getValueByName("bar.test")).isEqualTo("bar_nl-BE");
+    assertThat(Message.App.Hello).hasToString("Hello_nl-BE");
+    assertThat(Message.foo.bar.test).hasToString("bar_nl-BE");
+    assertThat(Message.getValueByName("foo.bar.test")).hasToString("bar_nl-BE");
+    assertThat(Message.foo.getValueByName("bar.test")).hasToString("bar_nl-BE");
   }
 
   /**
@@ -94,10 +94,10 @@ class ResourceBundleTest
 
     assertThat(Message.getLocale()).isEqualTo(Locale.ROOT);
     assertThat(Message.foo).hasToString("foo");
-    assertThat(Message.App.Hello).isEqualTo("Hello");
-    assertThat(Message.foo.bar.test).isEqualTo("bar");
-    assertThat(Message.getValueByName("foo.bar.test")).isEqualTo("bar");
-    assertThat(Message.foo.getValueByName("bar.test")).isEqualTo("bar");
+    assertThat(Message.App.Hello).hasToString("Hello");
+    assertThat(Message.foo.bar.test).hasToString("bar");
+    assertThat(Message.getValueByName("foo.bar.test")).hasToString("bar");
+    assertThat(Message.foo.getValueByName("bar.test")).hasToString("bar");
   }
 
   /**
@@ -108,8 +108,8 @@ class ResourceBundleTest
   void testMessagesDefaultSecondMessageBundle()
   {
     assertThat(Message2.m2.foo).hasToString("foo");
-    assertThat(Message2.m2.App.Hello).isEqualTo("Hello");
-    assertThat(Message2.m2.foo.bar.test).isEqualTo("bar");
+    assertThat(Message2.m2.App.Hello).hasToString("Hello");
+    assertThat(Message2.m2.foo.bar.test).hasToString("bar");
   }
 
   /**
@@ -120,10 +120,10 @@ class ResourceBundleTest
   void testMessagesWithOnlyDefaultMessageBundleAvailable()
   {
     assertThat(Message3.m3.foo).hasToString("foo");
-    assertThat(Message3.m3.App.Hello).isEqualTo("Hello");
-    assertThat(Message3.m3.foo.bar.test).isEqualTo("bar");
-    assertThat(Message3.m3.getValueByName("foo.bar.test")).isEqualTo("bar");
-    assertThat(Message3.m3.foo.getValueByName("bar.test")).isEqualTo("bar");
+    assertThat(Message3.m3.App.Hello).hasToString("Hello");
+    assertThat(Message3.m3.foo.bar.test).hasToString("bar");
+    assertThat(Message3.m3.getValueByName("foo.bar.test")).hasToString("bar");
+    assertThat(Message3.m3.foo.getValueByName("bar.test")).hasToString("bar");
 
     // verifies that 'setLocale' method does not exist
     assertThat(ReflectionUtils.findMethod(Message3.class, "setLocale", Locale.class)).isEmpty();

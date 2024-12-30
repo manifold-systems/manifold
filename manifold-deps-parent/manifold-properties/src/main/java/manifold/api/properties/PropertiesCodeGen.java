@@ -18,10 +18,8 @@ package manifold.api.properties;
 
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
-import manifold.api.gen.SrcExpression;
 import manifold.api.gen.SrcRawExpression;
 import manifold.api.util.cache.FqnCache;
-import manifold.api.util.cache.FqnCacheNode;
 
 class PropertiesCodeGen extends CommonCodeGen
 {
@@ -32,21 +30,12 @@ class PropertiesCodeGen extends CommonCodeGen
     }
 
     @Override
+    protected void extendLeafClass(SrcClass leafClass) {
+
+    }
+
+    @Override
     protected void extendSrcClass(SrcClass srcClass, FqnCache<SrcRawExpression> model)
     {
-
-    }
-
-    @Override
-    protected SrcExpression createPropertyValueField( FqnCacheNode<SrcRawExpression> node )
-    {
-        return node.getUserData();
-    }
-
-
-    @Override
-    protected void addRegularGetter( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
-    {
-
     }
 }

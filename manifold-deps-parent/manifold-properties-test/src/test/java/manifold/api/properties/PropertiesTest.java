@@ -27,8 +27,8 @@ class PropertiesTest
   @Test
   void testProperties()
   {
-    assertThat( MyProperties.MyProperty.toString() ).isEqualTo( "Hello" );
-    assertThat( MyProperties.MyProperty.Sub ).isEqualTo( "Sub Property" );
+    assertThat( MyProperties.MyProperty ).hasToString( "Hello" );
+    assertThat( MyProperties.MyProperty.Sub ).hasToString( "Sub Property" );
     assertThat( SystemProperties.java.version ).isNotNull();
   }
 
@@ -36,6 +36,6 @@ class PropertiesTest
   void testFragment()
   {
     //[MyPropertiesRightHere.properties/] Foo=bar
-    assertThat( MyPropertiesRightHere.Foo ).isEqualTo( "bar" );
+    assertThat( MyPropertiesRightHere.Foo ).hasToString( "bar" );
   }
 }
