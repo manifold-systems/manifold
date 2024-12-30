@@ -59,11 +59,11 @@ abstract class CommonCodeGen
 {
   private static final String FIELD_FILE_URL = "__FILE_URL";
   private static final String PROPERTIES_OBJECT_INTERFACE_NAME = "_PropertiesObjectIntf";
-  private static final String LEAF_CLASS_NAME = "LeafClass";
+  private static final String PROPERTY_VALUE_CLASS_NAME = "PropertyValue";
   protected final String _fqn;
   protected final String _content;
   protected final FqnCache<SrcRawExpression> _model;
-  private final String _leafClassFqn;
+  private final String _propertyValueClassFqn;
   protected IFile _file;
 
   CommonCodeGen( FqnCache<SrcRawExpression> model, IFile file, String fqn )
@@ -72,7 +72,7 @@ abstract class CommonCodeGen
     _file = file;
     _fqn = fqn;
     _content = assignContent();
-    _leafClassFqn = fqn + "." + LEAF_CLASS_NAME;
+    _propertyValueClassFqn = fqn + "." + PROPERTY_VALUE_CLASS_NAME;
   }
 
   SrcClass make( IModule module, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
@@ -82,7 +82,7 @@ abstract class CommonCodeGen
 
     addLocationAndPropertiesFileUrlField( srcClass, _model );
     addObjectInterface( srcClass );
-    addLeafClass( srcClass );
+    addPropertyValueClass( srcClass );
 
     extendSrcClass( srcClass, _model );
 
@@ -106,9 +106,9 @@ abstract class CommonCodeGen
             .initializer( getFile() ) );
   }
 
-  private void addLeafClass( SrcClass srcClass )
+  private void addPropertyValueClass( SrcClass srcClass )
   {
-    SrcClass leafClass = new SrcClass( LEAF_CLASS_NAME, srcClass, Kind.Class )
+    SrcClass propertyValueClass = new SrcClass(PROPERTY_VALUE_CLASS_NAME, srcClass, Kind.Class )
         .modifiers( Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL )
         .addInterface( "CharSequence" )
         .addField( new SrcField( srcClass )
@@ -147,12 +147,12 @@ abstract class CommonCodeGen
             .name( "get" )
             .body( "return toString();") );
 
-    extendLeafClass( leafClass );
+    extendPropertyValueClass( propertyValueClass );
 
-    srcClass.addInnerClass( leafClass );
+    srcClass.addInnerClass( propertyValueClass );
   }
 
-  protected abstract void extendLeafClass( SrcClass leafClass );
+  protected abstract void extendPropertyValueClass( SrcClass propertyValueClass );
 
   private void addObjectInterface( SrcClass srcClass ) {
     srcClass.addInnerClass(
@@ -173,13 +173,13 @@ abstract class CommonCodeGen
     }
     for( FqnCacheNode<SrcRawExpression> childNode: node.getChildren() )
     {
-      SrcType type = new SrcType(childNode.isLeaf() ? _leafClassFqn : childNode.getName());
+      SrcType type = new SrcType(childNode.isLeaf() ? _propertyValueClassFqn : childNode.getName());
       SrcField propertyField = new SrcField(srcClass)
           .name(childNode.getName())
           .modifiers(Modifier.PUBLIC | Modifier.FINAL | (srcClass.getEnclosingClass() == null ? Modifier.STATIC : 0))
           .type(type)
           .initializer(childNode.isLeaf()
-              ? new SrcRawExpression( "new " + _leafClassFqn + "(() -> " + childNode.getUserData() + ")" )
+              ? new SrcRawExpression( "new " + _propertyValueClassFqn + "(() -> " + childNode.getUserData() + ")" )
               : new SrcRawExpression("new " + type + "()"));
       if (_file != null) {
         propertyField.addAnnotation(addSourcePositionAnnotation(childNode));

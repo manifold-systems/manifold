@@ -30,7 +30,7 @@ class PropertiesCodeGen extends CommonCodeGen
     }
 
     @Override
-    protected void extendLeafClass(SrcClass leafClass) {
+    protected void extendPropertyValueClass(SrcClass leafClass) {
 
     }
 

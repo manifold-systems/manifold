@@ -44,7 +44,7 @@ class ResourceBundelCodeGen extends CommonCodeGen
   }
 
   @Override
-  protected void extendLeafClass(SrcClass leafClass) {
+  protected void extendPropertyValueClass(SrcClass leafClass) {
     leafClass
         .addMethod( new SrcMethod( leafClass )
             .returns( "String" )
