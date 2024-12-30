@@ -78,7 +78,7 @@ abstract class CommonCodeGen
   SrcClass make( IModule module, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
     SrcClass srcClass = new SrcClass( _fqn, SrcClass.Kind.Class, location, module, errorHandler )
-        .imports( SourcePosition.class, Supplier.class, Object.class );
+        .imports( SourcePosition.class, Supplier.class, Object.class, CharSequence.class );
 
     addLocationAndPropertiesFileUrlField( srcClass, _model );
     addObjectInterface( srcClass );
@@ -110,6 +110,7 @@ abstract class CommonCodeGen
   {
     SrcClass leafClass = new SrcClass( LEAF_CLASS_NAME, srcClass, Kind.Class )
         .modifiers( Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL )
+        .addInterface( "CharSequence" )
         .addField( new SrcField( srcClass )
             .name( "_data" )
             .modifiers( Modifier.PRIVATE | Modifier.FINAL )
@@ -122,7 +123,25 @@ abstract class CommonCodeGen
             .modifiers( Modifier.PUBLIC )
             .name( "toString" )
             .body( "return _data.get();" ) )
-        .addMethod(new SrcMethod( srcClass )
+        .addMethod( new SrcMethod( srcClass )
+            .returns( "int" )
+            .modifiers( Modifier.PUBLIC )
+            .name( "length" )
+            .body( "return toString().length();") )
+        .addMethod( new SrcMethod( srcClass )
+            .returns( "char" )
+            .modifiers( Modifier.PUBLIC )
+            .name( "charAt" )
+            .addParam("index", "int" )
+            .body( "return toString().charAt(index);") )
+        .addMethod( new SrcMethod( srcClass )
+            .returns( "CharSequence" )
+            .modifiers( Modifier.PUBLIC )
+            .name( "subSequence" )
+            .addParam("start", "int" )
+            .addParam("end", "int" )
+            .body( "return toString().subSequence(start, end);" ) )
+        .addMethod( new SrcMethod( srcClass )
             .returns( "String" )
             .modifiers( Modifier.PUBLIC )
             .name( "get" )
