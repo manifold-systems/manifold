@@ -51,7 +51,7 @@ class ResourceBundelCodeGen extends CommonCodeGen
             .modifiers( Modifier.PUBLIC )
             .name( "formatted" )
             .addParam( new SrcParameter("args", "Object..." ) )
-            .body( "return toString().formatted(args);" ) );
+            .body( "return String.format(toString(), args);" ) );
   }
 
   protected void extendSrcClass( SrcClass srcClass, FqnCache<SrcRawExpression> model )
