@@ -201,7 +201,7 @@ class ExtCodeGen
     boolean methodExtensions = false;
     boolean interfaceExtensions = false;
     boolean annotationExtensions = false;
-    List<String> utilityClassFqns = new ArrayList<>();
+    List<String> sourceClassFqns = new ArrayList<>();
     Set<String> allExtensions = findAllExtensions();
     _model.pushProcessing( _fqn );
     try
@@ -227,12 +227,12 @@ class ExtCodeGen
             addExtensionAnnotation( anno, extendedClass );
             annotationExtensions = true;
             if( anno.getAnnotationType().equals( Extension.class.getName() ) ) {
-              SrcArgument utilityClassesArg = anno.getArgument( "sources" );
-              if( utilityClassesArg != null ) {
-                String[] utilityClassFqnsSplit = utilityClassesArg.getValue().toString()
+              SrcArgument sourceClassesArg = anno.getArgument( "sources" );
+              if( sourceClassesArg != null ) {
+                String[] sourceClassFqnsSplit = sourceClassesArg.getValue().toString()
                     .replace("{", "").replace("}", "").split(",");
-                for ( String utilityClassFqn : utilityClassFqnsSplit ) {
-                  utilityClassFqns.add( utilityClassFqn.substring( 0, utilityClassFqn.lastIndexOf(".class") ).trim() );
+                for ( String sourceClassFqn : sourceClassFqnsSplit ) {
+                  sourceClassFqns.add( sourceClassFqn.substring( 0, sourceClassFqn.lastIndexOf(".class") ).trim() );
                 }
               }
             }
@@ -243,8 +243,8 @@ class ExtCodeGen
           iterator.remove();
         }
       }
-      for(String utilityClassFqn : utilityClassFqns ) {
-        SrcClass srcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( utilityClassFqn );
+      for(String sourceClassFqn : sourceClassFqns ) {
+        SrcClass srcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( sourceClassFqn );
         for ( AbstractSrcMethod<?> method : srcClass.getMethods() ) {
           if ( !method.getParameters().isEmpty() && method.getParameters().get( 0 ).getType().getFqName().equals( _fqn ) ) {
             // Mark first param with @This annotation, so it is handled as an extension method
