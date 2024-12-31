@@ -246,15 +246,11 @@ class ExtCodeGen
       for(String utilityClassFqn : utilityClassFqns ) {
         SrcClass srcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( utilityClassFqn );
         for ( AbstractSrcMethod<?> method : srcClass.getMethods() ) {
-          if ( method.isConstructor() || !Modifier.isStatic( (int) method.getModifiers() )
-              || !Modifier.isPublic( (int) method.getModifiers() )
-              || method.getParameters().isEmpty()
-              || !method.getParameters().get( 0 ).getType().getFqName().equals( _fqn ) ) {
-            continue;
+          if ( !method.getParameters().isEmpty() && method.getParameters().get( 0 ).getType().getFqName().equals( _fqn ) ) {
+            // Mark first param with @This annotation, so it is handled as an extension method
+            method.getParameters().get( 0 ).addAnnotation( This.class );
+            addExtensionMethod(method, extendedClass, errorHandler);
           }
-          // Mark first param with @This annotation, so it is handled as an extension method
-          method.getParameters().get( 0 ).addAnnotation( This.class );
-          addExtensionMethod(method, extendedClass, errorHandler);
         }
       }
       if( !_existingSource.isEmpty() )

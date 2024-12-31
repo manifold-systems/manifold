@@ -63,7 +63,7 @@ public class SimpleTest extends TestCase
 
   public void testExtensionUtilityClass(){
     // isDirectory method should exist
-    assertThat(Paths.get("X:\\invalid_path").isDirectory()).isFalse();
+    assertFalse(Paths.get("X:\\invalid_path").isDirectory());
   }
 
   public void testSelfTypeOnExtension()
