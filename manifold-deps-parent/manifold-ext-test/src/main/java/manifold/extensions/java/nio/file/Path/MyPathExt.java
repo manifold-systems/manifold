@@ -21,7 +21,7 @@ import java.nio.file.Files;
 import manifold.ext.rt.api.Extension;
 
 
-@Extension(utilityClasses = { Files.class })
+@Extension(sources = { Files.class })
 public class MyPathExt
 {
 }

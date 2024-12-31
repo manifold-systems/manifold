@@ -227,7 +227,7 @@ class ExtCodeGen
             addExtensionAnnotation( anno, extendedClass );
             annotationExtensions = true;
             if( anno.getAnnotationType().equals( Extension.class.getName() ) ) {
-              SrcArgument utilityClassesArg = anno.getArgument( "utilityClasses" );
+              SrcArgument utilityClassesArg = anno.getArgument( "sources" );
               if( utilityClassesArg != null ) {
                 String[] utilityClassFqnsSplit = utilityClassesArg.getValue().toString()
                     .replace("{", "").replace("}", "").split(",");
