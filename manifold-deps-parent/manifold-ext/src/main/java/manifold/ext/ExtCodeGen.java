@@ -17,6 +17,7 @@
 package manifold.ext;
 
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.tools.internal.jxc.gen.config.Classes;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
@@ -45,6 +46,7 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -199,6 +201,7 @@ class ExtCodeGen
     boolean methodExtensions = false;
     boolean interfaceExtensions = false;
     boolean annotationExtensions = false;
+    List<String> utilityClassFqns = new ArrayList<>();
     Set<String> allExtensions = findAllExtensions();
     _model.pushProcessing( _fqn );
     try
@@ -223,11 +226,35 @@ class ExtCodeGen
           {
             addExtensionAnnotation( anno, extendedClass );
             annotationExtensions = true;
+            if( anno.getAnnotationType().equals( Extension.class.getName() ) ) {
+              SrcArgument utilityClassesArg = anno.getArgument( "utilityClasses" );
+              if( utilityClassesArg != null ) {
+                String[] utilityClassFqnsSplit = utilityClassesArg.getValue().toString()
+                    .replace("{", "").replace("}", "").split(",");
+                for ( String utilityClassFqn : utilityClassFqnsSplit ) {
+                  utilityClassFqns.add( utilityClassFqn.substring( 0, utilityClassFqn.lastIndexOf(".class") ).trim() );
+                }
+              }
+            }
           }
         }
         else
         {
           iterator.remove();
+        }
+      }
+      for(String utilityClassFqn : utilityClassFqns ) {
+        SrcClass srcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( utilityClassFqn );
+        for ( AbstractSrcMethod<?> method : srcClass.getMethods() ) {
+          if ( method.isConstructor() || !Modifier.isStatic( (int) method.getModifiers() )
+              || !Modifier.isPublic( (int) method.getModifiers() )
+              || method.getParameters().isEmpty()
+              || !method.getParameters().get( 0 ).getType().getFqName().equals( _fqn ) ) {
+            continue;
+          }
+          // Mark first param with @This annotation, so it is handled as an extension method
+          method.getParameters().get( 0 ).addAnnotation( This.class );
+          addExtensionMethod(method, extendedClass, errorHandler);
         }
       }
       if( !_existingSource.isEmpty() )
@@ -337,7 +364,7 @@ class ExtCodeGen
       // short-circuit e.g., extension producers
       return Collections.emptySet();
     }
-    
+
     Set<String> fqns = new LinkedHashSet<>();
     findExtensionsOnDisk( fqns );
     findExtensionsFromExtensionClassProviders( fqns );
