@@ -689,6 +689,33 @@ to your project separately depending on its needs.
 >}
 >```
 
+## Using Utility Class Methods as Extensions
+
+In some cases, a utility class with methods for a specific object already exists. 
+However, since these methods are not annotated, you can't directly use them as extensions.
+
+Instead of manually converting all those methods into extensions (which can be time-consuming and error-prone), 
+you can leverage Manifold's built-in functionality to automate this process. 
+By adding the utility class as a parameter to the `@Extension` annotation, 
+you can easily incorporate its methods as extension methods.
+
+For example, to use methods from `java.nio.file.Files` as extension methods for `java.nio.file.Path`:
+
+```java
+package extensions.java.nio.file.Path;
+
+import java.nio.file.Files;
+import manifold.ext.rt.api.Extension;
+
+@Extension(utilityClasses = { Files.class })
+public class MyPathExt {
+    // Additional extension methods can be added here
+}
+```
+With this approach, all `public`, `static` methods from the `Files` class that take a `Path` as their first parameter 
+will be automatically available as extension methods for `Path` objects.
+
+
 ## Generating Extension Classes
 
 Sometimes the contents of an extension class reflect metadata from other resources.  In this case rather 
