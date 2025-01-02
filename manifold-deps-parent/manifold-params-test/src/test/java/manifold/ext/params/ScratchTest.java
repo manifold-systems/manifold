@@ -17,7 +17,6 @@
 package manifold.ext.params;
 
 import junit.framework.TestCase;
-import manifold.ext.params.rt.api.spread;
 import manifold.ext.rt.api.auto;
 
 import java.math.BigDecimal;
@@ -135,6 +134,27 @@ public class ScratchTest extends TestCase
     assertEquals( "hi", ctorTest.getFoo() );
   }
 
+  public void testSomething()
+  {
+    String result = valueOf( new char[] {'a', 'b', 'c'} );
+    assertEquals( "abc", result );
+
+    result = valueOf( new char[] {'a', 'b', 'c'}, 1 );
+    assertEquals( "bc", result );
+
+    result = valueOf( data: new char[] {'a', 'b', 'c'}, count: 2 );
+    assertEquals( "ab", result );
+
+    result = valueOf((new char[] {'a', 'b', 'c'}, offset: 1, count: 1));
+    assertEquals( "b", result );
+  }
+  
+  public String valueOf(char[] data,
+                        int offset = 0,
+                        int count = data.length - offset) {
+    return String.valueOf( data, offset, count );
+  }
+
   private String optionalParams1( String name, int age =100 )
   {
     return name + "," + age;
@@ -217,7 +237,6 @@ public class ScratchTest extends TestCase
       _foo = foo;
     }
 
-    @spread
     CtorTest( int i, StringBuilder sb = new StringBuilder("sb") )
     {
       _t = null;
