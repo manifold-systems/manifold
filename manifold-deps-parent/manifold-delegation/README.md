@@ -476,11 +476,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-delegation-rt:2024.1.44'
+     implementation 'systems.manifold:manifold-delegation-rt:2024.1.45'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-delegation:2024.1.44'
-     testAnnotationProcessor 'systems.manifold:manifold-delegation:2024.1.44'
+     annotationProcessor 'systems.manifold:manifold-delegation:2024.1.45'
+     testAnnotationProcessor 'systems.manifold:manifold-delegation:2024.1.45'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -516,7 +516,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.44</manifold.version>
+        <manifold.version>2024.1.45</manifold.version>
     </properties>
     
     <dependencies>
@@ -560,10 +560,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-delegation`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation/2024.1.44/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation/2024.1.44)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation/2024.1.45/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation/2024.1.45)
 
 `manifold-delegation-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation-rt/2024.1.44/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation-rt/2024.1.44)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation-rt/2024.1.45/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation-rt/2024.1.45)
 
 # License
 
