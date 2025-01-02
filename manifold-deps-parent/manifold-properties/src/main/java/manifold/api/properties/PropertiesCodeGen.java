@@ -16,9 +16,6 @@
 
 package manifold.api.properties;
 
-import static java.nio.charset.StandardCharsets.*;
-import static manifold.api.gen.AbstractSrcClass.Kind.*;
-
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Modifier;
@@ -55,7 +52,10 @@ import manifold.api.util.cache.FqnCacheNode;
 import manifold.rt.api.SourcePosition;
 import manifold.rt.api.util.StreamUtil;
 
-public class PropertiesCodeGen
+import static java.nio.charset.StandardCharsets.*;
+import static manifold.api.gen.AbstractSrcClass.Kind.*;
+
+class PropertiesCodeGen
 {
     private static final String FIELD_FILE_URL = "__FILE_URL";
     private static final String PROPERTIES_OBJECT_INTERFACE_NAME = "_PropertiesObjectIntf";

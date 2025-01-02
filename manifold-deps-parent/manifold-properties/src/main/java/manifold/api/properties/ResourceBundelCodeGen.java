@@ -21,9 +21,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 import manifold.api.fs.IFile;
-import manifold.api.gen.AbstractSrcClass.Kind;
 import manifold.api.gen.SrcClass;
-import manifold.api.gen.SrcConstructor;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcParameter;
