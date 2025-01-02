@@ -34,7 +34,7 @@ import manifold.api.util.cache.FqnCache;
 /**
  *
  */
-class ResourceBundelCodeGen extends CommonCodeGen
+class ResourceBundelCodeGen extends PropertiesCodeGen
 {
   public static final String FIELD_RESOURCE_BUNDLE = "_resourceBundle";
 
