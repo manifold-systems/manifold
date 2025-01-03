@@ -220,9 +220,9 @@ repositories {
 dependencies {
     
      // Manifold dependencies    
-     implementation 'systems.manifold:manifold-sql-rt:2024.1.46'
-     annotationProcessor 'systems.manifold:manifold-sql:2024.1.46'
-     testAnnotationProcessor 'systems.manifold:manifold-sql:2024.1.46'
+     implementation 'systems.manifold:manifold-sql-rt:2024.1.47'
+     annotationProcessor 'systems.manifold:manifold-sql:2024.1.47'
+     testAnnotationProcessor 'systems.manifold:manifold-sql:2024.1.47'
 
      // Add your JDBC driver here, this is just an example using postgres
      implementation 'org.postgresql:postgresql:42.6.0'
@@ -263,7 +263,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.46</manifold.version>
+        <manifold.version>2024.1.47</manifold.version>
       
         <!-- use maven.compiler settings for JDK 9+ -->
         <maven.compiler.source>11</maven.compiler.source>
@@ -1412,10 +1412,10 @@ commands. You'll know instantly whether your SQL is valid and, if not, what is w
 # Javadoc
 
 `manifold-sql`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-sql/2024.1.46/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-sql/2024.1.46)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-sql/2024.1.47/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-sql/2024.1.47)
 
 `manifold-sql-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-sql-rt/2024.1.46/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-sql-rt/2024.1.46)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-sql-rt/2024.1.47/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-sql-rt/2024.1.47)
 
 # License
 
