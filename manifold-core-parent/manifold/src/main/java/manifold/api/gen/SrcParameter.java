@@ -23,6 +23,7 @@ import java.util.List;
 public class SrcParameter extends SrcAnnotated<SrcParameter>
 {
   private SrcType _type;
+  private SrcExpression _initializer;
 
   public SrcParameter( String name )
   {
@@ -45,6 +46,19 @@ public class SrcParameter extends SrcAnnotated<SrcParameter>
   {
     name( name );
     type( type );
+  }
+
+  public SrcParameter( String name, SrcType type, SrcExpression initializer )
+  {
+    name( name );
+    type( type );
+    initializer( initializer );
+  }
+
+  public SrcParameter initializer( SrcExpression expr )
+  {
+    _initializer = expr;
+    return this;
   }
 
   public SrcParameter type( SrcType type )
@@ -100,6 +114,12 @@ public class SrcParameter extends SrcAnnotated<SrcParameter>
     if( !forSignature )
     {
       sb.append( ' ' ).append( getSimpleName() );
+    }
+
+    if( _initializer != null )
+    {
+      sb.append( " = " );
+      _initializer.render( sb, 0 );
     }
     return sb;
   }

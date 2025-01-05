@@ -1681,7 +1681,9 @@ public interface ManAttr
 
   default String findMethodName( JCExpression call )
   {
-    if( call instanceof JCTree.JCNewClass )
+    if( call instanceof JCTree.JCNewClass ||
+      call instanceof JCTree.JCMethodInvocation && ((JCTree.JCMethodInvocation)call).meth instanceof JCTree.JCIdent &&
+        ((JCTree.JCIdent)((JCTree.JCMethodInvocation)call).meth).getName().equals( names()._this ) )
     {
       return "constructor";
     }
@@ -1729,12 +1731,12 @@ public interface ManAttr
     Type superclass = ((Symbol.ClassSymbol)receiverType.tsym).getSuperclass();
     if( superclass != null )
     {
-      result.appendList( getParamsClasses( superclass, methodName, seen ) );
+      result = result.appendList( getParamsClasses( superclass, methodName, seen ) );
     }
     List<Type> interfaces = ((Symbol.ClassSymbol)receiverType.tsym).getInterfaces();
     for( Type iface: interfaces )
     {
-      result.appendList( getParamsClasses( iface, methodName, seen ) );
+      result = result.appendList( getParamsClasses( iface, methodName, seen ) );
     }
     return result;
   }

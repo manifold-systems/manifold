@@ -20,5 +20,5 @@ import manifold.api.util.IssueMsg;
 
 public class ParamsIssueMsg
 {
-  public static final IssueMsg MSG_EXPAND_NO_OPTIONAL_PARAMS = new IssueMsg( "'@spread' requires one or more optional parameters in the method signature" );
+  public static final IssueMsg MSG_OVERRIDE_DEFAULT_VALUES_NOT_ALLOWED = new IssueMsg( "Default parameter values are not allowed in the signature of an overriding method" );
 }
