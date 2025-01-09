@@ -102,6 +102,29 @@ configure("MyConfig",
           showName: false,
           autoSave: false);
 ```
+                      
+## Binary compatibility
+
+Adding new optional parameters to existing methods maintains binary compatibility.
+                                                                     
+Version 1.
+```java
+public void size(int width) {...}
+```
+Version 2 adds optional parameter `height`.
+```java
+public void size(int width, int height = width) {...}
+```
+Code compiled with v1 still runs with v2, without having to recompile with v2.
+
+Additionally, code not compiled with manifold-params can still benefit from using optional parameters methods compiled
+with manifold-params.
+
+Code compiled w/o manifold-params can call method overloads reflecting the optional parameters.
+```java
+size(myWidth);
+size(myWidth, myHeight);
+```
 
 # IDE Support
 

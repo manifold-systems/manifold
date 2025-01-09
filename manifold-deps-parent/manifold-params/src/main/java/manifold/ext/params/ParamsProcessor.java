@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static manifold.ext.params.ParamsIssueMsg.MSG_OVERRIDE_DEFAULT_VALUES_NOT_ALLOWED;
+import static manifold.ext.params.ParamsIssueMsg.*;
 
 public class ParamsProcessor implements ICompilerComponent, TaskListener
 {
@@ -594,8 +594,18 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       {
         typeName = getNames().fromString( "constructor" );
       }
-      Name name = names.fromString( "$" + typeName +
-        targetMethod.params.stream().map( e -> "_" + (e.init == null ? "" : "opt$") + e.name ).reduce( "", (a,b) -> a+b ) );
+
+      JCAnnotation paramsAnno = make.Annotation(
+        memberAccess( make, manifold_params.class.getTypeName() ),
+        List.of( getTreeMaker().Literal(
+          targetMethod.params.stream().map( e -> "_" + (e.init == null ? "" : "opt$") + e.name ).reduce( "", (a,b) -> a+b ) ) ) );
+      modifiers.annotations = modifiers.annotations.append( paramsAnno );
+
+      // params class name is composed of the method name and its required parameters,
+      // this convention allows for a method to be overloaded with multiple optional params methods while maintaining
+      // binary compatibility
+      Name name = names.fromString( "$" + typeName + "_" +
+        targetMethod.params.stream().filter( e -> e.init == null ).map( e -> "_" + e.name ).reduce( "", (a,b) -> a+b ) );
 
       // Type params (copy from method and, if target method is nonstatic, from the enclosing class)
       List<JCTypeParameter> typeParams = List.nil();
@@ -799,11 +809,13 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
       Symbol.MethodSymbol psiMethod = findTargetMethod( telescopeMethod.sym, methods );
 
-      for( Symbol.MethodSymbol msym : new ArrayList<Symbol.MethodSymbol>(){{methods.forEach( m -> add( (Symbol.MethodSymbol)m ) );}} )
+      for( Symbol.MethodSymbol msym : new ArrayList<>( methods ) )
       {
         if( msym != telescopeMethod.sym && getTypes().overrideEquivalent( msym.type, telescopeMethod.type ) )
         {
-          String paramNames = psiMethod.params.stream().map( p -> p.name.toString() ).collect( Collectors.joining( ", " ) );
+          String paramNames = psiMethod.params.stream()
+            .map( p -> p.name.toString() )
+            .collect( Collectors.joining( ", " ) );
           JCMethodDecl paramsMethodDecl = getTargetMethod( telescopeMethod.name, paramNames );;
           if( msym.owner == classDecl().sym )
           {
@@ -814,19 +826,20 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
                 .map( p -> p.type.tsym.getSimpleName() )
                 .collect( Collectors.joining( ", " ) );
               reportError( paramsMethodDecl,
-                "'" + psiMethod + "' clashes with '" + msym + "' using sub-signature '(" + signature + ")'" );
+                MSG_OPT_PARAM_METHOD_CLASHES_WITH_SUBSIG
+                  .get( psiMethod, msym, signature ) );
             }
             else
             {
-              reportError( paramsMethodDecl, "Optional parameter method: " +
-                "'" + psiMethod + "' indirectly clashes with '" + msym + "'" );
+              reportError( paramsMethodDecl,
+                MSG_OPT_PARAM_METHOD_INDIRECTLY_CLASHES.get( psiMethod, msym ) );
             }
           }
           else if( !msym.isConstructor() && !msym.isPrivate() && !msym.isStatic() )
           {
-            reportWarning( paramsMethodDecl, "Optional parameter method: " +
-              "'" + psiMethod + "' indirectly overrides method '" + msym + "' in class '" +
-              (msym.owner == null ? "<unknown>" : msym.owner.getSimpleName()) + "'" );
+            reportWarning( paramsMethodDecl,
+              MSG_OPT_PARAM_METHOD_INDIRECTLY_OVERRIDES
+                .get( psiMethod, msym, (msym.owner == null ? "<unknown>" : msym.owner.getSimpleName()) ) );
           }
         }
       }
