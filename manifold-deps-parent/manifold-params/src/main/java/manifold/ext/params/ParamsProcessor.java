@@ -219,6 +219,12 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     @Override
     public void visitClassDef( JCClassDecl tree )
     {
+      if( alreadyProcessed( tree ) )
+      {
+        // already processed for optional params, probably an annotation processor round e.g., for lombok.
+        return;
+      }
+
       _newDefs.push( new Pair<>( tree, new ArrayList<>() ) );
       try
       {
@@ -238,6 +244,23 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       {
         _newDefs.pop();
       }
+    }
+
+    private boolean alreadyProcessed( JCClassDecl tree )
+    {
+      for( JCTree def : tree.defs )
+      {
+        if( def instanceof JCMethodDecl )
+        {
+          JCMethodDecl methodDecl = (JCMethodDecl)def;
+          if( methodDecl.mods.getAnnotations().stream().anyMatch(
+            anno -> anno.getAnnotationType().toString().endsWith( manifold_params.class.getSimpleName() ) ) )
+          {
+            return true;
+          }
+        }
+      }
+      return false;
     }
 
     // since at this early stage the record's implicit ctor isn't there yet,
