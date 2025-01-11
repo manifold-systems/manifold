@@ -17,8 +17,7 @@ public String valueOf(char[] data,
 
 valueOf(array) // use default values for offet and count
 valueOf(array, 2) // use default value for count
-valueOf(data: array, count: 20) // use default value for offset
-valueOf((array, count: 20)) // use a tuple expression to mix positional and named arguments
+valueOf(array, count:20) // use default value for offset
 ```
 
 Optional parameters and named arguments are fully integrated in both **IntelliJ IDEA** and **Android Studio**. Use the IDE's
@@ -102,6 +101,28 @@ configure("MyConfig",
           showName: false,
           autoSave: false);
 ```
+                      
+## Binary compatible
+
+Adding new optional parameters to existing methods is binary compatible with code compiled before adding the new parameters.
+                                                                     
+Version 1.
+```java
+public void size(int width) {...}
+```
+Version 2 adds optional parameter `height`.
+```java
+public void size(int width, int height = width) {...}
+```
+Code compiled with v1 still runs with v2, without having to recompile with v2.
+
+Additionally, code compiled without `manifold-params` can still benefit from code compiled with optional parameters. In
+this case default parameter values can be used with calls to method overloads that are generated for this purpose.  
+```java
+size(myWidth);
+size(myWidth, myHeight);
+``` 
+
 
 # IDE Support
 
@@ -166,11 +187,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-params-rt:2024.1.47'
+     implementation 'systems.manifold:manifold-params-rt:2024.1.49'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-params:2024.1.47'
-     testAnnotationProcessor 'systems.manifold:manifold-params:2024.1.47'
+     annotationProcessor 'systems.manifold:manifold-params:2024.1.49'
+     testAnnotationProcessor 'systems.manifold:manifold-params:2024.1.49'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -206,7 +227,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.47</manifold.version>
+        <manifold.version>2024.1.49</manifold.version>
         <!-- choose your preferred JDK LTS release, or latest JDK release -->
         <maven.compiler.source>21</maven.compiler.target>
         <maven.compiler.target>21</maven.compiler.release>
@@ -251,10 +272,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-params`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-params/2024.1.47/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-params/2024.1.47)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-params/2024.1.49/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-params/2024.1.49)
 
 `manifold-params-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-params-rt/2024.1.47/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-params-rt/2024.1.47)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-params-rt/2024.1.49/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-params-rt/2024.1.49)
 
 # License
 

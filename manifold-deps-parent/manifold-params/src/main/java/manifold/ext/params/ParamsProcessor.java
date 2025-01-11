@@ -46,12 +46,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
-import static manifold.ext.params.ParamsIssueMsg.MSG_OVERRIDE_DEFAULT_VALUES_NOT_ALLOWED;
+import static manifold.ext.params.ParamsIssueMsg.*;
 
 public class ParamsProcessor implements ICompilerComponent, TaskListener
 {
+  private static final long RECORD = 1L << 61; // from Flags in newer JDKs
+
   private BasicJavacTask _javacTask;
   private Context _context;
   private TaskEvent _taskEvent;
@@ -194,12 +195,6 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
   }
 
-  @Override
-  public boolean isSuppressed( JCDiagnostic.DiagnosticPosition pos, String issueKey, Object[] args )
-  {
-    return ICompilerComponent.super.isSuppressed( pos, issueKey, args );
-  }
-
   // Add data classes reflecting parameters and corresponding method overloads
   //
   private class Enter_Start extends TreeTranslator
@@ -219,6 +214,12 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     @Override
     public void visitClassDef( JCClassDecl tree )
     {
+      if( alreadyProcessed( tree ) )
+      {
+        // already processed for optional params, probably an annotation processor round e.g., for lombok.
+        return;
+      }
+
       _newDefs.push( new Pair<>( tree, new ArrayList<>() ) );
       try
       {
@@ -238,6 +239,23 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       {
         _newDefs.pop();
       }
+    }
+
+    private boolean alreadyProcessed( JCClassDecl tree )
+    {
+      for( JCTree def : tree.defs )
+      {
+        if( def instanceof JCMethodDecl )
+        {
+          JCMethodDecl methodDecl = (JCMethodDecl)def;
+          if( methodDecl.mods.getAnnotations().stream().anyMatch(
+            anno -> anno.getAnnotationType().toString().endsWith( manifold_params.class.getSimpleName() ) ) )
+          {
+            return true;
+          }
+        }
+      }
+      return false;
     }
 
     // since at this early stage the record's implicit ctor isn't there yet,
@@ -265,6 +283,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         if( isRecordParam( def ) )
         {
           params = params.append( (JCVariableDecl)copier.copy( def ) );
+          ((JCVariableDecl)def).init = null; // records compile parameters directly as fields, gotta remove the init
         }
       }
 
@@ -278,7 +297,6 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
     private boolean isRecordParam( JCTree def )
     {
-      final long RECORD = 1L << 61; // from Flags in newer JDKs
       return def instanceof JCVariableDecl && (((JCVariableDecl)def).getModifiers().flags & RECORD) != 0;
     }
 
@@ -291,12 +309,17 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
     private void processParams( JCMethodDecl methodDecl )
     {
+      boolean processed = false;
       for( JCVariableDecl param : methodDecl.params )
       {
         if( param.init != null )
         {
-          handleOptionalParams( methodDecl );
-          return;
+          if( !processed )
+          {
+            handleOptionalParams( methodDecl );
+            processed = true;
+          }
+          param.init = null; // remove init just in case javac decides not to like it at some point
         }
       }
     }
@@ -310,22 +333,21 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
       ArrayList<JCTree> defs = _newDefs.peek().snd;
 
+      // Generate an inner class to encapsulate default values and as a means to assign default values to unassigned params.
+      // The tuple expr used to call the method is transformed into a new-expression on the generated inner class.
       JCClassDecl paramsClass = makeParamsClass( optParamsMeth, make, copier );
       defs.add( paramsClass );
 
+      // Generate a method having the above generated inner class as its single parameter, this method delegates calls to
+      // the original optional params method.
       JCMethodDecl paramsMethod = makeParamsMethod( optParamsMeth, paramsClass, make, copier );
       defs.add( paramsMethod );
 
-      if( shouldAddTelescopeMethods( optParamsMeth ) )
-      {
-        ArrayList<JCMethodDecl> telescopeMethods = makeTelescopeMethods( optParamsMeth, make, copier );
-        defs.addAll( telescopeMethods );
-      }
-    }
-
-    private boolean shouldAddTelescopeMethods( JCMethodDecl optParamsMeth )
-    {
-      return true;
+      // Generate telescoping methods, for binary compatibility and for handling call sites having all positional arguments.
+      // A call site having all positional arguments is parsed normally, reflecting all the args separately. Whereas a call
+      // site having one or more named arguments parses all the arguments as a single tuple expression.
+      ArrayList<JCMethodDecl> telescopeMethods = makeTelescopeMethods( optParamsMeth, make, copier );
+      defs.addAll( telescopeMethods );
     }
 
     private ArrayList<JCMethodDecl> makeTelescopeMethods( JCMethodDecl optParamsMeth, TreeMaker make, TreeCopier<?> copier )
@@ -441,135 +463,6 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       return List.of( make.Apply( List.nil(), make.Ident( getNames().fromString( "$manifold_label" ) ), List.of( make.Ident( name ) ) ),
         make.Ident( name ) );
     }
-//    private JCMethodDecl makeTelescopeMethod( JCMethodDecl targetMethod, TreeMaker make, TreeCopier<?> copier, int optParamsInSig )
-//    {
-//      JCMethodDecl copy = copier.copy( targetMethod );
-//
-//      ArrayList<JCVariableDecl> reqParams = new ArrayList<>();
-//      ArrayList<JCVariableDecl> optParams = new ArrayList<>();
-//      for( JCVariableDecl p: copy.params )
-//      {
-//        if( p.init == null )
-//        {
-//          reqParams.add( p );
-//        }
-//        else
-//        {
-//          optParams.add( p );
-//        }
-//      }
-//
-//      List<Name> targetParams = List.from( copy.params.stream().map( e -> e.name ).collect( Collectors.toList() ) );
-//
-//      // telescope interface methods have default impls that forward to original
-//      long flags = targetMethod.getModifiers().flags;
-//      if( (flags & Flags.STATIC) == 0 &&
-//        (classDecl().mods.flags & Flags.INTERFACE) != 0 )
-//      {
-//        flags |= Flags.DEFAULT;
-//      }
-//      copy.mods.flags = flags;
-//      // mark with @manifold_params for IJ use
-//      JCAnnotation paramsAnno = make.Annotation( memberAccess( make, manifold_params.class.getTypeName() ), List.nil() );
-//      copy.mods.annotations = copy.mods.annotations.append( paramsAnno );
-//
-//      // Params
-//      ArrayList<JCVariableDecl> params = new ArrayList<>();
-//      ArrayList<JCExpression> args = new ArrayList<JCExpression>()
-//      {{
-//        addAll( targetParams.stream().map( e -> (JCExpression)null ).collect( Collectors.toList() ) );
-//      }};
-//      ArrayList<JCStatement> locals = new ArrayList<>();
-//      for( JCVariableDecl reqParam: reqParams )
-//      {
-//        params.add( make.VarDef( make.Modifiers( Flags.PARAMETER ), reqParam.name, reqParam.vartype, null ) );
-//        int index = targetParams.indexOf( reqParam.name );
-//        args.set( index, make.Ident( reqParam.name ) );
-//      }
-//      for( int i = 0; i < optParamsInSig; i++ )
-//      {
-//        JCVariableDecl optParam = optParams.get( i );
-//        int index = targetParams.indexOf( optParam.name );
-//        params.add( index, optParam );
-//        args.set( index, make.Ident( optParam.name ) );
-//      }
-//      for( int i = optParamsInSig; i < optParams.size(); i++ )
-//      {
-//        JCVariableDecl local = optParams.get( i );
-//        local.mods.flags &= ~Flags.PARAMETER;
-//        int index = targetParams.indexOf( local.name );
-//        args.set( index, make.Ident( local.name ) );
-//        locals.add( local );
-//      }
-//      if( args.stream().anyMatch( Objects::isNull ) )
-//      {
-//        throw new IllegalStateException( "null " );
-//      }
-//      copy.params = List.from( params );
-//
-//      // body
-//      JCMethodInvocation forwardCall;
-//      if( targetMethod.name.equals( getNames().init ) )
-//      {
-//        forwardCall = make.Apply( List.nil(), make.Ident( getNames()._this ), List.from( args ) );
-//      }
-//      else
-//      {
-//        forwardCall = make.Apply( List.nil(), make.Ident( targetMethod.name ), List.from( args ) );
-//      }
-//      JCStatement stmt;
-//      if( targetMethod.restype == null ||
-//        (targetMethod.restype instanceof JCPrimitiveTypeTree &&
-//          ((JCPrimitiveTypeTree)targetMethod.restype).typetag == TypeTag.VOID) )
-//      {
-//        stmt = make.Exec( forwardCall );
-//      }
-//      else
-//      {
-//        stmt = make.Return( forwardCall );
-//      }
-//      copy.body = make.Block( 0L, List.from( locals ).append( stmt ) );
-//      return copy;
-//    }
-
-//    // make a structural interface reflecting the parameters of the method
-//    // String foo(String name, int age = 100) {...}
-//    // @Structural interface $foo {
-//    //   @val String name;
-//    //   @val int age = 100;
-//    // }
-//    private JCClassDecl makeStructuralInterface( JCMethodDecl targetMethod, TreeMaker make, TreeCopier<?> copier )
-//    {
-//      // name & modifiers
-//      JCTree.JCModifiers modifiers = make.Modifiers( Flags.INTERFACE, List.of( makeAnnotation( Structural.class ) ) );
-//      modifiers.pos = make.pos;
-//      Names names = getNames();
-//      Name name = names.fromString( "$" + targetMethod.getName() +
-//        targetMethod.params.stream().map( e -> "_" + e.name ).reduce( "", (a,b) -> a+b ) );
-//
-//      // Type params
-//      List<JCTypeParameter> typeParams = List.nil();
-//      typeParams = typeParams.appendList( copier.copy( List.from( targetMethod.getTypeParameters() ) ) );
-//      if( (targetMethod.getModifiers().flags & Flags.STATIC) == 0 )
-//      {
-//        typeParams = typeParams.appendList( copier.copy( List.from( classDecl().getTypeParameters().stream()
-//          .map( e -> make.TypeParameter( e.name, List.nil() ) ).collect( Collectors.toList() ) ) ) );
-//      }
-//
-//      // Properties
-//      List<JCVariableDecl> methParams = targetMethod.getParameters();
-//      List<JCTree> properties = List.nil();
-//      for( JCVariableDecl methParam : methParams )
-//      {
-//        JCExpression propType = (JCExpression)copier.copy( methParam.getType() );
-//        JCVariableDecl property = make.VarDef( make.Modifiers( 0L, List.of( makeAnnotation( val.class ) ) ), methParam.name, propType, methParam.init );
-//        property.pos = make.pos;
-//        properties = properties.append( property );
-//      }
-//
-//      return make.ClassDef( modifiers, name, typeParams, null, List.nil(), properties );
-//    }
-//
 
     // make a static inner class reflecting the parameters of the method
     //
@@ -594,8 +487,18 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       {
         typeName = getNames().fromString( "constructor" );
       }
-      Name name = names.fromString( "$" + typeName +
-        targetMethod.params.stream().map( e -> "_" + (e.init == null ? "" : "opt$") + e.name ).reduce( "", (a,b) -> a+b ) );
+
+      JCAnnotation paramsAnno = make.Annotation(
+        memberAccess( make, manifold_params.class.getTypeName() ),
+        List.of( getTreeMaker().Literal(
+          targetMethod.params.stream().map( e -> "_" + (e.init == null ? "" : "opt$") + e.name ).reduce( "", (a,b) -> a+b ) ) ) );
+      modifiers.annotations = modifiers.annotations.append( paramsAnno );
+
+      // params class name is composed of the method name and its required parameters,
+      // this convention allows for a method to be overloaded with multiple optional params methods while maintaining
+      // binary compatibility
+      Name name = names.fromString( "$" + typeName + "_" +
+        targetMethod.params.stream().filter( e -> e.init == null ).map( e -> "_" + e.name ).reduce( "", (a,b) -> a+b ) );
 
       // Type params (copy from method and, if target method is nonstatic, from the enclosing class)
       List<JCTypeParameter> typeParams = List.nil();
@@ -799,11 +702,13 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
       Symbol.MethodSymbol psiMethod = findTargetMethod( telescopeMethod.sym, methods );
 
-      for( Symbol.MethodSymbol msym : new ArrayList<Symbol.MethodSymbol>(){{methods.forEach( m -> add( (Symbol.MethodSymbol)m ) );}} )
+      for( Symbol.MethodSymbol msym : new ArrayList<>( methods ) )
       {
         if( msym != telescopeMethod.sym && getTypes().overrideEquivalent( msym.type, telescopeMethod.type ) )
         {
-          String paramNames = psiMethod.params.stream().map( p -> p.name.toString() ).collect( Collectors.joining( ", " ) );
+          String paramNames = psiMethod.params.stream()
+            .map( p -> p.name.toString() )
+            .collect( Collectors.joining( ", " ) );
           JCMethodDecl paramsMethodDecl = getTargetMethod( telescopeMethod.name, paramNames );;
           if( msym.owner == classDecl().sym )
           {
@@ -814,19 +719,20 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
                 .map( p -> p.type.tsym.getSimpleName() )
                 .collect( Collectors.joining( ", " ) );
               reportError( paramsMethodDecl,
-                "'" + psiMethod + "' clashes with '" + msym + "' using sub-signature '(" + signature + ")'" );
+                MSG_OPT_PARAM_METHOD_CLASHES_WITH_SUBSIG
+                  .get( psiMethod, msym, signature ) );
             }
             else
             {
-              reportError( paramsMethodDecl, "Optional parameter method: " +
-                "'" + psiMethod + "' indirectly clashes with '" + msym + "'" );
+              reportError( paramsMethodDecl,
+                MSG_OPT_PARAM_METHOD_INDIRECTLY_CLASHES.get( psiMethod, msym ) );
             }
           }
           else if( !msym.isConstructor() && !msym.isPrivate() && !msym.isStatic() )
           {
-            reportWarning( paramsMethodDecl, "Optional parameter method: " +
-              "'" + psiMethod + "' indirectly overrides method '" + msym + "' in class '" +
-              (msym.owner == null ? "<unknown>" : msym.owner.getSimpleName()) + "'" );
+            reportWarning( paramsMethodDecl,
+              MSG_OPT_PARAM_METHOD_INDIRECTLY_OVERRIDES
+                .get( psiMethod, msym, (msym.owner == null ? "<unknown>" : msym.owner.getSimpleName()) ) );
           }
         }
       }

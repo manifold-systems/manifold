@@ -111,6 +111,9 @@ public class ScratchTest extends TestCase
     CtorTest<String> str = new CtorTest<>(foo:"foo");
     assertEquals( "foo", str.getFoo() );
 
+    str = new CtorTest<>("foo");
+    assertEquals( "foo", str.getFoo() );
+
     str = new CtorTest<>(());
     assertEquals( "hi", str.getFoo() );
 
