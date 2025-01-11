@@ -102,7 +102,7 @@ public class TypeNameParser
         {
           if( !match( '>' ) )
           {
-            throw new RuntimeException( "expecting '>" );
+            throw new TypeNameParserException( "expecting '>" );
           }
           if( any.equals( "any" ) )
           {
@@ -122,7 +122,7 @@ public class TypeNameParser
       parseParamList( type );
       if( !match( '>' ) )
       {
-        throw new RuntimeException( "expecting '>" );
+        throw new TypeNameParserException( "expecting '>" );
       }
       Type innerType = parseType();
       if( innerType != null )
@@ -136,7 +136,7 @@ public class TypeNameParser
     {
       if( !match( ']' ) )
       {
-        throw new RuntimeException( "expecting ']" );
+        throw new TypeNameParserException( "expecting ']" );
       }
       type._arrayDim++;
     }
@@ -157,7 +157,7 @@ public class TypeNameParser
   {
     if( !superOrExtends.equals( "super" ) && !superOrExtends.equals( "extends" ) )
     {
-      throw new RuntimeException( "expecting 'extends' or 'super'" );
+      throw new TypeNameParserException( "expecting 'extends' or 'super'" );
     }
   }
 

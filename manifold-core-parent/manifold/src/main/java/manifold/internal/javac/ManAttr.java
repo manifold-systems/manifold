@@ -28,6 +28,7 @@ import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.Tag;
 import com.sun.tools.javac.util.*;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.*;
@@ -1396,7 +1397,7 @@ public interface ManAttr
       {
         if( !namedArgs.isEmpty() )
         {
-          getLogger().error( arg.pos, "proc.messager", "Positional arguments must appear before named arguments" );
+          getLogger().error( arg.pos, "proc.messager", IssueMsg.MSG_OPT_PARAMS_POSITIONAL_BEFORE_NAMED );
         }
         unnamedArgs.add( arg );
       }
@@ -1426,13 +1427,13 @@ public interface ManAttr
       if( ctors.hasNext() )
       {
         Symbol.MethodSymbol ctor = ctors.next();
-        List<String> paramsInOrder = getParamNames( paramsClass.name.toString(), true );
+        List<String> paramsInOrder = getParamNames( paramsClass, true );
         if( paramsInOrder.containsAll( namedArgsCopy.keySet() ) )
         {
           ArrayList<JCExpression> args = new ArrayList<>();
           boolean optional = false;
           List<Symbol.VarSymbol> params = ctor.params;
-          List<String> paramNames = getParamNames( paramsClass.name.toString(), false );
+          List<String> paramNames = getParamNames( paramsClass, false );
           int targetParamsOffset = 0;
           for( int i = 0; i < params.size(); i++ )
           {
@@ -1531,7 +1532,7 @@ public interface ManAttr
     }
     if( missingRequiredParam != null )
     {
-      getLogger().error( tree.pos, "proc.messager", "missing required argument: " + missingRequiredParam );
+      getLogger().error( tree.pos, "proc.messager", IssueMsg.MSG_OPT_PARAMS_MISSING_REQ_ARG.get( missingRequiredParam ) );
     }
   }
 
@@ -1540,7 +1541,7 @@ public interface ManAttr
     java.util.List<String> badNamedArgs = Collections.emptyList();
     for( Symbol.ClassSymbol paramsClass: paramsClasses )
     {
-      java.util.List<String> paramsInOrder = getParamNames( paramsClass.name.toString(), true );
+      java.util.List<String> paramsInOrder = getParamNames( paramsClass, true );
       java.util.List<String> candidate = namedArgsCopy.keySet().stream()
         .filter( e -> !paramsInOrder.contains( e ) )
         .collect( Collectors.toList() );
@@ -1549,19 +1550,18 @@ public interface ManAttr
         badNamedArgs = candidate;
       }
     }
-    getLogger().error( pos, "proc.messager", "No matching parameters for named argument[s]: '" + String.join( "', '", badNamedArgs ) + "'" );
+    getLogger().error( pos, "proc.messager",
+      IssueMsg.MSG_OPT_PARAMS_NO_MATCHING_PARAMS_FOR_NAMED_ARGS.get( String.join( "', '", badNamedArgs ) ) );
   }
 
 
-  default List<String> getParamNames( String paramsClass, boolean removeOpt$ )
+  default List<String> getParamNames( Symbol.ClassSymbol paramsClass, boolean removeOpt$ )
   {
+    //noinspection unchecked
+    Annotation anno = paramsClass.getAnnotation( (Class<Annotation>)ReflectUtil.type( "manifold.ext.params.rt.manifold_params" ) );
+    String params = (String)ReflectUtil.method( anno, "value" ).invoke();
     List<String> result = List.nil();
-    StringTokenizer tokenizer = new StringTokenizer( paramsClass, "_" );
-    if( tokenizer.hasMoreTokens() )
-    {
-      // skip method name
-      tokenizer.nextToken();
-    }
+    StringTokenizer tokenizer = new StringTokenizer( params, "_" );
     while( tokenizer.hasMoreTokens() )
     {
       String paramName = tokenizer.nextToken();
@@ -1681,7 +1681,9 @@ public interface ManAttr
 
   default String findMethodName( JCExpression call )
   {
-    if( call instanceof JCTree.JCNewClass )
+    if( call instanceof JCTree.JCNewClass ||
+      call instanceof JCTree.JCMethodInvocation && ((JCTree.JCMethodInvocation)call).meth instanceof JCTree.JCIdent &&
+        ((JCTree.JCIdent)((JCTree.JCMethodInvocation)call).meth).getName().equals( names()._this ) )
     {
       return "constructor";
     }
@@ -1729,12 +1731,12 @@ public interface ManAttr
     Type superclass = ((Symbol.ClassSymbol)receiverType.tsym).getSuperclass();
     if( superclass != null )
     {
-      result.appendList( getParamsClasses( superclass, methodName, seen ) );
+      result = result.appendList( getParamsClasses( superclass, methodName, seen ) );
     }
     List<Type> interfaces = ((Symbol.ClassSymbol)receiverType.tsym).getInterfaces();
     for( Type iface: interfaces )
     {
-      result.appendList( getParamsClasses( iface, methodName, seen ) );
+      result = result.appendList( getParamsClasses( iface, methodName, seen ) );
     }
     return result;
   }

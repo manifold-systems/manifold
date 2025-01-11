@@ -757,11 +757,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-templates-rt:2024.1.44'
+    implementation 'systems.manifold:manifold-templates-rt:2024.1.49'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-templates:2024.1.44'
-    testAnnotationProcessor 'systems.manifold:manifold-templates:2024.1.44'
+    annotationProcessor 'systems.manifold:manifold-templates:2024.1.49'
+    testAnnotationProcessor 'systems.manifold:manifold-templates:2024.1.49'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -797,7 +797,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.44</manifold.version>
+        <manifold.version>2024.1.49</manifold.version>
     </properties>
     
     <dependencies>
@@ -841,10 +841,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-templates`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-templates/2024.1.44/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-templates/2024.1.44)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-templates/2024.1.49/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-templates/2024.1.49)
 
 `manifold-templates-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-templates-rt/2024.1.44/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-templates-rt/2024.1.44)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-templates-rt/2024.1.49/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-templates-rt/2024.1.49)
 
 
 # License
