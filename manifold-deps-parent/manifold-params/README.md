@@ -17,8 +17,7 @@ public String valueOf(char[] data,
 
 valueOf(array) // use default values for offet and count
 valueOf(array, 2) // use default value for count
-valueOf(data: array, count: 20) // use default value for offset
-valueOf((array, count: 20)) // use a tuple expression to mix positional and named arguments
+valueOf(array, count:20) // use default value for offset
 ```
 
 Optional parameters and named arguments are fully integrated in both **IntelliJ IDEA** and **Android Studio**. Use the IDE's
@@ -103,9 +102,9 @@ configure("MyConfig",
           autoSave: false);
 ```
                       
-## Binary compatibility
+## Binary compatible
 
-Adding new optional parameters to existing methods maintains binary compatibility.
+Adding new optional parameters to existing methods is binary compatible with code compiled before adding the new parameters.
                                                                      
 Version 1.
 ```java
@@ -117,14 +116,13 @@ public void size(int width, int height = width) {...}
 ```
 Code compiled with v1 still runs with v2, without having to recompile with v2.
 
-Additionally, code not compiled with manifold-params can still benefit from using optional parameters methods compiled
-with manifold-params.
-
-Code compiled w/o manifold-params can call method overloads reflecting the optional parameters.
+Additionally, code compiled without `manifold-params` can still benefit from code compiled with optional parameters. In
+this case default parameter values can be used with calls to method overloads that are generated for this purpose.  
 ```java
 size(myWidth);
 size(myWidth, myHeight);
-```
+``` 
+
 
 # IDE Support
 
