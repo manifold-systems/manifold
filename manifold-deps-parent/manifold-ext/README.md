@@ -204,7 +204,7 @@ public class MyStringExtension {
 
 ```java
 String text = null;
-text.trim(); // return ''
+text.trim(); // returns null
 text = "  myTestString  ";
 text.trim(); // returns 'myTestString'
 ```
