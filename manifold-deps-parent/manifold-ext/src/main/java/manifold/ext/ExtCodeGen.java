@@ -33,6 +33,7 @@ import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.ForwardingExtensionMethod;
 import manifold.ext.rt.api.Expires;
 import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.Intercept;
 import manifold.ext.rt.api.This;
 import manifold.ext.rt.api.ThisClass;
 import manifold.internal.javac.ClassSymbols;
@@ -410,10 +411,30 @@ class ExtCodeGen
     }
   }
 
-  private void addExtensionMethod( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler )
+  private void addExtensionMethod( AbstractSrcMethod<?> method, SrcClass extendedType,
+      DiagnosticListener<JavaFileObject> errorHandler )
   {
     if( !isExtensionMethod( method, extendedType ) )
     {
+      return;
+    }
+
+    if(  method.getAnnotation(Intercept.class) != null )
+    {
+      AbstractSrcMethod originalMethod = findMethod( method, extendedType );
+      if ( originalMethod == null )
+      {
+        errorHandler.report( new JavacDiagnostic( null, Diagnostic.Kind.ERROR, 0, 0, 0,
+          ExtIssueMsg.MSG_INTERCEPTION_NOT_FOUND.get( method.signature(), ((SrcClass)method.getOwner()).getName(), extendedType.getName()) ) );
+        return;
+      }
+      // mark as extension method for efficient lookup during method call replacement
+      originalMethod.addAnnotation(
+          new SrcAnnotationExpression( ExtensionMethod.class )
+              .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() )
+              .addArgument( "isStatic", boolean.class, !isInstanceExtensionMethod( method, extendedType ) )
+              .addArgument( "isSmartStatic", boolean.class, hasThisClassAnnotation( method ) )
+              .addArgument( "isIntercept", boolean.class, true ) );
       return;
     }
 
@@ -457,7 +478,8 @@ class ExtCodeGen
         new SrcAnnotationExpression( ExtensionMethod.class )
           .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() )
           .addArgument( "isStatic", boolean.class, !isInstanceExtensionMethod )
-          .addArgument( "isSmartStatic", boolean.class, hasThisClassAnnotation( method ) ) );
+          .addArgument( "isSmartStatic", boolean.class, hasThisClassAnnotation( method ) )
+          .addArgument( "isIntercept", boolean.class, false ) );
     }
     else
     {
@@ -584,7 +606,7 @@ class ExtCodeGen
     return true;
   }
 
-  private AbstractSrcMethod findMethod( AbstractSrcMethod method, SrcClass extendedType )
+  private AbstractSrcMethod findMethod( AbstractSrcMethod<?> method, SrcClass extendedType )
   {
     if( extendedType == null )
     {
@@ -592,10 +614,17 @@ class ExtCodeGen
     }
 
     AbstractSrcMethod duplicate = null;
+    int paramsToSubtract = 0;
+    if( !method.getParameters().isEmpty() )
+    {
+      SrcParameter firstParam = method.getParameters().get(0);
+      paramsToSubtract =
+          (firstParam.getAnnotation( This.class ) != null || firstParam.getAnnotation( ThisClass.class ) != null) ? 1 : 0;
+    }
     outer:
     for( AbstractSrcMethod m: extendedType.getMethods() )
     {
-      if( m.getSimpleName().equals( method.getSimpleName() ) && m.getParameters().size() == method.getParameters().size()-1 )
+      if( m.getSimpleName().equals( method.getSimpleName() ) && m.getParameters().size() == method.getParameters().size()-paramsToSubtract )
       {
         List parameters = method.getParameters();
         List params = m.getParameters();

@@ -26,8 +26,10 @@ import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.comp.Resolve;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCTypeCast;
+import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
@@ -35,6 +37,7 @@ import com.sun.tools.javac.util.*;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
+import manifold.api.gen.SrcParameter;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
@@ -3078,6 +3081,13 @@ public class ExtensionTransformer extends TreeTranslator
         String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
         boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
         isSmartStatic[0] = (boolean)annotation.values.get( 2 ).snd.getValue();
+        boolean isIntercept = (boolean)annotation.values.get( 3 ).snd.getValue();
+
+        if ( isIntercept && !shouldInterceptMethod( tree, sym ) )
+        {
+          // Do not replace an intercepted method call in the method declaration of the intercepted method
+          return null;
+        }
         BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getModule() ).getJavacTask_PlainFileMgr();
         Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
         if( classSymbol == null )
@@ -3123,6 +3133,64 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
     return null;
+  }
+
+  /**
+   * Determines whether a method should be intercepted. A method should not be intercepted if it is invoked
+   * from within the body of the method being intercepted.
+   *
+   * @param tree The method invocation represented as a JCMethodInvocation tree.
+   * @param sym The symbol representing the method being called.
+   *
+   * @return true if the method should be intercepted; false otherwise.
+   */
+  private boolean shouldInterceptMethod( JCTree.JCMethodInvocation tree, Symbol sym )
+  {
+    Tree parent = _tp.getParent(tree);
+    while ( !( parent instanceof JCTree.JCMethodDecl ) )
+    {
+      parent = _tp.getParent( parent );
+    }
+    JCTree.JCMethodDecl methodDecl = (JCTree.JCMethodDecl) parent;
+    if ( !methodDecl.name.toString().equals( sym.name.toString() ) )
+    {
+      return true;
+    }
+    int paramsToSubtract = 0;
+    if( !methodDecl.params.isEmpty() )
+    {
+      List<JCAnnotation> annotations = methodDecl.getParameters().get( 0 ).getModifiers().getAnnotations();
+      if( !annotations.isEmpty() )
+      {
+        String annotationFqn = annotations.get(0).getAnnotationType().type.toString();
+        if ( This.class.getTypeName().equals( annotationFqn ) || ThisClass.class.getTypeName().equals( annotationFqn ) )
+        {
+          // If the method's first parameter is annotated with @This or @ThisClass, it should be ignored.
+          paramsToSubtract = 1;
+        }
+      }
+    }
+
+    if( paramsToSubtract != 0 ){
+      String objectName = methodDecl.params.get(0).name.toString();
+      if ( !tree.toString().split("\\.", 2)[0].equals(objectName) )
+      {
+        // The method does not call its parent. The current method name differs from the surrounding method's name.
+      }
+    }
+    if ( methodDecl.params.length() - paramsToSubtract != tree.args.length() )
+    {
+      // The method does not call its parent. The number of parameters does not match.
+      return true;
+    }
+    for ( int i = 1; i < methodDecl.params.length(); i++ ) {
+      if ( !methodDecl.params.get( i ).type.tsym.equals( tree.args.get( i - paramsToSubtract ).type.tsym ) ) {
+        // The method does not call its parent. The argument type does not match the parameter type of the parent method.
+        return true;
+      }
+    }
+    // The method call its parent, it should not be intercepted
+    return false;
   }
 
   //## todo: cache these

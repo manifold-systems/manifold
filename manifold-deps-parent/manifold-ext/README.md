@@ -181,6 +181,34 @@ Call static extensions just as if they were on the extended class:
 String.lineSeparator()
 ```
 
+## Intercepting Methods
+
+It's possible to intercept (existing) methods, allowing you to modify their logic or introduce custom behavior 
+before or after the original method executes. 
+The method's signature remains unchanged, meaning the return type, parameters, and any declared exceptions must be 
+preserved.
+To intercept a method, simply annotate the (extension) method with `@Intercept`.
+
+Consider the following example:
+```java
+package extensions.java.lang.String;
+
+@Extension
+public class MyStringExtension {
+    @Intercept
+    public static String trim(@This String thiz) {
+        return thiz == null ? null : thiz.trim();
+    }
+}
+```
+
+```java
+String text = null;
+text.trim(); // return ''
+text = "  myTestString  ";
+text.trim(); // returns 'myTestString'
+```
+
 ## Generics
 
 You can extend generic classes too and define generic methods. This is how Manifold extension libraries
