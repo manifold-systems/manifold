@@ -618,8 +618,7 @@ class ExtCodeGen
     if( !method.getParameters().isEmpty() )
     {
       SrcParameter firstParam = method.getParameters().get(0);
-      paramsToSubtract =
-          (firstParam.getAnnotation( This.class ) != null || firstParam.getAnnotation( ThisClass.class ) != null) ? 1 : 0;
+      paramsToSubtract = firstParam.hasAnnotation( This.class ) || firstParam.hasAnnotation( ThisClass.class ) ? 1 : 0;
     }
     outer:
     for( AbstractSrcMethod m: extendedType.getMethods() )
