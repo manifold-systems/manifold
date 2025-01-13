@@ -248,8 +248,11 @@ class ExtCodeGen
         for ( AbstractSrcMethod<?> method : srcClass.getMethods() ) {
           if ( !method.getParameters().isEmpty() && method.getParameters().get( 0 ).getType().getFqName().equals( _fqn ) ) {
             // Mark first param with @This annotation, so it is handled as an extension method
-            method.getParameters().get( 0 ).addAnnotation( This.class );
-            addExtensionMethod(method, extendedClass, errorHandler);
+            method.getParameters().get(0).addAnnotation(This.class);
+            AbstractSrcMethod duplicate = findMethod(method, extendedClass);
+            if (duplicate == null) {
+              addExtensionMethod(method, extendedClass, errorHandler);
+            }
           }
         }
       }
