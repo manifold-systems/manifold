@@ -6,26 +6,46 @@
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
-The `manifold-params` project is a compiler plugin that implements optional parameters and named arguments for methods,
-constructors, and records. Use it with any Java project to add clarity and flexibility to call sites and to reduce boilerplate
-in class definitions.
+The `manifold-params` project is a compiler plugin that implements binary compatible _optional parameters and named arguments_
+for methods, constructors, and records. Use it with any Java project to add clarity and flexibility to call sites and as
+a refreshing alternative to method overloads and builders.
                                                                          
 ```java
 public String valueOf(char[] data, 
                       int offset = 0, 
                       int count = data.length - offset) {...}
 
-valueOf(array) // use default values for offet and count
-valueOf(array, 2) // use default value for count
-valueOf(array, count:20) // use default value for offset
+valueOf(array) // use default args for offet and count
+valueOf(array, 2) // use default args for count
+valueOf(array, count:20) // use default arg just for offset by naming count argument
 ```
 
-Optional parameters and named arguments are fully integrated in both **IntelliJ IDEA** and **Android Studio**. Use the IDE's
-features to be more productive with optional parameters and named arguments.
+Optional parameters and named arguments are fully integrated in both **IntelliJ IDEA** and **Android Studio**.
+                      
+<!-- TOC -->
+* [Optional parameters & named arguments](#optional-parameters--named-arguments)
+  * [Optional parameters](#optional-parameters)
+  * [Named arguments](#named-arguments)
+  * [Overloading and overriding](#overloading-and-overriding)
+  * [Binary compatible](#binary-compatible)
+  * [Notes & tidbits](#notes--tidbits)
+* [IDE Support](#ide-support)
+  * [Install](#install)
+* [Setup](#setup)
+  * [Building this project](#building-this-project)
+  * [Using this project](#using-this-project)
+  * [Binaries](#binaries)
+  * [Gradle](#gradle)
+  * [Maven](#maven)
+* [Javadoc](#javadoc)
+* [License](#license)
+* [Versioning](#versioning)
+* [Author](#author)
+<!-- TOC -->
 
 ## Optional parameters
 
-An optional parameter has a default value assigned to it, much like a field or local variable with an initial value.
+An optional parameter has a default value, much like a field or local variable can have an initial value.
 ```java
 void println(String text = "") {...}
 ```
@@ -36,27 +56,9 @@ println("flubber");
 println(text: "flubber"); // named argument syntax
 ```
 
-A default value may be an arbitrary expression of any complexity and can reference preceding parameters.
+A default value expression may be arbitrarily complex and can reference preceding parameters.
 ```java
 public record Destination(Country country, String city = country.capital()) {}
-```
-
-A method override automatically inherits all the super method's default parameter values. The default values are fixed in
-the super class and may not be changed in the overriding method. 
-```java
-public interface Contacts {
-  Contact add(String name, String address = null, String phone = null);
-}
-
-public class MyContacts implements Contacts {
-  @Override // no default parameter values allowed here
-  public Contact add(String name, String address, String phone) {...}
-}
-
-Contacts contacts = new MyContacts();
-contacts.add("Fred");
-// calling directly inherits defaults
-((MyContacts)contacts).add("Bob");
 ```
 
 If an optional parameter precedes a required parameter, positional arguments may still be used with all the parameters.
@@ -101,7 +103,61 @@ configure("MyConfig",
           showName: false,
           autoSave: false);
 ```
-                      
+
+## Overloading and overriding
+
+A method override automatically inherits all the super method's default parameter values. The default values are fixed in
+the super class and may not be changed in the overriding method.
+```java
+public interface Contacts {
+  Contact add(String name, String address = null, String phone = null);
+}
+
+public class MyContacts implements Contacts {
+  @Override // no default parameter values allowed here, they are strictly inherited
+  public Contact add(String name, String address, String phone) {...}
+}
+```
+
+A method having optional parameters logically consists of the set of methods comprising the methods one would otherwise
+write if using Java's idiomatic method overloads.
+```java
+void message(String content, int id = 0, LocalTime timestamp = null )
+```
+Logically occupies the following method signatures.
+```java
+void message(String)
+void message(String, int)
+void message(String, int, LocalTime)
+```
+These are called the _sub-signatures_ of the optional parameter method.
+
+An optional parameter method automatically overrides any super type methods whose signatures are _sub-signatures_ of the
+optional parameter method. Generally, a sub-signature is one that partially matches the optional parameter method using
+Java's idiomatic "telescoping" method overload analogy as described above.
+```java
+class Base {
+  void func() {...}
+}
+
+class Sub extends Base {
+  @Override
+  void func(int id = 0) {...}
+}
+```
+`Sub#func(int)` indirectly overrides `Base#func()`. As with full signature overriding, the compiler issues a warning for
+this if `@Override` is not applied to `func(int)`. Note, a future release may include a more suitable annotation to name
+specific overloaded method signatures.
+
+Overloading is permitted with optional parameter methods, however a compiler error results if sub-signatures overlap.
+```java
+class Sample {
+  void func()
+  void func(int alpha = 0) //error: clashes with func()
+  void func(int beta, int gamma = 0) //error: clashes with func(int)
+}
+```
+
 ## Binary compatible
 
 Adding new optional parameters to existing methods is binary compatible with code compiled before adding the new parameters.
@@ -123,6 +179,25 @@ size(myWidth);
 size(myWidth, myHeight);
 ``` 
 
+## Notes & tidbits
+
+#### Why limit named arguments to only methods with optional parameters?
+Since the feature is neither part of the language nor the JVM, supporting named args for arbitrary methods would incur a
+bit of perf/space overhead for each method/constructor/record, which isn't really justifiable considering modern IDEs like
+IntelliJ IDEA already render positional argument names, aka "name hints", in call sites. Basically, if you want this feature,
+you already have it without any direct language support. Right?
+
+Where named arguments become invaluable is when used as a means to select optional parameters. The synergy between these
+two features provides a concise, flexible, and maintainable alternative to builders and "telescoping" method/constructor
+overloads.
+                 
+#### Why does the named argument syntax use `:` instead of `=`?
+Indeed, many languages having named arguments, such as Kotlin and Scala, use the syntax: `foo(x = 8)`. One problem with
+that, however, is Java's assignment expression clashes where `x = 8` may be parsed as an assignment as opposed to a mapping 
+of an argument. While this could be worked out, overloading the assignment operator in a prominent place like argument parsing
+probably isn't the best idea.
+
+Perhaps the main reason is aesthetics. `x: 8` just reads more like a naming or labeling of something. Shrug. 
 
 # IDE Support
 
