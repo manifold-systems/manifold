@@ -628,10 +628,10 @@ class ExtCodeGen
       {
         List parameters = method.getParameters();
         List params = m.getParameters();
-        for( int i = 1; i < parameters.size(); i++ )
+        for( int i = paramsToSubtract; i < parameters.size(); i++ )
         {
           SrcParameter param = (SrcParameter)parameters.get( i );
-          SrcParameter p = (SrcParameter)params.get( i-1 );
+          SrcParameter p = (SrcParameter)params.get( i-paramsToSubtract );
           if( !param.getType().equals( p.getType() ) )
           {
             continue outer;
