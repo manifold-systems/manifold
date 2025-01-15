@@ -15,9 +15,9 @@ public String valueOf(char[] data,
                       int offset = 0, 
                       int count = data.length - offset) {...}
 
-valueOf(array) // use default args for offet and count
-valueOf(array, 2) // use default args for count
-valueOf(array, count:20) // use default arg just for offset by naming count argument
+valueOf(array) // use defaults for offset and count
+valueOf(array, 2) // use default for count
+valueOf(array, count:20) // use default for offset by naming count
 ```
 
 Optional parameters and named arguments are fully integrated in both **IntelliJ IDEA** and **Android Studio**.
@@ -71,9 +71,7 @@ new Item("Chair"); // default value id = -1 is used
 
 ## Named arguments
 
-Arguments may be named when calling any method, constructor, or record having optional parameters. The naming format follows
-manifold's [tuple syntax](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple).
-
+Arguments may be named when calling any method, constructor, or record having optional parameters.
 ```java
 void configure(String name,
                boolean showName = true,
@@ -81,27 +79,19 @@ void configure(String name,
                int size = 64, 
                boolean autoSave = true) {...}
 ```
-
-Naming arguments adds clarity to call sites.
+Naming arguments adds clarity to call sites. And with optional parameters you only have to supply the arguments you need.
 ```java
 configure(name: "MyConfig",
-          showName: false,
-          color: 0x7393B3,
           size: 128,
           autoSave: false);
 ```
-But with optional parameters you only have to supply the arguments you need.
-```java
-configure("Config");
-configure(name:"Config", showName:false);
-```
-And you can order named arguments to your liking, and mix positional arguments with named arguments. But a labeled argument
-may not precede a positional argument.
+Order named arguments to your liking, and mix positional arguments with named arguments. But a labeled argument may not
+precede a positional argument.
 ```java
 configure("MyConfig",
+          autoSave: false,
           color: 0x7393B3,
-          showName: false,
-          autoSave: false);
+          showName: false);
 ```
 
 ## Overloading and overriding
@@ -119,37 +109,36 @@ public class MyContacts implements Contacts {
 }
 ```
 
-A method having optional parameters logically consists of the set of methods comprising the methods one would otherwise
-write if using Java's idiomatic method overloads.
+A method having optional parameters logically consists of all the methods one would otherwise write using method overloads
+to approximate optional parameters.
 ```java
-void message(String content, int id = 0, LocalTime timestamp = null )
+void func(String a, int b = 0, int c = b )
 ```
-Logically occupies the following method signatures.
+Here, `func` covers the following method signatures.
 ```java
-void message(String)
-void message(String, int)
-void message(String, int, LocalTime)
+void func(String) 
+void func(String, int) 
+void func(String, int, int)
 ```
-These are called the _sub-signatures_ of the optional parameter method.
-
-An optional parameter method automatically overrides any super type methods whose signatures are _sub-signatures_ of the
-optional parameter method. Generally, a sub-signature is one that partially matches the optional parameter method using
-Java's idiomatic "telescoping" method overload analogy as described above.
+Because `func` can be called using these signatures, together they are called the _signature set_ of `func`. Accordingly,
+`func` automatically overrides any super type method with a signature belonging to this set.
 ```java
 class Base {
-  void func() {...}
+  void func(String a, int b) {...}
 }
 
 class Sub extends Base {
   @Override
-  void func(int id = 0) {...}
+  void func(String a, int b = 0, int c = b) {...}
 }
-```
-`Sub#func(int)` indirectly overrides `Base#func()`. As with full signature overriding, the compiler issues a warning for
-this if `@Override` is not applied to `func(int)`. Note, a future release may include a more suitable annotation to name
-specific overloaded method signatures.
 
-Overloading is permitted with optional parameter methods, however a compiler error results if sub-signatures overlap.
+Base base = new Sub();
+base.func("hi", 5); // calls Sub#func
+```
+Here `Sub#func` indirectly overrides `Base#func`. As with any override, the compiler issues a warning for this if `@Override`
+is not applied to `Sub#func`.
+
+Overloading is permitted with optional parameter methods, however a compiler error results if signature sets overlap.
 ```java
 class Sample {
   void func()
@@ -184,18 +173,17 @@ size(myWidth, myHeight);
 #### Why limit named arguments to only methods with optional parameters?
 Since the feature is neither part of the language nor the JVM, supporting named args for arbitrary methods would incur a
 bit of perf/space overhead for each method/constructor/record, which isn't really justifiable considering modern IDEs like
-IntelliJ IDEA already render positional argument names, aka "name hints", in call sites. Basically, if you want this feature,
-you already have it without any direct language support. Right?
+IntelliJ IDEA already render positional argument names, aka "name hints", at call sites. Basically, if you want this feature,
+you already have it, more or less.
 
-Where named arguments become invaluable is when used as a means to select optional parameters. The synergy between these
-two features provides a concise, flexible, and maintainable alternative to builders and "telescoping" method/constructor
-overloads.
+But named arguments are indispensable when it comes to selecting optional parameters. The synergy between these two features
+is quite powerful. The result is a concise, flexible, and maintainable alternative to builders and "telescoping" overloads.
                  
 #### Why does the named argument syntax use `:` instead of `=`?
 Indeed, many languages having named arguments, such as Kotlin and Scala, use the syntax: `foo(x = 8)`. One problem with
-that, however, is Java's assignment expression clashes where `x = 8` may be parsed as an assignment as opposed to a mapping 
-of an argument. While this could be worked out, overloading the assignment operator in a prominent place like argument parsing
-probably isn't the best idea.
+that, however, is that Java's assignment expression clashes; `x = 8` may be parsed as an assignment as opposed to a
+mapping of an argument. While this could be worked out, overloading the assignment operator in a prominent place like argument
+parsing probably isn't the best idea.
 
 Perhaps the main reason is aesthetics. `x: 8` just reads more like a naming or labeling of something. Shrug. 
 
