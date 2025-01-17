@@ -20,6 +20,7 @@ Powerful **language enhancements** significantly improve developer productivity.
 * [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 * [_True_ delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+* [Optional parameters & named arguments](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params) _**(New!)**_
 * [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
 * [Operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 * [Unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
@@ -144,6 +145,20 @@ to this:
 ```java
 result.movie.leadingRole.actor.likes.count++;
 ``` 
+
+### [Optional parameters & named arguments](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params)
+Use optional parameters and named arguments with any Java project to add clarity and flexibility to call sites
+and as a refreshing alternative to method overloads and builders.
+```java
+String valueOf(char[] data, 
+               int offset = 0, 
+               int count = data.length - offset) {...}
+
+valueOf(array) // use defaults for offset and count
+valueOf(array, 2) // use default for count
+valueOf(array, count:20) // use default for offset by naming count
+```
+Binary compatible with methods, constructors, and records.
 
 ### [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 Implement *operator* methods on any type to directly support arithmetic, relational, index, and unit operators.
@@ -302,6 +317,8 @@ by the core framework. Each project consists of one or more **dependencies** you
 [Manifold : _Delegation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)<br>
 
 [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)<br>
+
+[Manifold : _Optional parameters & named arguments_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params)<br>
 
 [Manifold : _Tuples_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)<br>
 

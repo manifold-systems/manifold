@@ -618,7 +618,7 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 //    sb.append( "\n" ).append( indent( sb, indent ) ).append( "// methods //\n" );
     for( AbstractSrcMethod method : _methods )
     {
-      if( _kind == Kind.Record && method.isConstructor() )
+      if( _kind == Kind.Record && method.isPrimaryConstructor() )
       {
         continue;
       }
