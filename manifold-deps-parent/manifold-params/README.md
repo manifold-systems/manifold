@@ -152,23 +152,6 @@ base.func("hi", 5); // calls Sub#func
 ```
 Here `Sub#func` indirectly overrides `Base#func`.
 
-A method having optional parameters may override another one, but only by adding additional optional parameters.
-```java
-class Base {
-  void func(String a, int b = 0) {...}
-}
-
-class Sub extends Base {
-  @Override
-  void func(String a, int b, int c = b) {...}
-}
-
-Base base = new Sub();
-base.func("hi"); // calls Sub#func
-```
-The same rules apply: `Sub#func` inherits parameter defaults from `Base#func`, and the signature set of `Sub#func` expands
-to include the signature set of `Base#func`. Generally, `Sub#func` overrides _all_ of `Base#func`.
-
 Overloading is permitted with optional parameter methods, however a compiler error results if signature sets overlap.
 ```java
 class Sample {
