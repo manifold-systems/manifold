@@ -3175,7 +3175,8 @@ public class ExtensionTransformer extends TreeTranslator
       String objectName = methodDecl.params.get(0).name.toString();
       if ( !tree.toString().split("\\.", 2)[0].equals(objectName) )
       {
-        // The method does not call its parent. The current method name differs from the surrounding method's name.
+        // The method does not call its parent. The current object name differs from the parameters name.
+        return true;
       }
     }
     if ( methodDecl.params.length() - paramsToSubtract != tree.args.length() )

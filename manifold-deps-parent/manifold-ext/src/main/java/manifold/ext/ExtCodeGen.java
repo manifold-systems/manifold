@@ -40,7 +40,6 @@ import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavacPlugin;
 import manifold.rt.api.Array;
 import manifold.rt.api.util.Pair;
-import manifold.util.JreUtil;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -419,7 +418,7 @@ class ExtCodeGen
       return;
     }
 
-    if(  method.getAnnotation(Intercept.class) != null )
+    if( method.getAnnotation(Intercept.class) != null )
     {
       AbstractSrcMethod originalMethod = findMethod( method, extendedType );
       if ( originalMethod == null )
@@ -431,10 +430,10 @@ class ExtCodeGen
       // mark as extension method for efficient lookup during method call replacement
       originalMethod.addAnnotation(
           new SrcAnnotationExpression( ExtensionMethod.class )
-              .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() )
-              .addArgument( "isStatic", boolean.class, !isInstanceExtensionMethod( method, extendedType ) )
-              .addArgument( "isSmartStatic", boolean.class, hasThisClassAnnotation( method ) )
-              .addArgument( "isIntercept", boolean.class, true ) );
+              .addArgument( ExtensionMethod.extensionClass, String.class, ((SrcClass)method.getOwner()).getName() )
+              .addArgument( ExtensionMethod.isStatic, boolean.class, !isInstanceExtensionMethod( method, extendedType ) )
+              .addArgument( ExtensionMethod.isSmartStatic, boolean.class, hasThisClassAnnotation( method ) )
+              .addArgument( ExtensionMethod.isIntercept, boolean.class, true ) );
       return;
     }
 
@@ -476,10 +475,10 @@ class ExtCodeGen
       // mark as extension method for efficient lookup during method call replacement
       srcMethod.addAnnotation(
         new SrcAnnotationExpression( ExtensionMethod.class )
-          .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() )
-          .addArgument( "isStatic", boolean.class, !isInstanceExtensionMethod )
-          .addArgument( "isSmartStatic", boolean.class, hasThisClassAnnotation( method ) )
-          .addArgument( "isIntercept", boolean.class, false ) );
+          .addArgument( ExtensionMethod.extensionClass, String.class, ((SrcClass)method.getOwner()).getName() )
+          .addArgument( ExtensionMethod.isStatic, boolean.class, !isInstanceExtensionMethod )
+          .addArgument( ExtensionMethod.isSmartStatic, boolean.class, hasThisClassAnnotation( method ) )
+          .addArgument( ExtensionMethod.isIntercept, boolean.class, false ) );
     }
     else
     {
