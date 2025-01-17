@@ -22,6 +22,7 @@ import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.*;
+import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.*;
@@ -46,6 +47,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static manifold.ext.params.ParamsIssueMsg.*;
 
@@ -130,6 +132,70 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     return JavacPlugin.instance() != null
       ? JavacPlugin.instance().getTypeProcessor().getCompilationUnit()
       : null;
+  }
+
+  @Override
+  public boolean isSuppressed( JCDiagnostic.DiagnosticPosition pos, String issueKey, Object[] args )
+  {
+    if( issueKey.endsWith( "does.not.override.superclass" ) )
+    {
+      if( pos.getTree() instanceof JCAnnotation )
+      {
+        JCMethodDecl methodDecl = findEnclosing( pos.getTree(), JCMethodDecl.class );
+        if( methodDecl == null )
+        {
+          return false;
+        }
+        for( JCVariableDecl param : methodDecl.params )
+        {
+          return checkIndirectlyOverrides( methodDecl );
+        }
+      }
+    }
+    return false;
+  }
+
+  private <C extends JCTree> C findEnclosing( Tree tree, Class<C> cls )
+  {
+    if( tree == null )
+    {
+      return null;
+    }
+
+    if( cls.isInstance( tree ) )
+    {
+      return (C)tree;
+    }
+
+    tree = JavacPlugin.instance().getTypeProcessor().getParent( tree, ((ManAttr)Attr.instance( getContext() )).getEnv().toplevel );
+    return findEnclosing( tree, cls );
+  }
+
+  private boolean checkIndirectlyOverrides( JCMethodDecl optParamsMethod )
+  {
+    if( optParamsMethod.sym.isConstructor() || optParamsMethod.sym.isPrivate() )
+    {
+      return false;
+    }
+
+    JCClassDecl classDecl = findEnclosing( optParamsMethod, JCClassDecl.class );
+    Iterable<Symbol.MethodSymbol> methodOverloads = (Iterable)IDynamicJdk.instance().getMembers( classDecl.sym,
+      m -> m instanceof Symbol.MethodSymbol && m.name.equals( optParamsMethod.name ) );
+    Set<Symbol.MethodSymbol> overloads = StreamSupport.stream( methodOverloads.spliterator(), false ).collect( Collectors.toSet() );
+    for( Symbol.MethodSymbol potentialTelescopingMethod : methodOverloads )
+    {
+      Symbol.MethodSymbol targetMethod = findTargetMethod( potentialTelescopingMethod, overloads );
+      if( targetMethod == optParamsMethod.sym  )
+      {
+        Check check = Check.instance( getContext() );
+        if( (boolean)ReflectUtil.method( check, "isOverrider", Symbol.class ).invoke( potentialTelescopingMethod ) )
+        {
+          // at least one telescoping method overrides a super method
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   @Override
@@ -730,31 +796,15 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
           }
           else if( !msym.isConstructor() && !msym.isPrivate() && !msym.isStatic() )
           {
-            reportWarning( paramsMethodDecl,
-              MSG_OPT_PARAM_METHOD_INDIRECTLY_OVERRIDES
-                .get( psiMethod, msym, (msym.owner == null ? "<unknown>" : msym.owner.getSimpleName()) ) );
+            if( psiMethod.getAnnotation( Override.class ) == null )
+            {
+              reportWarning( paramsMethodDecl,
+                MSG_OPT_PARAM_METHOD_INDIRECTLY_OVERRIDES
+                  .get( psiMethod, msym, (msym.owner == null ? "<unknown>" : msym.owner.getSimpleName()) ) );
+            }
           }
         }
       }
-    }
-
-    private Symbol.MethodSymbol findTargetMethod( Symbol.MethodSymbol telescopeMethod, Set<Symbol.MethodSymbol> methods )
-    {
-      Symbol.MethodSymbol tm = null;
-      manifold_params anno = telescopeMethod.getAnnotation( manifold_params.class );
-      if( anno != null )
-      {
-        tm = getTargetMethod( anno, methods );
-      }
-      return tm;
-    }
-
-    Symbol.MethodSymbol getTargetMethod( manifold_params anno, Set<Symbol.MethodSymbol> methods )
-    {
-      return methods.stream()
-        .filter( m ->
-          anno.value().equals( m.params.stream().map( p -> p.name.toString() ).collect( Collectors.joining( ", ") ) ) )
-        .findFirst().orElse( null );
     }
 
     JCMethodDecl getTargetMethod( Name methodName, String paramNames )
@@ -866,4 +916,24 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     JavaFileObject file = sourcefile != null ? sourcefile : Util.getFile( tree, child -> getParent( child ) );
     reporter.report( new JavacDiagnostic( file, kind, tree.getStartPosition(), 0, 0, msg ) );
   }
+
+  private Symbol.MethodSymbol findTargetMethod( Symbol.MethodSymbol telescopeMethod, Set<Symbol.MethodSymbol> methods )
+  {
+    Symbol.MethodSymbol tm = null;
+    manifold_params anno = telescopeMethod.getAnnotation( manifold_params.class );
+    if( anno != null )
+    {
+      tm = getTargetMethod( anno, methods );
+    }
+    return tm;
+  }
+
+  Symbol.MethodSymbol getTargetMethod( manifold_params anno, Set<Symbol.MethodSymbol> methods )
+  {
+    return methods.stream()
+      .filter( m ->
+        anno.value().equals( m.params.stream().map( p -> p.name.toString() ).collect( Collectors.joining( ", ") ) ) )
+      .findFirst().orElse( null );
+  }
+
 }

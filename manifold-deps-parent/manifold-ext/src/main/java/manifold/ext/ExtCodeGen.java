@@ -610,7 +610,7 @@ class ExtCodeGen
     return true;
   }
 
-  private AbstractSrcMethod findMethod( AbstractSrcMethod method, SrcClass extendedType )
+  private AbstractSrcMethod findMethod( AbstractSrcMethod<?> method, SrcClass extendedType )
   {
     if( extendedType == null )
     {
@@ -618,17 +618,23 @@ class ExtCodeGen
     }
 
     AbstractSrcMethod duplicate = null;
+    int paramsToSubtract = 0;
+    if( !method.getParameters().isEmpty() )
+    {
+      SrcParameter firstParam = method.getParameters().get(0);
+      paramsToSubtract = firstParam.hasAnnotation( This.class ) || firstParam.hasAnnotation( ThisClass.class ) ? 1 : 0;
+    }
     outer:
     for( AbstractSrcMethod m: extendedType.getMethods() )
     {
-      if( m.getSimpleName().equals( method.getSimpleName() ) && m.getParameters().size() == method.getParameters().size()-1 )
+      if( m.getSimpleName().equals( method.getSimpleName() ) && m.getParameters().size() == method.getParameters().size()-paramsToSubtract )
       {
         List parameters = method.getParameters();
         List params = m.getParameters();
-        for( int i = 1; i < parameters.size(); i++ )
+        for( int i = paramsToSubtract; i < parameters.size(); i++ )
         {
           SrcParameter param = (SrcParameter)parameters.get( i );
-          SrcParameter p = (SrcParameter)params.get( i-1 );
+          SrcParameter p = (SrcParameter)params.get( i-paramsToSubtract );
           if( !param.getType().equals( p.getType() ) )
           {
             continue outer;

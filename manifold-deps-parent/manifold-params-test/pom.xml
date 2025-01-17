@@ -4,7 +4,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2024.1.49-SNAPSHOT</version>
+    <version>2024.1.51-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-params-test</artifactId>
@@ -39,6 +39,7 @@
           <compilerArgs>
             <!--Add the Manifold plugin-->
             <arg>-Xplugin:Manifold</arg>
+            <arg>-Xlint</arg>
           </compilerArgs>
 
           <!-- Add Manifold compile-time dependencies in the processor path -->

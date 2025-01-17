@@ -367,7 +367,7 @@ public class SrcClassUtil
       Symbol.MethodSymbol primaryRecordCtor = findPrimaryRecordCtor( owner, javacTask );
       if( primaryRecordCtor == method )
       {
-        recordFields = getRecordFields( owner );
+        recordFields = getRecordComponents( owner );
       }
     }
     List<Symbol.VarSymbol> parameters = method.getParameters();
@@ -806,7 +806,7 @@ public class SrcClassUtil
 
   private Symbol.MethodSymbol findPrimaryRecordCtor( Symbol.ClassSymbol owner, BasicJavacTask javacTask )
   {
-    java.util.List<Symbol.VarSymbol> fields = getRecordFields( owner );
+    java.util.List<Symbol.VarSymbol> fields = getRecordComponents( owner );
     for( Symbol meth : IDynamicJdk.instance().getMembers( owner, m -> m instanceof Symbol.MethodSymbol && m.isConstructor() ) )
     {
       Symbol.MethodSymbol method = (Symbol.MethodSymbol)meth;
@@ -836,7 +836,7 @@ public class SrcClassUtil
   private String initializeRecordFields( Symbol.ClassSymbol owner )
   {
     StringBuilder sb = new StringBuilder();
-    java.util.List<Symbol.VarSymbol> fields = getRecordFields( owner );
+    java.util.List<Symbol.VarSymbol> fields = getRecordComponents( owner );
     for( Symbol f: fields )
     {
       sb.append( "this." ).append( f.flatName() ).append( " = " ).append( getValueForType( f.type ) ).append( "; " );
@@ -845,13 +845,10 @@ public class SrcClassUtil
     return sb.toString();
   }
 
-  private java.util.List<Symbol.VarSymbol> getRecordFields( Symbol.ClassSymbol owner )
+  private java.util.List<Symbol.VarSymbol> getRecordComponents( Symbol.ClassSymbol owner )
   {
-    // fields in declared order
-    return owner.getEnclosedElements().stream()
-      .filter( e -> e instanceof Symbol.VarSymbol && !e.isStatic() )
-      .map( e -> (Symbol.VarSymbol)e )
-      .collect( Collectors.toList() );
+    // in declared order
+    return new ArrayList( (List<?>)ReflectUtil.method( owner, "getRecordComponents" ).invoke() );
   }
 
   private Symbol.MethodSymbol findConstructor( IModule module, String fqn, BasicJavacTask javacTask )
