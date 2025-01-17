@@ -21,14 +21,17 @@ valueOf(array, count:20) // use default for offset by naming count
 ```
 
 Optional parameters and named arguments are fully integrated in both **IntelliJ IDEA** and **Android Studio**.
-                      
+                                                    
+# Contents
+
 <!-- TOC -->
-* [Optional parameters & named arguments](#optional-parameters--named-arguments)
-  * [Optional parameters](#optional-parameters)
-  * [Named arguments](#named-arguments)
-  * [Overloading and overriding](#overloading-and-overriding)
-  * [Binary compatible](#binary-compatible)
-  * [Notes & tidbits](#notes--tidbits)
+* [Optional parameters](#optional-parameters)
+* [Named arguments](#named-arguments)
+* [Overloading and overriding](#overloading-and-overriding)
+* [Binary compatible](#binary-compatible)
+    * [Backward compatible](#backward-compatible-)
+    * [Binary accessible](#binary-accessible)
+    * [Java standard compatible](#java-standard-compatible)
 * [IDE Support](#ide-support)
   * [Install](#install)
 * [Setup](#setup)
@@ -43,7 +46,7 @@ Optional parameters and named arguments are fully integrated in both **IntelliJ 
 * [Author](#author)
 <!-- TOC -->
 
-## Optional parameters
+# Optional parameters
 
 An optional parameter has a default value, much like a field or local variable can have an initial value.
 ```java
@@ -53,10 +56,22 @@ The default value `""` makes the `text` parameter optional so that `println` may
 ```java
 println(); // same as calling println("");
 println("flubber");
-println(text: "flubber"); // named argument syntax
+println(text:"flubber"); // named argument syntax
 ```
 
-A default value expression may be arbitrarily complex and can reference preceding parameters.
+Optional parameters are supported equally in methods, constructors, and records.
+```java
+// method
+void chair(Kind kind, Wood wood = Walnut, boolean antique = false) {...}
+
+// constructor
+Chair(Kind kind, Wood wood = Walnut, boolean antique = false) {...}
+
+// record
+record Chair(Kind kind, Wood wood = Walnut, boolean antique = false) {...}
+```
+
+A default parameter value may be arbitrarily complex and may reference preceding parameters.
 ```java
 public record Destination(Country country, String city = country.capital()) {}
 ```
@@ -69,35 +84,35 @@ new Item(123, "Table");
 new Item("Chair"); // default value id = -1 is used
 ```
 
-## Named arguments
+# Named arguments
 
 Arguments may be named when calling any method, constructor, or record having optional parameters.
 ```java
-void configure(String name,
-               boolean showName = true,
-               int color = themeColor(),
-               int size = 64, 
-               boolean autoSave = true) {...}
+record Pizza(Size size,
+             Kind kind = Thin,
+             Sauce sauce = Red,
+             Cheese cheese = Mozzarella, 
+             boolean pepperoni = false,
+             boolean mushrooms = false,
+             boolean prosciutto = false) {}
 ```
 Naming arguments adds clarity to call sites. And with optional parameters you only have to supply the arguments you need.
 ```java
-configure(name: "MyConfig",
-          size: 128,
-          autoSave: false);
+new Pizza(size:Medium, kind:Detroit, pepperoni:true);
 ```
 Order named arguments to your liking, and mix positional arguments with named arguments. But a labeled argument may not
 precede a positional argument.
 ```java
-configure("MyConfig",
-          autoSave: false,
-          color: 0x7393B3,
-          showName: false);
+new Pizza(Large,
+          proscuitto:true,
+          mushrooms:true, 
+          cheese:Goat);
 ```
 
-## Overloading and overriding
+# Overloading and overriding
 
-A method override automatically inherits all the super method's default parameter values. The default values are fixed in
-the super class and may not be changed in the overriding method.
+A method override inherits all the super method's default parameter values. The default values are fixed in the super class
+and may not be changed in the overriding method.
 ```java
 public interface Contacts {
   Contact add(String name, String address = null, String phone = null);
@@ -116,12 +131,12 @@ void func(String a, int b = 0, int c = b )
 ```
 Here, `func` covers the following method signatures.
 ```java
-void func(String) 
-void func(String, int) 
-void func(String, int, int)
+func(String) 
+func(String, int) 
+func(String, int, int)
 ```
-Because `func` can be called using these signatures, together they are called the _signature set_ of `func`. Accordingly,
-`func` automatically overrides any super type method with a signature belonging to this set.
+This is the _signature set_ of `func`. Accordingly, `func` indirectly overrides any super type method with a signature
+belonging to this set.
 ```java
 class Base {
   void func(String a, int b) {...}
@@ -135,8 +150,24 @@ class Sub extends Base {
 Base base = new Sub();
 base.func("hi", 5); // calls Sub#func
 ```
-Here `Sub#func` indirectly overrides `Base#func`. As with any override, the compiler issues a warning for this if `@Override`
-is not applied to `Sub#func`.
+Here `Sub#func` indirectly overrides `Base#func`.
+
+A method having optional parameters may override another one, but only by adding additional optional parameters.
+```java
+class Base {
+  void func(String a, int b = 0) {...}
+}
+
+class Sub extends Base {
+  @Override
+  void func(String a, int b, int c = b) {...}
+}
+
+Base base = new Sub();
+base.func("hi"); // calls Sub#func
+```
+The same rules apply: `Sub#func` inherits parameter defaults from `Base#func`, and the signature set of `Sub#func` expands
+to include the signature set of `Base#func`. Generally, `Sub#func` overrides _all_ of `Base#func`.
 
 Overloading is permitted with optional parameter methods, however a compiler error results if signature sets overlap.
 ```java
@@ -147,10 +178,16 @@ class Sample {
 }
 ```
 
-## Binary compatible
+# Binary compatible
 
+There are three aspects of binary compatibility with optional parameters and named arguments.
+- Backward compatible
+- Binary accessible
+- Java standard compatible
+
+### Backward compatible                                                      
 Adding new optional parameters to existing methods is binary compatible with code compiled before adding the new parameters.
-                                                                     
+
 Version 1.
 ```java
 public void size(int width) {...}
@@ -160,32 +197,30 @@ Version 2 adds optional parameter `height`.
 public void size(int width, int height = width) {...}
 ```
 Code compiled with v1 still runs with v2, without having to recompile with v2.
+                                                       
+### Binary accessible
+Although not built into the JVM, optional parameters and named arguments are just as accessible and usable from compiled
+code as from source.
+```java
+// .class file
+public class MyClass {
+  public void size(int width, int height = width) {...}
+}
+```
+```java
+// .java file
+MyClass myClass = new MyClass();
+myClass.size(width:100);
+```
+`size` in .class file `MyClass` is directly accessible as if from source.
 
-Additionally, code compiled without `manifold-params` can still benefit from code compiled with optional parameters. In
-this case default parameter values can be used with calls to method overloads that are generated for this purpose.  
+### Java standard compatible
+Code compiled without `manifold-params` can still benefit from code compiled with optional parameters. In
+this case default parameter values can be used with calls to method overloads that are generated for this purpose.
 ```java
 size(myWidth);
 size(myWidth, myHeight);
 ``` 
-
-## Notes & tidbits
-
-#### Why limit named arguments to only methods with optional parameters?
-Since the feature is neither part of the language nor the JVM, supporting named args for arbitrary methods would incur a
-bit of perf/space overhead for each method/constructor/record, which isn't really justifiable considering modern IDEs like
-IntelliJ IDEA already render positional argument names, aka "name hints", at call sites. Basically, if you want this feature,
-you already have it, more or less.
-
-But named arguments are indispensable when it comes to selecting optional parameters. The synergy between these two features
-is quite powerful. The result is a concise, flexible, and maintainable alternative to builders and "telescoping" overloads.
-                 
-#### Why does the named argument syntax use `:` instead of `=`?
-Indeed, many languages having named arguments, such as Kotlin and Scala, use the syntax: `foo(x = 8)`. One problem with
-that, however, is that Java's assignment expression clashes; `x = 8` may be parsed as an assignment as opposed to a
-mapping of an argument. While this could be worked out, overloading the assignment operator in a prominent place like argument
-parsing probably isn't the best idea.
-
-Perhaps the main reason is aesthetics. `x: 8` just reads more like a naming or labeling of something. Shrug. 
 
 # IDE Support
 
