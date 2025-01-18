@@ -3082,8 +3082,9 @@ public class ExtensionTransformer extends TreeTranslator
         boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
         isSmartStatic[0] = (boolean)annotation.values.get( 2 ).snd.getValue();
         boolean isIntercept = (boolean)annotation.values.get( 3 ).snd.getValue();
+        boolean isExtensionSource = (boolean) annotation.values.get( 4 ).snd.getValue();
 
-        if ( isIntercept && !shouldInterceptMethod( tree, sym ) )
+        if( isIntercept && !shouldInterceptMethod( tree, sym, isExtensionSource ) )
         {
           // Do not replace an intercepted method call in the method declaration of the intercepted method
           return null;
@@ -3113,7 +3114,7 @@ public class ExtensionTransformer extends TreeTranslator
             Symbol.MethodSymbol extMethodSym = (Symbol.MethodSymbol)elem;
             List<Symbol.VarSymbol> extParams = extMethodSym.getParameters();
             List<Symbol.VarSymbol> calledParams = ((Symbol.MethodSymbol)sym).getParameters();
-            int thisOffset = isStatic && !isSmartStatic[0] ? 0 : 1;
+            int thisOffset = isStatic && !isSmartStatic[0] && !isExtensionSource ? 0 : 1;
             if( extParams.size() - thisOffset != calledParams.size() )
             {
               continue;
@@ -3142,10 +3143,12 @@ public class ExtensionTransformer extends TreeTranslator
    *
    * @param tree The method invocation represented as a {@link JCTree.JCMethodInvocation} tree.
    * @param sym The symbol representing the method being called. This is the method to check for interception.
+   * @param isExtensionSource A flag indicating whether the source of the method is an `ExtensionSource`.
+   *                           If true, special handling is applied to the first parameter (which isn't annotated).
    *
    * @return true if the method should be intercepted; false otherwise.
    */
-  private boolean shouldInterceptMethod( JCTree.JCMethodInvocation tree, Symbol sym )
+  private boolean shouldInterceptMethod( JCTree.JCMethodInvocation tree, Symbol sym, boolean isExtensionSource )
   {
     Tree parent = _tp.getParent( tree );
     // Traverse up the tree to find the method declaration
@@ -3163,14 +3166,22 @@ public class ExtensionTransformer extends TreeTranslator
     int paramsToSubtract = 0;
     if( !methodDecl.params.isEmpty() )
     {
-      List<JCAnnotation> annotations = methodDecl.getParameters().get( 0 ).getModifiers().getAnnotations();
-      if( !annotations.isEmpty() )
+      if( isExtensionSource )
       {
-        String annotationFqn = annotations.get( 0 ).getAnnotationType().type.toString();
-        if( This.class.getTypeName().equals( annotationFqn ) || ThisClass.class.getTypeName().equals( annotationFqn ) )
+        // Source of the method is an ExtensionSource, first parameter isn't annotated, but should be ignored
+        paramsToSubtract = 1;
+      }
+      else
+      {
+        List<JCAnnotation> annotations = methodDecl.getParameters().get( 0 ).getModifiers().getAnnotations();
+        if( !annotations.isEmpty() )
         {
-          // If the method's first parameter is annotated with @This or @ThisClass, it should be ignored.
-          paramsToSubtract = 1;
+          String annotationFqn = annotations.get( 0 ).getAnnotationType().type.toString();
+          if( This.class.getTypeName().equals( annotationFqn ) || ThisClass.class.getTypeName().equals( annotationFqn ) )
+          {
+            // If the method's first parameter is annotated with @This or @ThisClass, it should be ignored.
+            paramsToSubtract = 1;
+          }
         }
       }
     }

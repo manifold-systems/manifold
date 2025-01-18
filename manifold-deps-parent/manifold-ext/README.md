@@ -717,11 +717,68 @@ to your project separately depending on its needs.
 >}
 >```
 
-## Generating Extension Classes
+## Using Utility Class Methods as Extensions
 
-Sometimes the contents of an extension class reflect metadata from other resources.  In this case rather 
-than painstakingly writing such classes by hand it's easier and less error-prone to produce them via 
-type manifold.  To facilitate this use-case, your type manifold must implement the `IExtensionClassProducer`
+Methods in utility classes are often good candidates to be used as extension methods. 
+However, since these methods are not annotated, they cannot be used directly as extension methods.
+
+Rather than manually converting all those methods into extensions, which can be time-consuming and error-prone,
+you can leverage Manifold's built-in functionality to automate this process. 
+By specifying the utility class as a parameter to the `@ExtensionSource` annotation, 
+you can easily incorporate its methods as extension methods for the target type.
+
+### Basic Usage
+Suppose you want to use methods from the `org.apache.commons.lang3.StringUtils` class as extension methods for
+`java.lang.String`. You can do this with the following code:
+
+```java
+package extensions.java.lang.String;
+
+import java.org.apache.commons.lang3.StringUtils;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.ExtensionSource;
+
+@Extension
+@ExtensionSource( source = StringUtils.class )
+public class MyStringExt {
+    // Additional extension methods can be added here
+}
+```
+With this approach, all `public`, `static` methods from the `StringUtils` class that take a `String` as their first 
+parameter will be automatically available as extension methods for `String` objects.
+Any methods that conflict with existing methods in the `String` class (i.e., methods with the same signature) 
+will be excluded by default.
+
+### Overriding Existing Methods
+If you want to override existing methods (i.e., make the methods from the utility class replace the methods already present on the target object), 
+you can set the `overrideExistingMethods` attribute to `true`:
+
+
+```java
+@ExtensionSource( source = Files.class, overrideExistingMethods = true )
+```
+### Granular Control Over Included and Excluded Methods
+
+You can further control which methods are included or excluded by specifying the method signatures you want to include or exclude. 
+This is achieved using the `type` and `methods` attributes in the `@ExtensionSource` annotation.
+
+For example, to include (or exclude) only specific methods from `StringUtils`, you can specify the `INCLUDE` or `EXCLUDE` types and provide method signatures:
+
+```java
+@ExtensionSource( 
+    source = StringUtils.class,
+    overrideExistingMethods = true,
+    type = ExtensionMethodType.INCLUDE, // <-- change to EXCLUDE to exclude specified methods
+    methods = {
+        @MethodSignature( name = "substring", paramTypes = { String.class, int.class } )
+        // others
+    } )
+```
+
+### Manually Generating Extension Classes
+
+Manifold also provides the option to manually generate extension classes by creating your own type manifolds.
+To do this, your type manifold must implement the `IExtensionClassProducer`
 interface so that the `ExtensionManifold` can discover information about the classes your type
 manifold produces. For the typical use case your type manifold should extend `AbstractExtensionProducer`.
 

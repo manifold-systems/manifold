@@ -41,6 +41,24 @@
         <artifactId>junit</artifactId>
         <scope>compile</scope>
       </dependency>
+      <dependency>
+        <groupId>org.junit.vintage</groupId>
+        <artifactId>junit-vintage-engine</artifactId>
+        <version>5.11.4</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>5.11.4</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>3.27.2</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
 
     <build>

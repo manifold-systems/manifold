@@ -31,11 +31,8 @@ import manifold.api.util.JavacDiagnostic;
 import manifold.api.util.JavacUtil;
 import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.ForwardingExtensionMethod;
-import manifold.ext.rt.api.Expires;
-import manifold.ext.rt.api.Extension;
-import manifold.ext.rt.api.Intercept;
-import manifold.ext.rt.api.This;
-import manifold.ext.rt.api.ThisClass;
+import manifold.ext.rt.api.*;
+import manifold.ext.rt.api.MethodSignature;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavacPlugin;
 import manifold.rt.api.Array;
@@ -47,6 +44,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static manifold.ext.ExtensionManifold.EXTENSIONS_PACKAGE;
@@ -194,6 +192,49 @@ class ExtCodeGen
     return srcExtended;
   }
 
+  /**
+   * Simple way to represents the method signature of a method, consisting of the method name and a list of parameter types.
+   */
+  private static class SimpleMethodSignature
+  {
+    public final String methodName;
+    public final List<String> parameterTypes;
+
+    SimpleMethodSignature( String methodName, List<String> parameterTypes )
+    {
+      this.methodName = methodName;
+      this.parameterTypes = parameterTypes;
+    }
+
+    /**
+     * Compares this method signature with another method to determine if they are the same.
+     * The method is considered the same if the names match and the parameter types are identical.
+     *
+     * @param method the method to compare against
+     *
+     * @return true if the method signature matches, false otherwise
+     */
+    public boolean isSameAs( AbstractSrcMethod<?> method )
+    {
+      if( !method.getSimpleName().equals( methodName ) || method.getParameters().size() != parameterTypes.size() )
+      {
+        return false;
+      }
+      Iterator<String> thisParamIter = parameterTypes.iterator();
+      Iterator<SrcParameter> methodParamIter = method.getParameters().iterator();
+      while( thisParamIter.hasNext() )
+      {
+        String thisParam = thisParamIter.next();
+        SrcParameter methodParam = methodParamIter.next();
+        if( !thisParam.equals( methodParam.getType().getFqName() ) )
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+  }
+
   private String addExtensions( SrcClass extendedClass, DiagnosticListener<JavaFileObject> errorHandler )
   {
     boolean methodExtensions = false;
@@ -211,7 +252,7 @@ class ExtCodeGen
         {
           for( AbstractSrcMethod method: srcExtension.getMethods() )
           {
-            addExtensionMethod( method, extendedClass, errorHandler );
+            addExtensionMethod( method, extendedClass, errorHandler, false );
             methodExtensions = true;
           }
           for( SrcType iface: srcExtension.getInterfaces() )
@@ -223,6 +264,7 @@ class ExtCodeGen
           {
             addExtensionAnnotation( anno, extendedClass );
             annotationExtensions = true;
+            addExtensionSourceAnnotation( anno, extendedClass, errorHandler );
           }
         }
         else
@@ -243,6 +285,106 @@ class ExtCodeGen
     finally
     {
       _model.popProcessing( _fqn );
+    }
+  }
+
+  /**
+   * Adds the {@link ExtensionSource} annotation to a class, processing various parameters like the
+   * source class, method inclusion/exclusion, and method definitions.
+   * <p>
+   * This method checks the provided annotation for configuration related to source class, method
+   * overriding, method types (inclusion/exclusion), and specific methods to include. It then processes
+   * the methods of the specified class and adds appropriate extension methods based on the provided
+   * configuration.
+   *
+   * @param anno the annotation expression containing the {@link ExtensionSource} annotation
+   * @param extendedClass the class that will be extended with the methods
+   * @param errorHandler the error handler
+   */
+  private void addExtensionSourceAnnotation( SrcAnnotationExpression anno, SrcClass extendedClass,
+    DiagnosticListener<JavaFileObject> errorHandler )
+  {
+    if( !anno.getAnnotationType().equals( ExtensionSource.class.getName() ) )
+    {
+      return;
+    }
+    // Helper function to extract fully qualified class names (FQN) from class name strings
+    UnaryOperator<String> getFqnFromClass = className -> className.substring( 0, className.lastIndexOf( ".class" ) );
+    // Extract the 'source' parameter from the annotation
+    String source = anno.getArgument( ExtensionSource.source ).getValue().toString();
+    SrcClass srcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( getFqnFromClass.apply( source ) );
+
+    // Extract the 'overrideExistingMethods' parameter from the annotation
+    SrcArgument overwriteExistingMethodsArg = anno.getArgument( ExtensionSource.overrideExistingMethods );
+    boolean overrideExistingMethods = overwriteExistingMethodsArg != null &&
+      Boolean.parseBoolean( overwriteExistingMethodsArg.getValue().toString() );
+
+    // Extract the 'type' parameter from the annotation
+    SrcArgument typeArg = anno.getArgument( ExtensionSource.type );
+    ExtensionMethodType type = typeArg == null ? ExtensionMethodType.EXCLUDE :
+      ExtensionMethodType.valueOf( typeArg.getValue().toString().substring( typeArg.getValue().toString().lastIndexOf( '.' ) + 1 ) );
+
+    // Extract the 'methods' parameter from the annotation
+    SrcArgument methodsArg = anno.getArgument( ExtensionSource.methods );
+    List<SimpleMethodSignature> methodDefinitions = new ArrayList<>();
+    if( methodsArg != null )
+    {
+      // Extract the method definitions from the 'methods' argument
+      ( (SrcAnnotationExpression) methodsArg.getValue() ).getArguments().forEach( methodDefinitionArg -> {
+        SrcAnnotationExpression methodDefinition = (SrcAnnotationExpression) methodDefinitionArg.getValue();
+
+        // Extract the method name
+        String methodName = methodDefinition.getArgument( MethodSignature.name ).getValue().toString();
+        methodName = methodName.substring( 1, methodName.length() - 1 );
+
+        // Extract the parameter types
+        List<SrcArgument> paramTypeArgs =
+          ( (SrcAnnotationExpression) methodDefinition.getArgument( MethodSignature.paramTypes ).getValue() )
+            .getArguments();
+        List<String> paramTypes = paramTypeArgs.stream()
+          .map( paramType -> getFqnFromClass.apply( paramType.getValue().toString() ) )
+          .collect( Collectors.toList() );
+
+        // collect the method definitions
+        methodDefinitions.add( new SimpleMethodSignature( methodName, paramTypes ) );
+      } );
+    }
+
+    // Iterate over all methods in the source class
+    for( AbstractSrcMethod<?> method : srcClass.getMethods() )
+    {
+      // method should have at least one parameter, which is of the type that we want to write extensions for
+      if( !method.getParameters().isEmpty() && method.getParameters().get( 0 ).getType().getFqName().equals( _fqn ) )
+      {
+        // Try to find a matching method signature in the configured method definitions
+        Optional<SimpleMethodSignature> configuredMethod =
+          methodDefinitions.stream().filter( methodDef -> methodDef.isSameAs( method ) ).findAny();
+        // handle the method, based on the config values
+        if( ( type == ExtensionMethodType.EXCLUDE && configuredMethod.isPresent() )
+          || type == ExtensionMethodType.INCLUDE && !configuredMethod.isPresent() )
+        {
+          continue;
+        }
+        // Annotate the first parameter with @This so it's treated as an extension method
+        method.getParameters().get( 0 ).addAnnotation( This.class );
+        // Check if a method with the same signature already exists in the extended class
+        AbstractSrcMethod duplicate = findMethod( method, extendedClass );
+        if( duplicate != null )
+        {
+          if( overrideExistingMethods )
+          {
+            // If overwriting, add the @Intercept annotation to intercept the method
+            method.addAnnotation( Intercept.class );
+          }
+          else
+          {
+            // Skip if we don't want to overwrite existing methods
+            continue;
+          }
+        }
+        // Add the method as an extension method
+        addExtensionMethod( method, extendedClass, errorHandler, true );
+      }
     }
   }
 
@@ -399,7 +541,8 @@ class ExtCodeGen
 
   private void addExtensionAnnotation( SrcAnnotationExpression anno, SrcClass extendedType )
   {
-    if( anno.getAnnotationType().equals( Extension.class.getName() ) )
+    if( anno.getAnnotationType().equals( Extension.class.getName() )
+      || anno.getAnnotationType().equals( ExtensionSource.class.getName() ) )
     {
       return;
     }
@@ -411,7 +554,7 @@ class ExtCodeGen
   }
 
   private void addExtensionMethod( AbstractSrcMethod<?> method, SrcClass extendedType,
-    DiagnosticListener<JavaFileObject> errorHandler )
+    DiagnosticListener<JavaFileObject> errorHandler, boolean isExtensionSource )
   {
     if( !isExtensionMethod( method, extendedType ) )
     {
@@ -433,7 +576,8 @@ class ExtCodeGen
           .addArgument( ExtensionMethod.extensionClass, String.class, ( (SrcClass) method.getOwner() ).getName() )
           .addArgument( ExtensionMethod.isStatic, boolean.class, !isInstanceExtensionMethod( method, extendedType ) )
           .addArgument( ExtensionMethod.isSmartStatic, boolean.class, hasThisClassAnnotation( method ) )
-          .addArgument( ExtensionMethod.isIntercept, boolean.class, true ) );
+          .addArgument( ExtensionMethod.isIntercept, boolean.class, true )
+          .addArgument( ExtensionMethod.isExtensionSource, boolean.class, isExtensionSource ) );
       return;
     }
 
@@ -475,10 +619,11 @@ class ExtCodeGen
       // mark as extension method for efficient lookup during method call replacement
       srcMethod.addAnnotation(
         new SrcAnnotationExpression( ExtensionMethod.class )
-          .addArgument( ExtensionMethod.extensionClass, String.class, ((SrcClass)method.getOwner()).getName() )
+          .addArgument( ExtensionMethod.extensionClass, String.class, ( (SrcClass) method.getOwner() ).getName() )
           .addArgument( ExtensionMethod.isStatic, boolean.class, !isInstanceExtensionMethod )
           .addArgument( ExtensionMethod.isSmartStatic, boolean.class, hasThisClassAnnotation( method ) )
-          .addArgument( ExtensionMethod.isIntercept, boolean.class, false ) );
+          .addArgument( ExtensionMethod.isIntercept, boolean.class, false )
+          .addArgument( ExtensionMethod.isExtensionSource, boolean.class, isExtensionSource ) );
     }
     else
     {

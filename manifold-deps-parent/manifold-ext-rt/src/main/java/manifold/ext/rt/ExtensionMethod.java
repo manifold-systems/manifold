@@ -43,6 +43,15 @@ public @interface ExtensionMethod
   String isSmartStatic = "isSmartStatic";
   boolean isSmartStatic();
 
+  /**
+   * True if the method is intercepted, and it body needs to be rewritten. See {@link manifold.ext.rt.api.Intercept}
+   */
   String isIntercept = "isIntercept";
   boolean isIntercept();
+
+  /**
+   * True if the origin of the method is from an (unannotated) class. See {@link manifold.ext.rt.api.ExtensionSource}
+   */
+  String isExtensionSource = "isExtensionSource";
+  boolean isExtensionSource();
 }

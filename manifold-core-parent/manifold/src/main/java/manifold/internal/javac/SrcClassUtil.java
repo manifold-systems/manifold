@@ -20,6 +20,14 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.*;
+import com.sun.tools.javac.code.Attribute.Array;
+import com.sun.tools.javac.code.Attribute.Class;
+import com.sun.tools.javac.code.Attribute.Compound;
+import com.sun.tools.javac.code.Attribute.Enum;
+import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.TypeSymbol;
+import com.sun.tools.javac.code.Type.ArrayType;
+import com.sun.tools.javac.code.Type.MethodType;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Pair;
@@ -34,6 +42,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 
 import manifold.api.gen.*;
+import manifold.api.gen.AbstractSrcClass.Kind;
 import manifold.api.host.IModule;
 import manifold.api.util.JavacUtil;
 import manifold.rt.api.util.ManEscapeUtil;
@@ -954,20 +963,88 @@ public class SrcClassUtil
 //        fqn = "androidx.annotation.RecentlyNonNull";
         continue;
       }
-
       SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( fqn );
-      for( Pair<Symbol.MethodSymbol, Attribute> value: annotationMirror.values )
+      boolean multipleAnnotations = false;
+      for( Pair<Symbol.MethodSymbol, Attribute> value : annotationMirror.values )
       {
-        SrcType type = makeSrcType( value );
-        annoExpr.addArgument( value.fst.flatName().toString(), type, value.snd.getValue() );
+        addArguments( annoExpr, value.fst, value.snd );
+        if( value.snd instanceof Attribute.Array )
+        {
+          multipleAnnotations = true;
+          ( (SrcAnnotationArrayExpression) annoExpr.getArguments().get( 0 ).getValue() ).getArguments()
+            .forEach( arg -> srcAnnotated.addAnnotation( (SrcAnnotationExpression) arg.getValue() ) );
+        }
       }
-      srcAnnotated.addAnnotation( annoExpr );
+      if( !multipleAnnotations )
+      {
+        srcAnnotated.addAnnotation( annoExpr );
+      }
     }
   }
 
-  private static SrcType makeSrcType( Pair<Symbol.MethodSymbol, Attribute> value )
+  /**
+   * Adds the arguments from the provided  symbol and attribute to the given annotation expression.
+   * This method handles various types of attributes, including arrays, classes, enums, and constants, and correctly
+   * formats them for use in the annotation expression.
+   * <p>
+   * The method recursively processes compound attributes and constructs the appropriate annotation
+   * arguments, including handling nested structures for array and compound attribute types.
+   *
+   * @param annoExpr the annotation expression to which the arguments will be added.
+   * @param symbol the symbol representing part of the original annotation being processed.
+   * @param attribute the attribute whose value(s) will be added as arguments to the annotation.
+   */
+  private void addArguments( SrcAnnotationExpression annoExpr, Symbol symbol, Attribute attribute )
   {
-    Type t = value.snd.type;
+    SrcType srcType = makeSrcType( attribute.type );
+    String name = symbol.name.toString();
+    if( attribute instanceof Attribute.Array )
+    {
+      Attribute[] values = ( (Array) attribute ).values;
+      SrcAnnotationArrayExpression annoArrayExpr = new SrcAnnotationArrayExpression( srcType.toString() );
+      for( Attribute value : values )
+      {
+        if( value instanceof Attribute.Compound )
+        {
+          SrcAnnotationExpression annoExprInner = new SrcAnnotationExpression( srcType.getFqName() );
+          for( Pair<Symbol.MethodSymbol, Attribute> val : ( (Attribute.Compound) value ).values )
+          {
+            addArguments( annoExprInner, val.fst, val.snd );
+          }
+          SrcArgument srcArgument = new SrcArgument( annoExprInner );
+          annoArrayExpr.addArgument( srcArgument );
+        } else if( value instanceof Attribute.Class )
+        {
+          SrcArgument srcParameter = new SrcArgument( makeSrcType( value.type ), ( (Class) value ).classType.toString() + ".class" );
+          annoArrayExpr.addArgument( srcParameter );
+        } else if( value instanceof Attribute.Enum )
+        {
+          SrcArgument srcParameter = new SrcArgument( makeSrcType( value.type ), ( (Enum) value ).value.toString() );
+          annoArrayExpr.addArgument( srcParameter );
+        } else if( value instanceof Attribute.Constant )
+        {
+          SrcArgument srcParameter = new SrcArgument( makeSrcType( value.type ), ( (Attribute.Constant) value ).value.toString() );
+          annoArrayExpr.addArgument( srcParameter );
+        }
+      }
+      SrcArgument srcArgument = new SrcArgument( annoArrayExpr ).name( name );
+      annoExpr.addArgument( srcArgument );
+    } else if( attribute instanceof Attribute.Class )
+    {
+      SrcIdentifier srcIdentifier = new SrcIdentifier( ( (Class) attribute ).classType.toString() + ".class" );
+      annoExpr.addArgument( name, srcType, srcIdentifier );
+    } else if( attribute instanceof Attribute.Enum )
+    {
+      SrcIdentifier srcIdentifier = new SrcIdentifier( ( (Enum) attribute ).value.toString() );
+      annoExpr.addArgument( name, srcType, srcIdentifier );
+    } else if( attribute instanceof Attribute.Constant )
+    {
+      annoExpr.addArgument( name, srcType, attribute.getValue().toString() );
+    }
+  }
+
+  private static SrcType makeSrcType( Type t )
+  {
     SrcType type = new SrcType( t.toString() );
     if( t.tsym != null )
     {
