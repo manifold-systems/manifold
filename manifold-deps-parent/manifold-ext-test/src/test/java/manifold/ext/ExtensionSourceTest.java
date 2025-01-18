@@ -3,12 +3,11 @@ package manifold.ext;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
+import junit.framework.TestCase;
 
-class ExtensionSourceTest
+public class ExtensionSourceTest extends TestCase
 {
-  @Test
-  void testExtensionSources()
+  public void testExtensionSources()
   {
     String nullString = null;
     String text = "  abc  FoO bar ";
