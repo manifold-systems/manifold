@@ -75,7 +75,6 @@ public class ReflectUtil
     }
   } );
 
-  //
   /**
    * For JDK 12+ using {@code Class#getDeclaredMethods0(boolean)} to access fields and methods that are otherwise
    * filtered via {@code jdk.internal.reflect.Reflection#filterFields(Class, Field[])}.
