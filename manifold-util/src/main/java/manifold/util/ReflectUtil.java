@@ -726,7 +726,7 @@ public class ReflectUtil
       List<Field> fields = fields( cls );
       return fields.stream()
         .map( f -> field( receiver, f.getName() ) )
-        .filter( lf -> filter != null && filter.test( lf ) )
+        .filter( lf -> filter == null || filter.test( lf ) )
         .collect( Collectors.toList() );
     }
     catch( Exception e )

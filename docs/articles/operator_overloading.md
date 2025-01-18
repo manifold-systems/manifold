@@ -241,8 +241,8 @@ Read more about [unit expressions](https://github.com/manifold-systems/manifold/
 
 Using [extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-classes-via-extension)
 you can provide operator implementations for classes you don't otherwise control. For instance, Manifold provides
-operator extensions for [`BigDecimal`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-ext/src/main/java/manifold/ext/extensions/java/math/BigDecimal/ManBigDecimalExt.java)
-and [`BigInteger`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-ext/src/main/java/manifold/ext/extensions/java/math/BigInteger/ManBigIntegerExt.java).
+operator extensions for [`BigDecimal`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-science/src/main/java/manifold/science/extensions/java/math/BigDecimal/ManBigDecimalExt.java)
+and [`BigInteger`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-science/src/main/java/manifold/science/extensions/java/math/BigInteger/ManBigIntegerExt.java).
 These extensions are implemented in the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 dependency.  
 
@@ -272,7 +272,7 @@ modules use operator overloading and unit expressions extensively.
 
 ##Update: _2020/11/13_
 >
->Release 2024.1.49 adds additional operator overloading support for:
+>Release 2024.1.51 adds additional operator overloading support for:
 >
 >* infix/postfix increment/decrement operators  `++` and `--`
 >* compound assignment: operators `+=`, `-=`, `*=`, `/=`, `%=`, 
