@@ -411,29 +411,29 @@ class ExtCodeGen
   }
 
   private void addExtensionMethod( AbstractSrcMethod<?> method, SrcClass extendedType,
-      DiagnosticListener<JavaFileObject> errorHandler )
+    DiagnosticListener<JavaFileObject> errorHandler )
   {
     if( !isExtensionMethod( method, extendedType ) )
     {
       return;
     }
 
-    if( method.getAnnotation(Intercept.class) != null )
+    if( method.getAnnotation( Intercept.class ) != null )
     {
       AbstractSrcMethod originalMethod = findMethod( method, extendedType );
-      if ( originalMethod == null )
+      if( originalMethod == null )
       {
         errorHandler.report( new JavacDiagnostic( null, Diagnostic.Kind.ERROR, 0, 0, 0,
-          ExtIssueMsg.MSG_INTERCEPTION_NOT_FOUND.get( method.signature(), ((SrcClass)method.getOwner()).getName(), extendedType.getName()) ) );
+          ExtIssueMsg.MSG_INTERCEPTION_NOT_FOUND.get( method.signature(), ( (SrcClass) method.getOwner() ).getName(), extendedType.getName() ) ) );
         return;
       }
       // mark as extension method for efficient lookup during method call replacement
       originalMethod.addAnnotation(
-          new SrcAnnotationExpression( ExtensionMethod.class )
-              .addArgument( ExtensionMethod.extensionClass, String.class, ((SrcClass)method.getOwner()).getName() )
-              .addArgument( ExtensionMethod.isStatic, boolean.class, !isInstanceExtensionMethod( method, extendedType ) )
-              .addArgument( ExtensionMethod.isSmartStatic, boolean.class, hasThisClassAnnotation( method ) )
-              .addArgument( ExtensionMethod.isIntercept, boolean.class, true ) );
+        new SrcAnnotationExpression( ExtensionMethod.class )
+          .addArgument( ExtensionMethod.extensionClass, String.class, ( (SrcClass) method.getOwner() ).getName() )
+          .addArgument( ExtensionMethod.isStatic, boolean.class, !isInstanceExtensionMethod( method, extendedType ) )
+          .addArgument( ExtensionMethod.isSmartStatic, boolean.class, hasThisClassAnnotation( method ) )
+          .addArgument( ExtensionMethod.isIntercept, boolean.class, true ) );
       return;
     }
 

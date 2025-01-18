@@ -3136,34 +3136,38 @@ public class ExtensionTransformer extends TreeTranslator
   }
 
   /**
-   * Determines whether a method should be intercepted. A method should not be intercepted if it is invoked
-   * from within the body of the method being intercepted.
+   * Determines whether a method invocation should be intercepted. A method should not be intercepted if
+   * it is invoked from within the body of the method being intercepted (i.e., the invocation is part of
+   * the method’s own execution).
    *
-   * @param tree The method invocation represented as a JCMethodInvocation tree.
-   * @param sym The symbol representing the method being called.
+   * @param tree The method invocation represented as a {@link JCTree.JCMethodInvocation} tree.
+   * @param sym The symbol representing the method being called. This is the method to check for interception.
    *
    * @return true if the method should be intercepted; false otherwise.
    */
   private boolean shouldInterceptMethod( JCTree.JCMethodInvocation tree, Symbol sym )
   {
-    Tree parent = _tp.getParent(tree);
-    while ( !( parent instanceof JCTree.JCMethodDecl ) )
+    Tree parent = _tp.getParent( tree );
+    // Traverse up the tree to find the method declaration
+    while( !( parent instanceof JCTree.JCMethodDecl ) )
     {
       parent = _tp.getParent( parent );
     }
     JCTree.JCMethodDecl methodDecl = (JCTree.JCMethodDecl) parent;
-    if ( !methodDecl.name.toString().equals( sym.name.toString() ) )
+    // If the method name doesn't match, it means we're not calling the same method, so it can be intercepted
+    if( !methodDecl.name.toString().equals( sym.name.toString() ) )
     {
       return true;
     }
+    // Determine how many parameters to subtract for the comparison
     int paramsToSubtract = 0;
     if( !methodDecl.params.isEmpty() )
     {
       List<JCAnnotation> annotations = methodDecl.getParameters().get( 0 ).getModifiers().getAnnotations();
       if( !annotations.isEmpty() )
       {
-        String annotationFqn = annotations.get(0).getAnnotationType().type.toString();
-        if ( This.class.getTypeName().equals( annotationFqn ) || ThisClass.class.getTypeName().equals( annotationFqn ) )
+        String annotationFqn = annotations.get( 0 ).getAnnotationType().type.toString();
+        if( This.class.getTypeName().equals( annotationFqn ) || ThisClass.class.getTypeName().equals( annotationFqn ) )
         {
           // If the method's first parameter is annotated with @This or @ThisClass, it should be ignored.
           paramsToSubtract = 1;
@@ -3171,26 +3175,31 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
 
-    if( paramsToSubtract != 0 ){
-      String objectName = methodDecl.params.get(0).name.toString();
-      if ( !tree.toString().split("\\.", 2)[0].equals(objectName) )
+    if( paramsToSubtract != 0 )
+    {
+      String objectName = methodDecl.params.get( 0 ).name.toString();
+      if( !tree.toString().split( "\\.", 2 )[0].equals( objectName ) )
       {
         // The method does not call its parent. The current object name differs from the parameters name.
         return true;
       }
     }
-    if ( methodDecl.params.length() - paramsToSubtract != tree.args.length() )
+    // Ensure that the number of arguments matches the number of parameters minus any ignored ones
+    if( methodDecl.params.length() - paramsToSubtract != tree.args.length() )
     {
-      // The method does not call its parent. The number of parameters does not match.
+      // If the argument count doesn't match the parameter count, it can be intercepted
       return true;
     }
-    for ( int i = 1; i < methodDecl.params.length(); i++ ) {
-      if ( !methodDecl.params.get( i ).type.tsym.equals( tree.args.get( i - paramsToSubtract ).type.tsym ) ) {
-        // The method does not call its parent. The argument type does not match the parameter type of the parent method.
+    // Compare the argument types to the method parameter types (ignoring the first parameter if needed)
+    for( int i = 1; i < methodDecl.params.length(); i++ )
+    {
+      if( !methodDecl.params.get( i ).type.tsym.equals( tree.args.get( i - paramsToSubtract ).type.tsym ) )
+      {
+        // If the argument type doesn't match the parameter type, it can be intercepted
         return true;
       }
     }
-    // The method call its parent, it should not be intercepted
+    // If all checks pass, the method is calling itself and should not be intercepted
     return false;
   }
 
