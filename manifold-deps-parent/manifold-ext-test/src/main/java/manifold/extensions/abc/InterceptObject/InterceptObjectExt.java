@@ -1,25 +1,25 @@
-package manifold.extensions.abc.MyObject;
+package manifold.extensions.abc.InterceptObject;
 
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.Intercept;
 import manifold.ext.rt.api.This;
-import abc.MyObject;
+import abc.InterceptObject;
 
 @Extension
-public class MyObjectExt
+public class InterceptObjectExt
 {
 
   @Extension
   public static String sayHello( String firstName, String lastName )
   {
-    return MyObject.sayHello( firstName + " " + lastName );
+    return InterceptObject.sayHello( firstName + " " + lastName );
   }
 
   @Intercept
   @Extension
   public static String sayHello( String name )
   {
-    return name == null ? "hello unknown" : MyObject.sayHello( name );
+    return name == null ? "hello unknown" : InterceptObject.sayHello( name );
   }
 
   @Extension
@@ -29,8 +29,8 @@ public class MyObjectExt
   }
 
   @Intercept
-  public static String repeatSelf( @This MyObject myObject, int times )
+  public static String repeatSelf( @This InterceptObject interceptObject, int times )
   {
-    return times < 0 ? "negative amount" : myObject.repeatSelf( times );
+    return times < 0 ? "negative amount" : interceptObject.repeatSelf( times );
   }
 }

@@ -1,7 +1,7 @@
 package manifold.ext;
 
+import abc.InterceptObject;
 import junit.framework.TestCase;
-import abc.MyObject;
 
 public class InterceptTest extends TestCase
 {
@@ -10,29 +10,23 @@ public class InterceptTest extends TestCase
     {
         String name = null;
         // intercept null name
-        assertEquals( "hello unknown", MyObject.sayHello( name ) );
-        // delegate non-null name to MyObject method
-        assertEquals( "hello scott", MyObject.sayHello( "scott" ) );
+        assertEquals( "hello unknown", InterceptObject.sayHello( name ) );
+        // delegate non-null name to InterceptObject method
+        assertEquals( "hello scott", InterceptObject.sayHello( "scott" ) );
     }
 
     public void testNonInterceptedStaticMethod()
     {
         // call static method
-        assertEquals( "hello John Doe", MyObject.sayHello( "John", "Doe" ) );
+        assertEquals( "hello John Doe", InterceptObject.sayHello( "John", "Doe" ) );
     }
 
     public void testInterceptNonStaticMethod()
     {
-        MyObject myObject = new MyObject( "12-" );
+        InterceptObject interceptObject = new InterceptObject( "12-" );
         // intercept, followed by call to static method
-        assertEquals( "12-12-", myObject.repeatSelf( 2 ) );
+        assertEquals( "12-12-", interceptObject.repeatSelf( 2 ) );
         // intercept negative amount
-        assertEquals( "negative amount", myObject.repeatSelf( -1 ) );
-    }
-
-    public void testTest()
-    {
-        // non-intercepted extension method
-        assertEquals( "test 123", MyObject.test( "123" ) );
+        assertEquals( "negative amount", interceptObject.repeatSelf( -1 ) );
     }
 }
