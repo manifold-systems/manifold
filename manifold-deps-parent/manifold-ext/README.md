@@ -209,6 +209,13 @@ text = "  myTestString  ";
 text.trim(); // returns 'myTestString'
 ```
 
+> [!IMPORTANT]  
+> **Method invocations in external code cannot be intercepted.** 
+> 
+> This means that any method calls made within code outside of the current context, such as those in third-party libraries,
+> are not subject to interception.
+> Any logic or behavior defined in external code remains unaffected by the interception mechanism.
+
 ## Generics
 
 You can extend generic classes too and define generic methods. This is how Manifold extension libraries
