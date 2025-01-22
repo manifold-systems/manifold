@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
+import manifold.ext.rt.api.ThisClass;
 
 /**
  */
@@ -18,6 +19,22 @@ public abstract class MyStringExt implements Iterable<Character>
   public static String times( @This String thiz, String that )
   {
     return thiz + that;
+  }
+
+  public static String duplicate( @This String thiz )
+  {
+    return thiz + thiz;
+  }
+
+  public static String concatenate( @This String thiz, int arg )
+  {
+    return thiz + arg;
+  }
+
+  @Extension
+  public static String staticClassMethod( int arg )
+  {
+    return "static class method - " + arg;
   }
 
   public static boolean isAlpha( @This String thiz )

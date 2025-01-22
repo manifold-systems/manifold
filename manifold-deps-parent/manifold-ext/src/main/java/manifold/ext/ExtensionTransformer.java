@@ -43,7 +43,10 @@ import manifold.ext.rt.ReflectionRuntimeMethods;
 import manifold.ext.rt.RuntimeMethods;
 import manifold.ext.rt.api.*;
 import manifold.internal.javac.*;
-import manifold.rt.api.*;
+import manifold.rt.api.Array;
+import manifold.rt.api.FragmentValue;
+import manifold.rt.api.IncrementalCompile;
+import manifold.rt.api.Precompile;
 import manifold.rt.api.util.Pair;
 import manifold.rt.api.util.TypesUtil;
 import manifold.util.JreUtil;
@@ -1431,10 +1434,9 @@ public class ExtensionTransformer extends TreeTranslator
 
     if( isExtensionMethod( tree.sym ) )
     {
-      // Method references not supported on extension methods
-
-      _tp.report( tree, Diagnostic.Kind.ERROR,
-        ExtIssueMsg.MSG_EXTENSION_METHOD_REF_NOT_SUPPORTED.get( tree.sym.flatName() ) );
+      MethodReferenceToLambda methodReferenceToLambda = new MethodReferenceToLambda( _tp.getContext(), _tp.getTreeMaker() );
+      result = methodReferenceToLambda.convert( tree,
+        methodCall -> configMethod( tree, (Symbol.MethodSymbol) tree.sym, methodCall ) );
     }
     else if( isStructuralMethod( tree.sym ) )
     {

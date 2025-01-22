@@ -7,6 +7,11 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import junit.framework.TestCase;
 import manifold.api.type.BasicIncrementalCompileDriver;
 import manifold.api.type.ClassType;
@@ -58,6 +63,36 @@ public class SimpleTest extends TestCase
     ContributorKind.Primary.hiContributorKind();
     ClassType.Enum.hiClassType();
     new BasicIncrementalCompileDriver(true).hiBasic();
+  }
+
+  public void testExtensionWithMethodRef()
+  {
+    // Consumer
+    Stream.of("this is impossible", "Foo").forEach( String::echo );
+
+    // Function
+    ArrayList<String> elements = new ArrayList<>();
+    elements.add( "FooFoo" );
+    elements.add( "BarBar" );
+    assertEquals(elements, Stream.of("Foo", "Bar").map( String::duplicate ).collect( Collectors.toList()) );
+
+    // BiFunction
+    Map<String, Integer> map = new HashMap<>();
+    map.add( "Foo" , 1 );
+    map.add( "Bar" ,  2);
+    map.forEach( String::concatenate );
+
+    // interface
+    assertEquals( "public method",  Stream.of(new MyInterface() {}).map( MyInterface::myPublicMethod ).collect( Collectors.joining()));
+
+    // static class method
+    elements = new ArrayList<>();
+    elements.add( "static class method - 1" );
+    assertEquals(elements,  Stream.of(1).map( String::staticClassMethod ).collect( Collectors.toList() ) );
+  }
+
+  interface MyInterface
+  {
   }
 
   public void testSelfTypeOnExtension()
