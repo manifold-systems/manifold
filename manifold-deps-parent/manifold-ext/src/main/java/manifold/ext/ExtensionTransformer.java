@@ -60,6 +60,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static com.sun.tools.javac.code.Flags.*;
@@ -1431,30 +1432,78 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitReference( JCTree.JCMemberReference tree )
   {
     super.visitReference( tree );
-//    MethodReferenceToLambda methodReferenceToLambda = new MethodReferenceToLambda( _tp.getContext(), _tp.getTreeMaker() );
-//    result = methodReferenceToLambda.convert( tree,
-//      methodCall -> configMethod( tree, (Symbol.MethodSymbol) tree.sym, methodCall ) );
+    result = methodRefToLambda( tree, methodCall -> configMethod( tree, (Symbol.MethodSymbol) tree.sym, methodCall ) );
+  }
 
-    if( isExtensionMethod( tree.sym ) )
+  /**
+   * Converts a JCMemberReference (method reference) to a JCLambda (lambda expression).
+   *
+   * @param methodRef The JCMemberReference to convert.
+   * @param methodTransformer the function to apply on the created method call
+   *
+   * @return A JCLambda representing the lambda equivalent of the method reference.
+   */
+  public JCTree.JCLambda methodRefToLambda( JCTree.JCMemberReference methodRef, UnaryOperator<JCTree.JCMethodInvocation> methodTransformer )
+  {
+    TreeMaker make = _tp.getTreeMaker();
+    Types types = _tp.getTypes();
+    Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) methodRef.sym;
+    ParamAndDecl paramAndDecl = createParameter( methodSymbol.owner.type, methodRef.pos, methodSymbol );
+    java.util.List<ParamAndDecl> lambdaParams = methodSymbol.params.stream()
+      .map( varSymbol -> createParameter( varSymbol.type, varSymbol.pos, methodSymbol ) )
+      .collect( Collectors.toList() );
+
+    // Create the lambda's method invocation (e.g., x -> x.methodName())
+    JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(),  // No receiver (it will be the lambda parameter)
+      make.Select( paramAndDecl.param, methodSymbol ),  // Instance method call on the parameter (x.methodName)
+      List.from( lambdaParams.stream().map( pd -> pd.param ).collect( Collectors.toList() ) )  // Arguments for the method
+    );
+    methodCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
+
+    // method callback
+    methodCall = methodTransformer.apply( methodCall );
+    methodCall.type = methodSymbol.type.getReturnType();
+
+    ListBuffer<JCTree.JCVariableDecl> lambdaArgs = new ListBuffer<>();
+    if( !methodSymbol.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
     {
-      MethodReferenceToLambda methodReferenceToLambda = new MethodReferenceToLambda( _tp );
-      result = methodReferenceToLambda.convert( tree, false,
-        methodCall -> configMethod( tree, (Symbol.MethodSymbol) tree.sym, methodCall ) );
+      lambdaArgs.add( paramAndDecl.paramDecl );
     }
-    else if( isStructuralMethod( tree.sym ) )
+    lambdaParams.forEach( pd -> lambdaArgs.add( pd.paramDecl ) );
+
+    // Create the lambda declaration (parameter + body)
+    JCTree.JCLambda lambda = make.Lambda( lambdaArgs.toList(), methodCall );
+    lambda.setPos( methodRef.pos );
+    lambda.type = methodRef.type;
+    lambda.targets = List.of( isStructuralMethod( methodRef.sym ) ? types.erasure( methodRef.type ) : methodRef.type );
+    return lambda;
+  }
+
+  private static class ParamAndDecl
+  {
+    public final JCTree.JCIdent param;
+    public final JCTree.JCVariableDecl paramDecl;
+
+    ParamAndDecl( JCTree.JCIdent param, JCTree.JCVariableDecl paramDecl )
     {
-      // Method references not supported on structural interface methods
-
-      MethodReferenceToLambda methodReferenceToLambda = new MethodReferenceToLambda( _tp );
-      result = methodReferenceToLambda.convert( tree, true,
-        methodCall -> configMethod( tree, (Symbol.MethodSymbol) tree.sym, methodCall ) );
-
-      //todo, see LambdaToMethod for how javac translates a method ref to a lambda, setting ownerAccessible and then
-      // utilizing LambdaToMethod directly should work:
-      //      - tree.ownerAccessible = false;
-      //      - call into LambdaToMethod to transform the method ref to a lambda expr
-      //      - call configMethod() here in case the method is an extension method
+      this.param = param;
+      this.paramDecl = paramDecl;
     }
+  }
+
+  private ParamAndDecl createParameter( Type type, int pos, Symbol symbol )
+  {
+    TreeMaker make = _tp.getTreeMaker();
+    Names names = Names.instance( _tp.getContext() );
+    Name paramName = names.fromString( "x" + UUID.randomUUID() );
+    JCTree.JCVariableDecl paramDecl = make.VarDef( make.Modifiers( FINAL | Flags.PARAMETER ), paramName, make.Type( type ), null );
+    paramDecl.sym = new Symbol.VarSymbol( FINAL, paramDecl.name, type, symbol );
+    paramDecl.type = paramDecl.sym.type;
+    paramDecl.pos = pos;
+    JCTree.JCIdent param = make.Ident( paramDecl.sym );
+    param.type = type;
+    param.pos = pos;
+    return new ParamAndDecl( param, paramDecl );
   }
 
   private boolean isStructuralMethod( Symbol sym )
