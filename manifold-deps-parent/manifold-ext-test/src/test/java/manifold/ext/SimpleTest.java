@@ -1,22 +1,21 @@
 package manifold.ext;
 
 import abc.*;
-
-import java.awt.Rectangle;
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import junit.framework.TestCase;
 import manifold.api.type.BasicIncrementalCompileDriver;
 import manifold.api.type.ClassType;
 import manifold.api.type.ContributorKind;
 import manifold.ext.rt.api.Structural;
+
+import java.awt.*;
+import java.io.Serializable;
+import java.util.List;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -68,32 +67,46 @@ public class SimpleTest extends TestCase
   public void testExtensionWithMethodRef()
   {
     // Consumer
-    Stream.of("this is impossible", "Foo").forEach( String::echo );
+    Stream.of( "this is impossible", "Foo" ).forEach( String::echo );
 
     // Function
     ArrayList<String> elements = new ArrayList<>();
     elements.add( "FooFoo" );
     elements.add( "BarBar" );
-    assertEquals(elements, Stream.of("Foo", "Bar").map( String::duplicate ).collect( Collectors.toList()) );
+    assertEquals( elements, Stream.of( "Foo", "Bar" ).map( String::duplicate ).collect( Collectors.toList() ) );
 
     // BiFunction
     Map<String, Integer> map = new HashMap<>();
-    map.add( "Foo" , 1 );
-    map.add( "Bar" ,  2);
+    map.add( "Foo", 1 );
+    map.add( "Bar", 2 );
     map.forEach( String::concatenate );
 
     // interface
-    assertEquals( "public method",  Stream.of(new MyInterface() {}).map( MyInterface::myPublicMethod ).collect( Collectors.joining()));
+    assertEquals( "public method", Stream.of( new MyInterface() { } )
+      .map( MyInterface::myPublicMethod ).collect( Collectors.joining() ) );
 
     // static class method
     elements = new ArrayList<>();
     elements.add( "static class method - 1" );
-    assertEquals(elements,  Stream.of(1).map( String::staticClassMethod ).collect( Collectors.toList() ) );
+    assertEquals( elements, Stream.of( 1 ).map( String::staticClassMethod ).collect( Collectors.toList() ) );
+
+    // structural interface
+    List<Integer> values = Arrays.asList( Integer.valueOf( 2 ) );
+    elements = new ArrayList<>();
+    elements.add( "myMethod" );
+    assertEquals( elements, values.stream().map( NumberStructural::myMethod ).collect( Collectors.toList() ) );
   }
 
   interface MyInterface
   {
   }
+
+  @Structural
+  public interface NumberStructural
+  {
+    String myMethod();
+  }
+
 
   public void testSelfTypeOnExtension()
   {

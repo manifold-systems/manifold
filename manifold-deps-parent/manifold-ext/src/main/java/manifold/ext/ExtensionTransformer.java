@@ -1431,19 +1431,23 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitReference( JCTree.JCMemberReference tree )
   {
     super.visitReference( tree );
+//    MethodReferenceToLambda methodReferenceToLambda = new MethodReferenceToLambda( _tp.getContext(), _tp.getTreeMaker() );
+//    result = methodReferenceToLambda.convert( tree,
+//      methodCall -> configMethod( tree, (Symbol.MethodSymbol) tree.sym, methodCall ) );
 
     if( isExtensionMethod( tree.sym ) )
     {
-      MethodReferenceToLambda methodReferenceToLambda = new MethodReferenceToLambda( _tp.getContext(), _tp.getTreeMaker() );
-      result = methodReferenceToLambda.convert( tree,
+      MethodReferenceToLambda methodReferenceToLambda = new MethodReferenceToLambda( _tp );
+      result = methodReferenceToLambda.convert( tree, false,
         methodCall -> configMethod( tree, (Symbol.MethodSymbol) tree.sym, methodCall ) );
     }
     else if( isStructuralMethod( tree.sym ) )
     {
       // Method references not supported on structural interface methods
 
-      _tp.report( tree, Diagnostic.Kind.ERROR,
-        ExtIssueMsg.MSG_STRUCTURAL_METHOD_REF_NOT_SUPPORTED.get( tree.sym.flatName() ) );
+      MethodReferenceToLambda methodReferenceToLambda = new MethodReferenceToLambda( _tp );
+      result = methodReferenceToLambda.convert( tree, true,
+        methodCall -> configMethod( tree, (Symbol.MethodSymbol) tree.sym, methodCall ) );
 
       //todo, see LambdaToMethod for how javac translates a method ref to a lambda, setting ownerAccessible and then
       // utilizing LambdaToMethod directly should work:
@@ -2343,7 +2347,7 @@ public class ExtensionTransformer extends TreeTranslator
           Symbol.MethodSymbol unproxyMethod = resolveMethod( tree.pos(), names.fromString( "unFakeProxy" ), runtimeMethodsClassSym.type,
             List.from( new Type[]{symbols.objectType} ) );
 
-          JCTree.JCMethodInvocation unproxyCall = make.Apply( List.nil(), 
+          JCTree.JCMethodInvocation unproxyCall = make.Apply( List.nil(),
             memberAccess( make, javacElems, RuntimeMethods.class.getTypeName() + ".unFakeProxy" ), List.of( proxiedParam ) );
           unproxyCall.setPos( bodyPos );
           unproxyCall.type = symbols.objectType;

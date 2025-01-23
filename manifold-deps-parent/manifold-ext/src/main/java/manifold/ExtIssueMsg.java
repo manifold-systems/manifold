@@ -31,7 +31,6 @@ public class ExtIssueMsg
   public static final IssueMsg MSG_MUST_NOT_BE_PRIVATE = new IssueMsg( "Extension method '{0}' must not be declared 'private'" );
   public static final IssueMsg MSG_EXTENSION_DUPLICATION = new IssueMsg( "Duplicate extension method. '{0}' from '{1}' duplicates another extension method from '{2}'" );
   public static final IssueMsg MSG_EXTENSION_SHADOWS = new IssueMsg( "Duplicate extension method. '{0}' from '{1}' duplicates a method in the extended class '{2}'" );
-  public static final IssueMsg MSG_STRUCTURAL_METHOD_REF_NOT_SUPPORTED = new IssueMsg( "Structural interface method '{0}' must be invoked as a lambda expression here" );
   public static final IssueMsg MSG_ONLY_STRUCTURAL_INTERFACE_ALLOWED_HERE = new IssueMsg( "Only structural interfaces allowed here, '{0}' is not structural" );
   public static final IssueMsg MSG_CANNOT_EXTEND_SOURCE_FILE = new IssueMsg( "Extending source file '{0}' in the same module, consider modifying the file directly." );
   public static final IssueMsg MSG_SELF_NOT_ALLOWED_HERE = new IssueMsg( "@Self is not allowed here, use it on method and field declarations." );

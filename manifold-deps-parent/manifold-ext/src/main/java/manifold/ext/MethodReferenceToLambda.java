@@ -3,9 +3,14 @@ package manifold.ext;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
-import com.sun.tools.javac.util.*;
+import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.ListBuffer;
+import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Names;
+import manifold.internal.javac.TypeProcessor;
 
 import java.util.UUID;
 import java.util.function.UnaryOperator;
@@ -15,83 +20,59 @@ import static com.sun.tools.javac.code.Flags.FINAL;
 
 public class MethodReferenceToLambda
 {
-
   private final TreeMaker make;
   private final Names names;
+  private final Types types;
 
-  public MethodReferenceToLambda( Context context, TreeMaker make )
+  public MethodReferenceToLambda( TypeProcessor _tp )
   {
-    this.make = make;
-    this.names = Names.instance( context );
+    this.make = _tp.getTreeMaker();
+    this.names = Names.instance( _tp.getContext() );
+    this.types = _tp.getTypes();
   }
 
   /**
    * Converts a JCMemberReference (method reference) to a JCLambda (lambda expression).
    *
    * @param methodRef The JCMemberReference to convert.
-   *
-   * @return A JCLambda representing the lambda equivalent of the method reference.
-   */
-  public JCTree.JCLambda convert( JCTree.JCMemberReference methodRef )
-  {
-    return convert( methodRef, UnaryOperator.identity() );
-  }
-
-  /**
-   * Converts a JCMemberReference (method reference) to a JCLambda (lambda expression).
-   *
-   * @param methodRef The JCMemberReference to convert.
+   * @param structural true if this is a structural method call
    * @param methodTransformer the function to apply on the created method call
    *
    * @return A JCLambda representing the lambda equivalent of the method reference.
    */
-  public JCTree.JCLambda convert( JCTree.JCMemberReference methodRef, UnaryOperator<JCTree.JCMethodInvocation> methodTransformer )
+  public JCTree.JCLambda convert( JCTree.JCMemberReference methodRef, boolean structural, UnaryOperator<JCTree.JCMethodInvocation> methodTransformer )
   {
-    Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) methodRef.sym;  // The method being referenced
-    return convert( methodRef, methodSymbol, methodTransformer );
-  }
-
-  /**
-   * Converts a JCMemberReference (method reference) to a JCLambda (lambda expression).
-   *
-   * @param methodRef The JCMemberReference to convert.
-   * @param methodTransformer the function to apply on the created method call
-   *
-   * @return A JCLambda representing the lambda equivalent of the method reference.
-   */
-  private JCTree.JCLambda convert( JCTree.JCMemberReference methodRef,
-    Symbol.MethodSymbol methodSymbol, UnaryOperator<JCTree.JCMethodInvocation> methodTransformer )
-  {
-    ParamAndDecl paramAndDecl = createParameter( methodRef.expr.type, methodRef.pos, methodSymbol );
-    java.util.List<ParamAndDecl> lambdaParams = methodSymbol.params.stream().map( varSymbol -> createParameter( varSymbol.type, varSymbol.pos, methodSymbol) ).collect( Collectors.toList() );
+    Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) methodRef.sym;
+    ParamAndDecl paramAndDecl = createParameter( methodSymbol.owner.type, methodRef.pos, methodSymbol );
+    java.util.List<ParamAndDecl> lambdaParams = methodSymbol.params.stream().map( varSymbol -> createParameter( varSymbol.type, varSymbol.pos, methodSymbol ) ).collect( Collectors.toList() );
 
     // Create the lambda's method invocation (e.g., x -> x.methodName())
-    JCTree.JCMethodInvocation methodCall = make.Apply(
-      List.nil(),  // No receiver (it will be the lambda parameter)
+    JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(),  // No receiver (it will be the lambda parameter)
       make.Select( paramAndDecl.param, methodSymbol ),  // Instance method call on the parameter (x.methodName)
-      List.from( lambdaParams.stream().map( pd -> pd.param ).collect( Collectors.toList()) )  // Arguments for the method
+      List.from( lambdaParams.stream().map( pd -> pd.param ).collect( Collectors.toList() ) )  // Arguments for the method
     );
+    methodCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
+
+    // method callback
+    methodCall = methodTransformer.apply( methodCall );
+    methodCall.type = methodSymbol.type.getReturnType();
 
     ListBuffer<JCTree.JCVariableDecl> lambdaArgs = new ListBuffer<>();
-    // If it's not a static method reference (e.g., ClassName::staticMethod)
     if( !methodSymbol.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
     {
       lambdaArgs.add( paramAndDecl.paramDecl );
     }
     lambdaParams.forEach( pd -> lambdaArgs.add( pd.paramDecl ) );
 
-    // method callback
-    methodCall = methodTransformer.apply( methodCall );
-    methodCall.type = methodSymbol.type.getReturnType();
     // Create the lambda declaration (parameter + body)
-    JCTree.JCLambda lambda = make.Lambda( lambdaArgs.toList() , methodCall );
+    JCTree.JCLambda lambda = make.Lambda( lambdaArgs.toList(), methodCall );
     lambda.setPos( methodRef.pos );
     lambda.type = methodRef.type;
-    lambda.targets  = List.of( methodRef.type );
+    lambda.targets = List.of( structural ? types.erasure( methodRef.type ) : methodRef.type );
     return lambda;
   }
 
-  private class ParamAndDecl
+  private static class ParamAndDecl
   {
     public final JCTree.JCIdent param;
     public final JCTree.JCVariableDecl paramDecl;
@@ -99,14 +80,15 @@ public class MethodReferenceToLambda
     ParamAndDecl( JCTree.JCIdent param, JCTree.JCVariableDecl paramDecl )
     {
       this.param = param;
-      this.paramDecl =paramDecl;
+      this.paramDecl = paramDecl;
     }
   }
 
-  private ParamAndDecl createParameter( Type type, int pos , Symbol symbol){
-    Name paramName = names.fromString("x" +  UUID.randomUUID() );
+  private ParamAndDecl createParameter( Type type, int pos, Symbol symbol )
+  {
+    Name paramName = names.fromString( "x" + UUID.randomUUID() );
     JCTree.JCVariableDecl paramDecl = make.VarDef( make.Modifiers( FINAL | Flags.PARAMETER ), paramName, make.Type( type ), null );
-    paramDecl.sym = new Symbol.VarSymbol( FINAL , paramDecl.name, type, symbol );
+    paramDecl.sym = new Symbol.VarSymbol( FINAL, paramDecl.name, type, symbol );
     paramDecl.type = paramDecl.sym.type;
     paramDecl.pos = pos;
     JCTree.JCIdent param = make.Ident( paramDecl.sym );
