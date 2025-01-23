@@ -21,22 +21,7 @@ valueOf(array, count:20) // use default for offset by naming count
 ```
 
 This project supports JDK LTS releases 8 - 21 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
-<br>
-<br>
-<br>
-<br>
 
-
-<sub><sup>
-```
-Warning! This project is experimental and uses internal Java compiler APIs to achieve some of its goals. While these
-implementation details do not imply using this project is unsafe, it should be understood that the Java compiler internal
-APIs may change in such a way that could render this and other manifold projects incompatible with a future JDK release.
-That being said, it should also be known that all manifold projects are tested and updated well in advance of JDK releases
-to ensure they remain compatible with internal API changes. This process has with little effort endured every JDK release
-since Java 8. As such, manifold projects will with considerable certainty continue to function with future JDK releases.
-```
-</sup></sub>
 
 # Contents
 
