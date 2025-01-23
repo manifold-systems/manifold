@@ -20,8 +20,8 @@ valueOf(array, 2) // use default for count
 valueOf(array, count:20) // use default for offset by naming count
 ```
 
-Optional parameters and named arguments are fully integrated in both **IntelliJ IDEA** and **Android Studio**.
-                                                    
+This project supports JDK LTS releases 8 - 21 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
+ 
 # Contents
 
 <!-- TOC -->
@@ -111,7 +111,7 @@ new Pizza(Large,
 
 # Overloading and overriding
 
-A method override inherits all the super method's default parameter values. The default values are fixed in the super class
+A method override inherits all the default parameter values from the super method. The default values are fixed in the super class
 and may not be changed in the overriding method.
 ```java
 public interface Contacts {
