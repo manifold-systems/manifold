@@ -1454,7 +1454,8 @@ public class ExtensionTransformer extends TreeTranslator
       .collect( Collectors.toList() );
 
     // Create the lambda's method invocation (e.g., x -> x.methodName())
-    JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(),  // No receiver (it will be the lambda parameter)
+    JCTree.JCMethodInvocation methodCall = make.Apply(
+      List.nil(),  // No receiver (it will be the lambda parameter)
       make.Select( paramAndDecl.param, methodSymbol ),  // Instance method call on the parameter (x.methodName)
       List.from( lambdaParams.stream().map( pd -> pd.param ).collect( Collectors.toList() ) )  // Arguments for the method
     );
