@@ -1447,10 +1447,11 @@ public class ExtensionTransformer extends TreeTranslator
   {
     TreeMaker make = _tp.getTreeMaker();
     Types types = _tp.getTypes();
+    int[] id = {0};
     Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) methodRef.sym;
-    ParamAndDecl paramAndDecl = createParameter( methodSymbol.owner.type, methodRef.pos, methodSymbol );
+    ParamAndDecl paramAndDecl = createParameter( methodSymbol.owner.type, methodRef.pos, methodSymbol, id );
     java.util.List<ParamAndDecl> lambdaParams = methodSymbol.params.stream()
-      .map( varSymbol -> createParameter( varSymbol.type, varSymbol.pos, methodSymbol ) )
+      .map( varSymbol -> createParameter( varSymbol.type, varSymbol.pos, methodSymbol, id ) )
       .collect( Collectors.toList() );
 
     // Create the lambda's method invocation (e.g., x -> x.methodName())
@@ -1492,11 +1493,11 @@ public class ExtensionTransformer extends TreeTranslator
     }
   }
 
-  private ParamAndDecl createParameter( Type type, int pos, Symbol symbol )
+  private ParamAndDecl createParameter( Type type, int pos, Symbol symbol, int[] id )
   {
     TreeMaker make = _tp.getTreeMaker();
-    Names names = Names.instance( _tp.getContext() );
-    Name paramName = names.fromString( "x" + UUID.randomUUID() );
+    Name paramName = make.paramName( id[0] );
+    id[0] = id[0] + 1;
     JCTree.JCVariableDecl paramDecl = make.VarDef( make.Modifiers( FINAL | Flags.PARAMETER ), paramName, make.Type( type ), null );
     paramDecl.sym = new Symbol.VarSymbol( FINAL, paramDecl.name, type, symbol );
     paramDecl.type = paramDecl.sym.type;
