@@ -17,6 +17,7 @@
 package manifold.ext;
 
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.*;
@@ -60,7 +61,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static com.sun.tools.javac.code.Flags.*;
@@ -1432,38 +1432,48 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitReference( JCTree.JCMemberReference tree )
   {
     super.visitReference( tree );
-    result = methodRefToLambda( tree, methodCall -> configMethod( tree, (Symbol.MethodSymbol) tree.sym, methodCall ) );
+    result = maybeReplaceMethodRefWithExtensionMethod( tree );
   }
 
   /**
-   * Converts a JCMemberReference (method reference) to a JCLambda (lambda expression).
+   * Converts a JCMemberReference (method reference) to a JCLambda (lambda expression) if needed.
+   * Methods can be replaced by extension methods inside the body of the generated lambda.
    *
    * @param methodRef The JCMemberReference to convert.
-   * @param methodTransformer the function to apply on the created method call
    *
-   * @return A JCLambda representing the lambda equivalent of the method reference.
+   * @return A JCLambda representing the lambda equivalent of the method reference or the input if it wasn't converted.
    */
-  public JCTree.JCLambda methodRefToLambda( JCTree.JCMemberReference methodRef, UnaryOperator<JCTree.JCMethodInvocation> methodTransformer )
+  private JCTree maybeReplaceMethodRefWithExtensionMethod( JCTree.JCMemberReference methodRef )
   {
+    Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) methodRef.sym;
+    if( methodRef.mode != MemberReferenceTree.ReferenceMode.INVOKE
+      // method references without params (e.g. Supplier) can never be an extension method.
+      || methodSymbol.params == null )
+    {
+      return methodRef;
+    }
     TreeMaker make = _tp.getTreeMaker();
     Types types = _tp.getTypes();
     int[] id = {0};
-    Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) methodRef.sym;
     ParamAndDecl paramAndDecl = createParameter( methodSymbol.owner.type, methodRef.pos, methodSymbol, id );
     java.util.List<ParamAndDecl> lambdaParams = methodSymbol.params.stream()
       .map( varSymbol -> createParameter( varSymbol.type, varSymbol.pos, methodSymbol, id ) )
       .collect( Collectors.toList() );
+    JCExpression method = methodRef.kind == JCTree.JCMemberReference.ReferenceKind.UNBOUND
+      || methodRef.kind == JCTree.JCMemberReference.ReferenceKind.BOUND ?
+      make.Select( paramAndDecl.param, methodSymbol ) : // Instance method call, e.g. x.foo();
+      make.Select( make.Ident( methodSymbol.owner ), methodSymbol ); // static method call, e.g. Bar.foo();
 
     // Create the lambda's method invocation (e.g., x -> x.methodName())
     JCTree.JCMethodInvocation methodCall = make.Apply(
-      List.nil(),  // No receiver (it will be the lambda parameter)
-      make.Select( paramAndDecl.param, methodSymbol ),  // Instance method call on the parameter (x.methodName)
+      List.nil(),  // No receiver
+      method,
       List.from( lambdaParams.stream().map( pd -> pd.param ).collect( Collectors.toList() ) )  // Arguments for the method
     );
     methodCall.polyKind = JCTree.JCPolyExpression.PolyKind.STANDALONE;
 
-    // method callback
-    methodCall = methodTransformer.apply( methodCall );
+    // If needed, replace with extension method or structural call
+    methodCall = configMethod( methodRef, (Symbol.MethodSymbol) methodRef.sym, methodCall );
     methodCall.type = methodSymbol.type.getReturnType();
 
     ListBuffer<JCTree.JCVariableDecl> lambdaArgs = new ListBuffer<>();
