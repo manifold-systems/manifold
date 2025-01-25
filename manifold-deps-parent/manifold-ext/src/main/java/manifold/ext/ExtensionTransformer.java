@@ -1485,10 +1485,9 @@ public class ExtensionTransformer extends TreeTranslator
     else
     {
       _tp.report( methodRef, Diagnostic.Kind.ERROR,
-        "Converting method ref to lambda, Unexpected type " + methodRef.kind );
+        String.format( "Error while converting method reference to lambda, unexpected type %s, %s", methodRef.kind, methodRef ) );
       return methodRef;
     }
-
 
     // Create the lambda's method invocation (e.g., x -> x.methodName())
     JCTree.JCMethodInvocation methodCall = make.Apply(
