@@ -2,7 +2,7 @@
 
 # Properties for Java
 
-![latest](https://img.shields.io/badge/latest-v2024.1.53-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.54-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
   
@@ -467,11 +467,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-props-rt:2024.1.53'
+     implementation 'systems.manifold:manifold-props-rt:2024.1.54'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-props:2024.1.53'
-     testAnnotationProcessor 'systems.manifold:manifold-props:2024.1.53'
+     annotationProcessor 'systems.manifold:manifold-props:2024.1.54'
+     testAnnotationProcessor 'systems.manifold:manifold-props:2024.1.54'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -507,7 +507,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.53</manifold.version>
+        <manifold.version>2024.1.54</manifold.version>
     </properties>
     
     <dependencies>
@@ -556,10 +556,10 @@ with javadoc.
 # Javadoc
 
 `manifold-props`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props/2024.1.53/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props/2024.1.53)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props/2024.1.54/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props/2024.1.54)
 
 `manifold-props-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props-rt/2024.1.53/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props-rt/2024.1.53)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props-rt/2024.1.54/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props-rt/2024.1.54)
 
 # License
 

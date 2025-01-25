@@ -40,21 +40,30 @@ public class ConstructorTest extends TestCase
     assertEquals( 0, myRec._age );
   }
 
-  interface Foo {
-    void reset( String name = "reset", int age = 0 );
+  public void testAnonCtor()
+  {
+    new MyRec( "", age:9 ) {};
   }
 
-  static class MyRec implements Foo {
+  interface Foo
+  {
+    void reset( String name="reset", int age=0 );
+  }
+
+  static class MyRec implements Foo
+  {
     String _name;
     int _age;
 
-    MyRec( String name, int age = 999 ) {
+    MyRec( String name, int age=999 )
+    {
       _name = name;
       _age = age;
     }
 
-    MyRec() {
-      this( name: "z", age: 33);
+    MyRec()
+    {
+      this(name:"z", age:33);
     }
 
     @Override
@@ -65,8 +74,10 @@ public class ConstructorTest extends TestCase
     }
   }
 
-  static class MyRecSub extends MyRec {
-    MyRecSub() {
+  static class MyRecSub extends MyRec
+  {
+    MyRecSub()
+    {
       super( "fred" );
     }
   }

@@ -1397,7 +1397,8 @@ public interface ManAttr
       {
         if( !namedArgs.isEmpty() )
         {
-          getLogger().error( arg.pos, "proc.messager", IssueMsg.MSG_OPT_PARAMS_POSITIONAL_BEFORE_NAMED );
+          getLogger().error( arg.pos, "proc.messager", IssueMsg.MSG_OPT_PARAMS_POSITIONAL_BEFORE_NAMED.get() );
+          return;
         }
         unnamedArgs.add( arg );
       }
