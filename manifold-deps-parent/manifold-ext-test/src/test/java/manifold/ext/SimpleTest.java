@@ -18,7 +18,7 @@ import static org.junit.Assert.assertArrayEquals;
 
 /**
  */
-public class SimpleTest extends TestCase
+public class SimpleTest extends SimpleTestSuper
 {
   public void testNothing() {}
 
@@ -88,6 +88,25 @@ public class SimpleTest extends TestCase
     // structural interface
     assertEquals( Collections.singletonList( "myMethod" ),
       Stream.of( 2 ).map( NumberStructural::myMethod ).collect( Collectors.toList() ) );
+  }
+
+  public void testMethodRefWithoutExtension()
+  {
+    // this method
+    assertEquals( Collections.singletonList( "testbar" ),
+      Stream.of( "test" ).map( this::appendBarNonStatic ).collect( Collectors.toList() ) );
+
+    // super method
+    assertEquals( Collections.singletonList( "testbarSuper" ),
+      Stream.of( "test" ).map( super::appendBarSuper ).collect( Collectors.toList() ) );
+  }
+
+  public static String appendBarStatic(String text){
+    return text + "bar";
+  }
+
+  public String appendBarNonStatic(String text){
+    return text + "bar";
   }
 
   interface MyInterface

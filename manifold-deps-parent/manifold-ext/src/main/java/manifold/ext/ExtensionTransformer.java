@@ -1454,15 +1454,41 @@ public class ExtensionTransformer extends TreeTranslator
     }
     TreeMaker make = _tp.getTreeMaker();
     Types types = _tp.getTypes();
-    int[] id = {0};
+    int[] id = { 0 };
     ParamAndDecl paramAndDecl = createParameter( methodSymbol.owner.type, methodRef.pos, methodSymbol, id );
     java.util.List<ParamAndDecl> lambdaParams = methodSymbol.params.stream()
       .map( varSymbol -> createParameter( varSymbol.type, varSymbol.pos, methodSymbol, id ) )
       .collect( Collectors.toList() );
-    JCExpression method = methodRef.kind == JCTree.JCMemberReference.ReferenceKind.UNBOUND
-      || methodRef.kind == JCTree.JCMemberReference.ReferenceKind.BOUND ?
-      make.Select( paramAndDecl.param, methodSymbol ) : // Instance method call, e.g. x.foo();
-      make.Select( make.Ident( methodSymbol.owner ), methodSymbol ); // static method call, e.g. Bar.foo();
+    boolean thisCall = "this".equals( methodRef.expr.toString() );
+    boolean superCall = "super".equals( methodRef.expr.toString() );
+    JCExpression method;
+    if( methodRef.kind == JCTree.JCMemberReference.ReferenceKind.STATIC )
+    {
+      method = make.Select( make.Ident( methodSymbol.owner ), methodSymbol ); // static method call, e.g. Bar.foo();
+    }
+    else if( methodRef.kind == JCTree.JCMemberReference.ReferenceKind.UNBOUND
+      || methodRef.kind == JCTree.JCMemberReference.ReferenceKind.BOUND )
+    {
+      if( thisCall )
+      {
+        method = make.Select( methodRef.expr, methodSymbol );
+      }
+      else
+      {
+        method = make.Select( paramAndDecl.param, methodSymbol ); // Instance method call, e.g. x.foo();
+      }
+    }
+    else if( methodRef.kind == JCTree.JCMemberReference.ReferenceKind.SUPER )
+    {
+      method = make.Select( methodRef.expr, methodSymbol );
+    }
+    else
+    {
+      _tp.report( methodRef, Diagnostic.Kind.ERROR,
+        "Converting method ref to lambda, Unexpected type " + methodRef.kind );
+      return methodRef;
+    }
+
 
     // Create the lambda's method invocation (e.g., x -> x.methodName())
     JCTree.JCMethodInvocation methodCall = make.Apply(
@@ -1477,7 +1503,7 @@ public class ExtensionTransformer extends TreeTranslator
     methodCall.type = methodSymbol.type.getReturnType();
 
     ListBuffer<JCTree.JCVariableDecl> lambdaArgs = new ListBuffer<>();
-    if( !methodSymbol.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
+    if( !methodSymbol.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) && !thisCall && !superCall )
     {
       lambdaArgs.add( paramAndDecl.paramDecl );
     }
