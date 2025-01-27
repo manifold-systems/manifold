@@ -1,4 +1,4 @@
-> **⚠ Experimental**
+> **⚠️ Experimental Feature**
 
 # Optional parameters & named arguments
 
@@ -164,19 +164,34 @@ Optional parameters and named arguments preserve three essential aspects of bina
 - **Binary accessible**
 - **Java standard compatible**
 
-### Backward compatible                                                      
-Adding new optional parameters to existing methods is binary compatible with code compiled before the new parameters were added.
+### Backward compatible  
 
-For example, this method:
+You can add new optional parameters to existing methods without breaking compatibility with code compiled before those
+parameters were introduced.  
+
+**For example:**  
+Suppose you have the following method:  
 ```java
-public void size(int width) {...}
-```
-Could be updated with an optional height parameter:
+public void size(int width) { ... }
+```  
+You can update it to include an optional `height` parameter:
 ```java
-public void size(int width, int height = width) {...}
-```
-Code compiled with the previous version still works without requiring recompilation.
-                                                       
+public void size(int width, int height = 0) { ... }
+```  
+Code compiled with the earlier version of the method will continue to work without requiring recompilation.
+
+**Changing Default Values:**  
+If the default value of an optional parameter changes, the updated value will apply even when older code calls the method.
+```java
+public void size(int width, int height = width) { ... }
+```  
+In this case, older code that doesn’t specify a `height` argument will use the new default (`width`) at runtime without
+needing to recompile.
+
+**⚠️ Caution:**  
+Changing default values, while binary-compatible, can still impact the behavior of existing code. Make these changes
+cautiously to prevent unintended side effects.
+
 ### Binary accessible
 Optional parameters and named arguments are fully accessible from compiled .class files, just like source code.
 ```java
