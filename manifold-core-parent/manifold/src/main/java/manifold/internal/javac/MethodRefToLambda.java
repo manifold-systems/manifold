@@ -39,6 +39,7 @@ public class MethodRefToLambda
 
       if( sym.params == null )
       {
+        // set type to null to prevent mismatched types (e.g. Collection<String> instead of Set<String>)
         params.forEach( varDecl -> varDecl.vartype = null );
       }
       JCTree.JCLambda lambda = make.Lambda( params, body );
@@ -46,7 +47,8 @@ public class MethodRefToLambda
       lambda.type = methodRef.type;
       IDynamicJdk.instance().setTargets(lambda, List.of( methodRef.type ) );
       return lambda;
-    } catch( Throwable e )
+    }
+    catch( Throwable e )
     {
       String message = String.format( "Error while converting method ref [%s] to lambda: %n%s ", methodRef, e );
       tp.report( methodRef, Diagnostic.Kind.ERROR, message );
