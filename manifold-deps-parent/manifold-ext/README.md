@@ -49,7 +49,6 @@
   * [Implementation by Proxy](#implementation-by-proxy)
     * [Using `factoryClass`](#using-factoryclass)
   * [Dynamic Typing with `ICallHandler`](#dynamic-typing-with-icallhandler)
-* [Named arguments & optional parameters](#named-arguments--optional-parameters)
 * [Type-safe Reflection via `@Jailbreak`](#type-safe-reflection-via-jailbreak)
   * [Using `@Jailbreak`](#using-jailbreak)
     * [Basic Use](#basic-use)
@@ -1675,122 +1674,6 @@ main difference is that invocations must be made through structural interfaces a
 the map, otherwise `Map` behaves much like an expando object.
 
 See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for details.
-
-# Named arguments & optional parameters
->**⚠ _Experimental Feature_**
-
-You can combine named arguments with optional parameters to create flexible and readable function calls. Although Java
-does not provide either feature, we can utilize [tuples](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
-and [structural interfaces](#structural-interfaces-via-structural) for virtually the same functionality.
-   
-## Defining optional parameters
-
-Instead of listing parameters directly in a method, you define them as members of a structural interface.
-```java
-@Structural 
-interface $greet {@val String name; @val int age = 20;}
-public void greet($greet args) {
-    out.println("Hello, "+args.name+"! You are "+args.age+" years old.");
-}
-```
-Notice `age` has a default value of 20, making it optional.
-
-Also, notice the `$greet` structural interface uses [properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
-instead of conventional _getter_ default interface methods, which looks like this:
-```java
-@Structural 
-interface $greet {String getName(); default int getAge() {return 20;}}
-```
-Both ways work equally well, but using `@val` is more concise and easier to read.
-
-Note, you can use any name you like for the interface, `$greet` is just following a convention for consistency. The `$`
-prefix indicates the type is not for general use.
-
-## Using named arguments
-
-Named arguments allow you to explicitly specify the parameter name when calling a function, improving code readability and
-allowing you to pass arguments out of order.
-```java
-greet((name:"Alice")); // Uses the default value for age (20)
-
-greet((name:"Bob", age:30)); // Explicitly sets age
-
-greet((age:25, name:"Charlie")); // Order doesn't matter with named arguments
-```
-Notice arguments are passed using tuple syntax. This works because tuples are assignable to structural interfaces.
-
-Consider a typical telescoping constructor in Java.
-```java
-public class Person {
-  private String name;
-  private int age;
-  private Gender gender;
-  private String address;
-  private String phone;
-
-  // name is the only required parameter, others are optional
-  public Person(String name) {
-    this(name, 0, null, null, null);
-  }
-  
-  public Person(String name, int age) {
-    this(name, age, null, null, null);
-  }
-  
-  public Person(String name, int age, Gender gender) {
-    this(name, age, gender, null, null);
-  }
-  
-  public Person(String name, int age, Gender gender, String address) {
-    this(name, age, gender, address, null);
-  }
-  
-  public Person(String name, int age, Gender gender, String address, String phone) {
-    this.name = name;
-    this.age = age;
-    this.gender = gender;
-    this.address = address;
-    this.phone = phone;
-  }
-  
-  // getters/setters  etc. . .
-}
-```
-While useful, this technique is widely considered an "anti-pattern" due to its verbosity, maintenance concerns, and general
-inadequacy--it does not cover all the different combinations of arguments, such as passing just `name` and `phone`. Although
-the Builder pattern is sometimes used to overcome some of the drawbacks, it too has its own set of problems, mostly due
-to the boilerplate and tedium involved with writing/generating and maintaining them.
-
-Named arguments and optional parameters offer a cleaner, more capable, and easier to maintain alternative to these strategies.
-
-```java
-public class Person {
-  private String name;
-  private int age;
-  private Gender gender;
-  private String address;
-  private String phone;
-
-  @Structural interface $person
-  {@val int age = 0; @val Gender gender = null; @val String address = null; @val String phone = null;}
-  public Person(String name, $person options) {
-    this.name = name;
-    this.age = options.age;
-    this.gender = options.gender;
-    this.address = options.address;
-    this.phone = options.phone;
-  }
-  . . .
-}
-```
-Since tuples are assignable to structural interfaces, we can utilize them for a powerful named arguments & optional parameters syntax.
-```java
-Person person = new Person("Scott", (age:100, phone:"408-555-1234"));
-```
-Here, we create a `Person` with named arguments in the order of our choosing. Not only is this syntax more concise
-and easier to read and use at the call site, the overall reduction in boilerplate also relieves the maintenance burden
-compared with telescoping methods and builder classes.
-
 
 # Type-safe Reflection via `@Jailbreak`
 
