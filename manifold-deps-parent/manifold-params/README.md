@@ -21,6 +21,10 @@ valueOf(array, count:20) // use default for offset by naming count
 
 This plugin supports JDK versions 8 - 21 (and the latest) and integrates seamlessly with **IntelliJ IDEA** and **Android Studio**.
 
+### Key Features
+- **Optional Parameters**: Define default values for method parameters
+- **Named Arguments**: Pass arguments by name, not just by position
+- **Binary Compatible**: Works seamlessly with legacy code
 
 # Contents
 
@@ -100,7 +104,7 @@ record Pizza(Size size,
 In this case, named arguments make it clear which values are being assigned to which parameters, improving the overall
 readability of the code.
 
-You can also mix positional and named arguments, but named arguments must come after positional arguments.
+You can also reorder named arguments and mix positional and named arguments, but named arguments must come after positional arguments.
 ```java
 new Pizza(Large, cheese:Fresco, sauce:Chili);
 ```
@@ -196,12 +200,14 @@ cautiously to prevent unintended side effects.
 Optional parameters and named arguments are fully accessible from compiled .class files, just like source code.
 ```java
 // .class file
+
 public class MyClass {
   public void size(int width, int height = width) {...}
 }
 ```
 ```java
 // .java file
+
 MyClass myClass = new MyClass();
 myClass.size(width:100);
 ```
