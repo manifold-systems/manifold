@@ -1,18 +1,19 @@
 package manifold.ext;
 
 import abc.*;
+import manifold.api.type.BasicIncrementalCompileDriver;
+import manifold.api.type.ClassType;
+import manifold.api.type.ContributorKind;
+import manifold.ext.rt.api.Structural;
+
 import java.awt.Rectangle;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import junit.framework.TestCase;
-import manifold.api.type.BasicIncrementalCompileDriver;
-import manifold.api.type.ClassType;
-import manifold.api.type.ContributorKind;
-import manifold.ext.rt.api.Structural;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -70,6 +71,11 @@ public class SimpleTest extends SimpleTestSuper
     assertEquals( Arrays.asList( "FooFoo", "BarBar" ),
       Stream.of( "Foo", "Bar" ).map( String::duplicate ).collect( Collectors.toList() ) );
 
+    //UnaryOperator
+    UnaryOperator<String> unaryOperator = String::duplicate;
+    assertEquals( Arrays.asList( "FooFoo", "BarBar" ),
+      Stream.of( "Foo", "Bar" ).map( unaryOperator ).collect( Collectors.toList() ) );
+
     // BiFunction
     Map<String, Integer> map = new LinkedHashMap<>();
     map.add( "Foo", 1 );
@@ -99,6 +105,21 @@ public class SimpleTest extends SimpleTestSuper
     // super method
     assertEquals( Collections.singletonList( "testbarSuper" ),
       Stream.of( "test" ).map( super::appendBarSuper ).collect( Collectors.toList() ) );
+
+    // Supplier
+    assertEquals( new LinkedHashSet<>( Arrays.asList( "foo", "bar" ) ),
+      Stream.of( "foo", "bar" ).collect( LinkedHashSet::new, Set::add, Set::addAll ));
+
+    // Static method call
+    assertEquals( Arrays.asList( 4, 3 ),
+      Stream.of( "test","foo" ).map(String::length).collect( Collectors.toList() ) );
+
+    // System.out.println
+    Stream.of( "1", "2" ).forEach( System.out::println );
+
+    // Array constructor
+    assertArrayEquals( new String[]{ "1", "2" },
+      Stream.of( "1", "2" ).toArray(String[]::new) );
   }
 
   public static String appendBarStatic(String text){
@@ -118,7 +139,6 @@ public class SimpleTest extends SimpleTestSuper
   {
     String myMethod();
   }
-
 
   public void testSelfTypeOnExtension()
   {
