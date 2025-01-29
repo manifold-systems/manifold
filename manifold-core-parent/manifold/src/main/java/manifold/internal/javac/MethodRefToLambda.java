@@ -1,15 +1,14 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.List;
-import com.sun.tools.javac.util.Name;
 
 import javax.tools.Diagnostic;
-
-import static com.sun.tools.javac.code.Flags.FINAL;
+import java.util.Iterator;
 
 public class MethodRefToLambda
 {
@@ -30,25 +29,19 @@ public class MethodRefToLambda
   {
     try
     {
-      Symbol.MethodSymbol sym = (Symbol.MethodSymbol) methodRef.sym;
       TreeMaker make = tp.getTreeMaker();
 
       List<JCTree.JCVariableDecl> params = createParams( tp, methodRef );
 
       JCTree.JCExpression body = createBody( tp, methodRef, params );
 
-      if( sym.params == null )
-      {
-        // set type to null to prevent mismatched types (e.g. Collection<String> instead of Set<String>)
-        params.forEach( varDecl -> varDecl.vartype = null );
-      }
       JCTree.JCLambda lambda = make.Lambda( params, body );
       lambda.setPos( methodRef.pos );
-      lambda.type = methodRef.type;
-      IDynamicJdk.instance().setTargets(lambda, List.of( methodRef.type ) );
+
+      lambda.type = createReturnType( methodRef, params );
+      IDynamicJdk.instance().setTargets( lambda, List.of(  lambda.type ) );
       return lambda;
-    }
-    catch( Throwable e )
+    } catch( Throwable e )
     {
       String message = String.format( "Error while converting method ref [%s] to lambda: %n%s ", methodRef, e );
       tp.report( methodRef, Diagnostic.Kind.ERROR, message );
@@ -66,7 +59,7 @@ public class MethodRefToLambda
     int idx = 0;
     if( methodRef.kind == JCTree.JCMemberReference.ReferenceKind.UNBOUND && !thisCall )
     {
-      params = params.append( createParam( make, sym, methodRef.sym.owner.type, idx++ ) );
+      params = params.append( createParam( make, sym, methodRef.expr.type, idx++ ) );
     }
     for( Type paramType : sym.type.getParameterTypes() )
     {
@@ -77,14 +70,13 @@ public class MethodRefToLambda
 
   private static JCTree.JCVariableDecl createParam( TreeMaker make, Symbol sym, Type paramType, int idx )
   {
-    Name paramName = make.paramName( idx );
     JCTree.JCVariableDecl param = make.VarDef(
-      make.Modifiers( 0 ),
-      paramName,
+      make.Modifiers( Flags.PARAMETER ),
+      make.paramName( idx ),
       make.Type( paramType ),
       null
     );
-    param.sym = new Symbol.VarSymbol( FINAL, param.name, paramType, sym );
+    param.sym = new Symbol.VarSymbol( 0, param.name, paramType, sym );
     param.type = param.sym.type;
     return param;
   }
@@ -104,37 +96,35 @@ public class MethodRefToLambda
     {
       case IMPLICIT_INNER:
       case BOUND:
-        return setTypes( make.Apply(
+        return make.Apply(
           List.nil(),
-          IDynamicJdk.instance().Select( make,  methodRef.expr, sym ),
+          IDynamicJdk.instance().Select( make, methodRef.expr, sym ),
           args
-        ), methodRef );
+        ).setType( methodRef.sym.type.getReturnType() );
       case UNBOUND:
-        return setTypes( make.Apply(
+        return make.Apply(
           List.nil(),
-          IDynamicJdk.instance().Select( make,  make.Ident( params.head ), sym ),
+          IDynamicJdk.instance().Select( make, make.Ident( params.head ), sym ),
           args.tail
-        ), methodRef );
+        ).setType( methodRef.sym.type.getReturnType() );
       case SUPER:
-        return setTypes( make.Apply(
+        return make.Apply(
           List.nil(),
-          IDynamicJdk.instance().Select( make,  make.Super( sym.owner.type, sym.owner.type.tsym ), sym ),
+          IDynamicJdk.instance().Select( make, make.Super( sym.owner.type, sym.owner.type.tsym ), sym ),
           args
-        ), methodRef );
+        ).setType( methodRef.sym.type.getReturnType() );
       case STATIC:
-        return setTypes( make.Apply(
+        return make.Apply(
           List.nil(),
           IDynamicJdk.instance().Select( make, make.Ident( sym.owner ), sym ),
           args
-        ), methodRef );
+        ).setType( methodRef.sym.type.getReturnType() );
       case ARRAY_CTOR:
-        JCTree.JCNewArray newArray = make.NewArray(
+        return make.NewArray(
           ( (JCTree.JCArrayTypeTree) methodRef.expr ).elemtype, // Element type (null for inferred type)
           args, // Dimensions (empty for array initializer)
           null // List of array elements
-        );
-        newArray.type = ( (Type.MethodType) methodRef.sym.type ).restype;
-        return newArray;
+        ).setType( methodRef.sym.type.getReturnType() );
       case TOPLEVEL:
         if( sym.isConstructor() )
         {
@@ -155,9 +145,33 @@ public class MethodRefToLambda
     }
   }
 
-  private static JCTree.JCMethodInvocation setTypes( JCTree.JCMethodInvocation method, JCTree.JCMemberReference methodRef )
+  private static Type createReturnType( JCTree.JCMemberReference methodRef, List<JCTree.JCVariableDecl> params )
   {
-    method.type = ( (Type.MethodType) methodRef.sym.type ).restype;
-    return method;
+    boolean thisCall = "this".equals( methodRef.expr.toString() );
+    if( methodRef.kind != JCTree.JCMemberReference.ReferenceKind.UNBOUND || thisCall )
+    {
+      return methodRef.type;
+    }
+    // Use parameter types for arguments, replacing some problematic types, such as IntersectionClassType
+    List<Type> typeArgs = List.nil();
+    Iterator<JCTree.JCVariableDecl> paramsIter = params.iterator();
+    Iterator<Type> typeArgumentsIter = methodRef.type.getTypeArguments().iterator();
+    while( paramsIter.hasNext() )
+    {
+      Type param = paramsIter.next().type;
+      Type typeArgument = typeArgumentsIter.next();
+      typeArgs = typeArgs.append( param.isPrimitive() && !typeArgument.isPrimitive() ? typeArgument : param );
+    }
+    if( typeArgumentsIter.hasNext() )
+    {
+      typeArgs = typeArgs.append( typeArgumentsIter.next() );
+    }
+
+    return new Type.ClassType(
+      methodRef.type.getEnclosingType(),
+      typeArgs,
+      methodRef.type.tsym
+    );
   }
+
 }

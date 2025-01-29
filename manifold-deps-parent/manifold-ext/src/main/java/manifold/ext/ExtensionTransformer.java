@@ -2297,7 +2297,7 @@ public class ExtensionTransformer extends TreeTranslator
           Symbol.MethodSymbol unproxyMethod = resolveMethod( tree.pos(), names.fromString( "unFakeProxy" ), runtimeMethodsClassSym.type,
             List.from( new Type[]{symbols.objectType} ) );
 
-          JCTree.JCMethodInvocation unproxyCall = make.Apply( List.nil(),
+          JCTree.JCMethodInvocation unproxyCall = make.Apply( List.nil(), 
             memberAccess( make, javacElems, RuntimeMethods.class.getTypeName() + ".unFakeProxy" ), List.of( proxiedParam ) );
           unproxyCall.setPos( bodyPos );
           unproxyCall.type = symbols.objectType;

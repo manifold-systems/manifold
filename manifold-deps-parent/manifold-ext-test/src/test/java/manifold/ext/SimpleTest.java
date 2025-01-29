@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -120,6 +121,22 @@ public class SimpleTest extends SimpleTestSuper
     // Array constructor
     assertArrayEquals( new String[]{ "1", "2" },
       Stream.of( "1", "2" ).toArray(String[]::new) );
+
+    // shared interface, IntersectionClassType
+    assertEquals( Arrays.asList( "A", "B", "C", "D" ),
+      Stream.of( Enum1.A, Enum1.B, Enum2.C, Enum2.D ).map( EnumIntf::getValue ).collect( Collectors.toList() ) );
+
+    // Optional
+    Function<String, Optional<String>> optionalSupplier = v -> Optional.of( "test" );
+    assertEquals( Optional.of( "test" ),
+      Optional.of( "5" ).map( optionalSupplier ).orElseGet( Optional::empty ) );
+
+    // BiFunction
+    Map<Integer, Integer> map = new LinkedHashMap<>();
+    map.add( 1, 1 );
+    map.add( 2, 2 );
+    assertEquals( Arrays.asList( 2, 4 ),
+      map.map( Integer::sum ).collect( Collectors.toList() ) );
   }
 
   public static String appendBarStatic(String text){
@@ -132,6 +149,30 @@ public class SimpleTest extends SimpleTestSuper
 
   interface MyInterface
   {
+  }
+
+  interface EnumIntf {
+    String getValue();
+  }
+
+  enum Enum1 implements EnumIntf {
+    A, B;
+
+    @Override
+    public String getValue()
+    {
+      return name();
+    }
+  }
+
+  enum Enum2 implements EnumIntf {
+    C,D;
+
+    @Override
+    public String getValue()
+    {
+      return name();
+    }
   }
 
   @Structural
