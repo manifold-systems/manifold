@@ -6,11 +6,14 @@ import manifold.api.type.ClassType;
 import manifold.api.type.ContributorKind;
 import manifold.ext.rt.api.Structural;
 
+import javax.swing.*;
 import java.awt.Rectangle;
+import java.awt.event.ItemEvent;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -137,6 +140,10 @@ public class SimpleTest extends SimpleTestSuper
     map.add( 2, 2 );
     assertEquals( Arrays.asList( 2, 4 ),
       map.map( Integer::sum ).collect( Collectors.toList() ) );
+
+    // no error should be thrown during compilation
+    Consumer<ItemEvent> itemListener = null;
+    new JComboBox<>().addItemListener(itemListener::accept);
   }
 
   public static String appendBarStatic(String text){

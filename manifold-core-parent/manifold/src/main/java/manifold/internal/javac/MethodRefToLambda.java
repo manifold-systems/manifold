@@ -147,16 +147,11 @@ public class MethodRefToLambda
 
   private static Type createReturnType( JCTree.JCMemberReference methodRef, List<JCTree.JCVariableDecl> params )
   {
-    boolean thisCall = "this".equals( methodRef.expr.toString() );
-    if( methodRef.kind != JCTree.JCMemberReference.ReferenceKind.UNBOUND || thisCall )
-    {
-      return methodRef.type;
-    }
     // Use parameter types for arguments, replacing some problematic types, such as IntersectionClassType
     List<Type> typeArgs = List.nil();
     Iterator<JCTree.JCVariableDecl> paramsIter = params.iterator();
     Iterator<Type> typeArgumentsIter = methodRef.type.getTypeArguments().iterator();
-    while( paramsIter.hasNext() )
+    while( paramsIter.hasNext() && typeArgumentsIter.hasNext() )
     {
       Type param = paramsIter.next().type;
       Type typeArgument = typeArgumentsIter.next();
