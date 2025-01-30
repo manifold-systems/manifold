@@ -17,6 +17,7 @@
 package manifold.ext;
 
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.*;
@@ -43,7 +44,10 @@ import manifold.ext.rt.ReflectionRuntimeMethods;
 import manifold.ext.rt.RuntimeMethods;
 import manifold.ext.rt.api.*;
 import manifold.internal.javac.*;
-import manifold.rt.api.*;
+import manifold.rt.api.Array;
+import manifold.rt.api.FragmentValue;
+import manifold.rt.api.IncrementalCompile;
+import manifold.rt.api.Precompile;
 import manifold.rt.api.util.Pair;
 import manifold.rt.api.util.TypesUtil;
 import manifold.util.JreUtil;
@@ -1427,55 +1431,7 @@ public class ExtensionTransformer extends TreeTranslator
   @Override
   public void visitReference( JCTree.JCMemberReference tree )
   {
-    super.visitReference( tree );
-
-    if( isExtensionMethod( tree.sym ) )
-    {
-      // Method references not supported on extension methods
-
-      _tp.report( tree, Diagnostic.Kind.ERROR,
-        ExtIssueMsg.MSG_EXTENSION_METHOD_REF_NOT_SUPPORTED.get( tree.sym.flatName() ) );
-    }
-    else if( isStructuralMethod( tree.sym ) )
-    {
-      // Method references not supported on structural interface methods
-
-      _tp.report( tree, Diagnostic.Kind.ERROR,
-        ExtIssueMsg.MSG_STRUCTURAL_METHOD_REF_NOT_SUPPORTED.get( tree.sym.flatName() ) );
-
-      //todo, see LambdaToMethod for how javac translates a method ref to a lambda, setting ownerAccessible and then
-      // utilizing LambdaToMethod directly should work:
-      //      - tree.ownerAccessible = false;
-      //      - call into LambdaToMethod to transform the method ref to a lambda expr
-      //      - call configMethod() here in case the method is an extension method
-    }
-  }
-
-  private boolean isStructuralMethod( Symbol sym )
-  {
-    if( sym != null && !sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
-    {
-      if( !isObjectMethod( sym ) )
-      {
-        return TypesUtil.isStructuralInterface( _tp.getTypes(), sym.owner );
-      }
-    }
-    return false;
-  }
-
-  private boolean isExtensionMethod( Symbol sym )
-  {
-    if( sym instanceof Symbol.MethodSymbol )
-    {
-      for( Attribute.Compound annotation : sym.getAnnotationMirrors() )
-      {
-        if( annotation.type.toString().equals( ExtensionMethod.class.getName() ) )
-        {
-          return true;
-        }
-      }
-    }
-    return false;
+    visitLambda( MethodRefToLambda.convert( _tp, tree ) );
   }
 
   @SuppressWarnings( "WeakerAccess" )
