@@ -63,16 +63,22 @@ out.println(pizza.options.shape);
 Tuples satisfy structural interfaces.
 ```java
 Being being = (name:"Scott", age:100);
+Being being = (name:"Scott"); // uses default argument `99`
 
 @Structural
 interface Being {
   String getName();
-  int getAge();
-  // setters too....
+  default int getAge() {return 99;}
+}
+// or, use manifold-props...
+@Structural
+interface Being {
+  @val String name;
+  @val int age = 99;
 }
 ```
 
-## Tuple labels
+# Tuple labels
 Data items are optionally labeled.
 ```java
 var t = (name: "Bob", age: 35);
@@ -93,7 +99,7 @@ int age = t.age;        // inferred
 String color = t.item3; // default
 ```
 
-## Multiple return values
+# Multiple return values
 A common use-case for tuples is to return multiple values from a method.
 ```java
 var result = findMinMax(data);
@@ -121,7 +127,7 @@ Note, you must use `auto` to infer a method return type; Java's `var` only works
 both an explicit type definition and full `new` expression syntax. By contrast, because they are purely structural,
 tuples serve as both implied type definitions and concise expression syntax.
 
-## Tuple types 
+# Tuple types 
 
 What is nice about tuples is they don't require a separate type definition, a tuple expression naturally conveys its type. On the other hand not having
 a named type means tuple types are not suitable where explicit typing is necessary. For instance, using a tuple type as a function
@@ -187,7 +193,7 @@ t1.getClass() == t2.getClass() // true!
 ```
 Here, `t1` and `t2` have the same tuple type because they project the same name/type pairs.
 
-## More examples
+# More examples
 A common use-case for tuples involves selecting and organizing data from query results.
 ```java
 /** Selects a list of (name, age) tuples from a list of Person */
@@ -223,20 +229,6 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) d
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
 <p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
-
-## Sample Project
-
-Experiment with the [Manifold Sample Project](https://github.com/manifold-systems/manifold-sample-project) via:
-
-<kbd>File</kbd> ➜ <kbd>New</kbd> ➜ <kbd>Project from Version Control</kbd> ➜ <kbd>Git</kbd>
-
-<p><img src="http://manifold.systems/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
-
-Enter: <kbd>https://github.com/manifold-systems/manifold-sample-project.git</kbd>
-
-<p><img src="http://manifold.systems/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
-
-Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity.
 
 # Setup
 

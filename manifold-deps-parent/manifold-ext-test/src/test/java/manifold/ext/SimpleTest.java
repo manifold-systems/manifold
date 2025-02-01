@@ -1,23 +1,29 @@
 package manifold.ext;
 
 import abc.*;
-
-import java.awt.Rectangle;
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import junit.framework.TestCase;
 import manifold.api.type.BasicIncrementalCompileDriver;
 import manifold.api.type.ClassType;
 import manifold.api.type.ContributorKind;
 import manifold.ext.rt.api.Structural;
 
+import javax.swing.*;
+import java.awt.Rectangle;
+import java.awt.event.ItemEvent;
+import java.io.Serializable;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static org.junit.Assert.assertArrayEquals;
 
 /**
  */
-public class SimpleTest extends TestCase
+public class SimpleTest extends SimpleTestSuper
 {
   public void testNothing() {}
 
@@ -58,6 +64,128 @@ public class SimpleTest extends TestCase
     ContributorKind.Primary.hiContributorKind();
     ClassType.Enum.hiClassType();
     new BasicIncrementalCompileDriver(true).hiBasic();
+  }
+
+  public void testExtensionWithMethodRef()
+  {
+    // Consumer
+    Stream.of( "this is impossible", "Foo" ).forEach( String::echo );
+
+    // Function
+    assertEquals( Arrays.asList( "FooFoo", "BarBar" ),
+      Stream.of( "Foo", "Bar" ).map( String::duplicate ).collect( Collectors.toList() ) );
+
+    //UnaryOperator
+    UnaryOperator<String> unaryOperator = String::duplicate;
+    assertEquals( Arrays.asList( "FooFoo", "BarBar" ),
+      Stream.of( "Foo", "Bar" ).map( unaryOperator ).collect( Collectors.toList() ) );
+
+    // BiFunction
+    Map<String, Integer> map = new LinkedHashMap<>();
+    map.add( "Foo", 1 );
+    map.add( "Bar", 2 );
+    assertEquals( Arrays.asList( "Foo1", "Bar2" ),
+      map.map( String::concatenate ).collect( Collectors.toList() ) );
+
+    // interface
+    assertEquals( "public method", Stream.of( new MyInterface() { } )
+      .map( MyInterface::myPublicMethod ).collect( Collectors.joining() ) );
+
+    // static class method
+    assertEquals( Collections.singletonList( "static class method - 1" ),
+      Stream.of( 1 ).map( String::staticClassMethod ).collect( Collectors.toList() ) );
+
+    // structural interface
+    assertEquals( Collections.singletonList( "myMethod" ),
+      Stream.of( 2 ).map( NumberStructural::myMethod ).collect( Collectors.toList() ) );
+  }
+
+  public void testMethodRefWithoutExtension()
+  {
+    // this method
+    assertEquals( Collections.singletonList( "testbar" ),
+      Stream.of( "test" ).map( this::appendBarNonStatic ).collect( Collectors.toList() ) );
+
+    // super method
+    assertEquals( Collections.singletonList( "testbarSuper" ),
+      Stream.of( "test" ).map( super::appendBarSuper ).collect( Collectors.toList() ) );
+
+    // Supplier
+    assertEquals( new LinkedHashSet<>( Arrays.asList( "foo", "bar" ) ),
+      Stream.of( "foo", "bar" ).collect( LinkedHashSet::new, Set::add, Set::addAll ));
+
+    // Static method call
+    assertEquals( Arrays.asList( 4, 3 ),
+      Stream.of( "test","foo" ).map(String::length).collect( Collectors.toList() ) );
+
+    // System.out.println
+    Stream.of( "1", "2" ).forEach( System.out::println );
+
+    // Array constructor
+    assertArrayEquals( new String[]{ "1", "2" },
+      Stream.of( "1", "2" ).toArray(String[]::new) );
+
+    // shared interface, IntersectionClassType
+    assertEquals( Arrays.asList( "A", "B", "C", "D" ),
+      Stream.of( Enum1.A, Enum1.B, Enum2.C, Enum2.D ).map( EnumIntf::getValue ).collect( Collectors.toList() ) );
+
+    // Optional
+    Function<String, Optional<String>> optionalSupplier = v -> Optional.of( "test" );
+    assertEquals( Optional.of( "test" ),
+      Optional.of( "5" ).map( optionalSupplier ).orElseGet( Optional::empty ) );
+
+    // BiFunction
+    Map<Integer, Integer> map = new LinkedHashMap<>();
+    map.add( 1, 1 );
+    map.add( 2, 2 );
+    assertEquals( Arrays.asList( 2, 4 ),
+      map.map( Integer::sum ).collect( Collectors.toList() ) );
+
+    // no error should be thrown during compilation
+    Consumer<ItemEvent> itemListener = null;
+    new JComboBox<>().addItemListener(itemListener::accept);
+  }
+
+  public static String appendBarStatic(String text){
+    return text + "bar";
+  }
+
+  public String appendBarNonStatic(String text){
+    return text + "bar";
+  }
+
+  interface MyInterface
+  {
+  }
+
+  interface EnumIntf {
+    String getValue();
+  }
+
+  enum Enum1 implements EnumIntf {
+    A, B;
+
+    @Override
+    public String getValue()
+    {
+      return name();
+    }
+  }
+
+  enum Enum2 implements EnumIntf {
+    C,D;
+
+    @Override
+    public String getValue()
+    {
+      return name();
+    }
+  }
+
+  @Structural
+  public interface NumberStructural
+  {
+    String myMethod();
   }
 
   public void testSelfTypeOnExtension()
