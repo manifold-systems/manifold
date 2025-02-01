@@ -541,8 +541,6 @@ public class ManAttr_17 extends Attr implements ManAttr
   public void visitReference( JCTree.JCMemberReference tree )
   {
     super.visitReference( tree );
-
-    checkReference( tree );
   }
 
   @Override
