@@ -672,7 +672,7 @@ class ExtCodeGen
           .addArgument( ExtensionMethod.extensionClass, String.class, ( (SrcClass) method.getOwner() ).getName() )
           .addArgument( ExtensionMethod.isStatic, boolean.class, !isInstanceExtensionMethod )
           .addArgument( ExtensionMethod.isSmartStatic, boolean.class, hasThisClassAnnotation( method ) )
-          .addArgument( ExtensionMethod.isIntercept, boolean.class, isInterceptMethod ) )
+          .addArgument( ExtensionMethod.isIntercept, boolean.class, isInterceptMethod )
           .addArgument( ExtensionMethod.isExtensionSource, boolean.class, isExtensionSource ) );
     }
     else

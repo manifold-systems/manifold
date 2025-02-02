@@ -3189,7 +3189,7 @@ public class ExtensionTransformer extends TreeTranslator
         boolean isIntercept = (boolean)annotation.values.get( 3 ).snd.getValue();
         boolean isExtensionSource = (boolean) annotation.values.get( 4 ).snd.getValue();
 
-        interceptType[0] = isIntercept ? getInterceptType( tree, sym ) : null;
+        interceptType[0] = isIntercept ? getInterceptType( tree, sym, isExtensionSource ) : null;
 
         BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getModule() ).getJavacTask_PlainFileMgr();
         Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
@@ -3245,6 +3245,8 @@ public class ExtensionTransformer extends TreeTranslator
    *
    * @param tree The method invocation represented as a {@link JCTree.JCMethodInvocation} tree.
    * @param sym The symbol representing the method being invoked. This is the method to be checked for interception.
+   * @param isExtensionSource A flag indicating whether the source of the method is an `ExtensionSource`.
+   *                          If true, special handling is applied to the first parameter (which isn't annotated).
    * @return The {@link InterceptType} describing how the method should be intercepted, which can be:
    *         <ul>
    *         <li>{@code InterceptType.REFLECTION} - for methods to be invoked via reflection</li>
@@ -3252,7 +3254,7 @@ public class ExtensionTransformer extends TreeTranslator
    *         <li>{@code InterceptType.NONE} - for methods that should not be intercepted</li>
    *         </ul>
    */
-  private InterceptType getInterceptType( JCTree.JCMethodInvocation tree, Symbol sym )
+  private InterceptType getInterceptType( JCTree.JCMethodInvocation tree, Symbol sym, boolean isExtensionSource )
   {
     Tree parent = _tp.getParent( tree );
     // Traverse up the tree to find the method declaration
