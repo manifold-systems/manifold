@@ -1,11 +1,11 @@
 package abc;
 
-public class MyObject
+public class InterceptObject
 {
 
   private final String text;
 
-  public MyObject( String text )
+  public InterceptObject( String text )
   {
     this.text = text;
   }
