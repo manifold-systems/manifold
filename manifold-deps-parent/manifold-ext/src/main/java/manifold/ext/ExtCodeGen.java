@@ -36,6 +36,7 @@ import manifold.ext.rt.api.MethodSignature;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavacPlugin;
 import manifold.rt.api.Array;
+import manifold.rt.api.anno.any;
 import manifold.rt.api.util.Pair;
 
 import javax.tools.Diagnostic;
@@ -200,7 +201,7 @@ class ExtCodeGen
     public final String methodNameExpr;
     public final List<String> parameterTypes;
 
-    SimpleMethodSignature( String methodNameExpr, List<String> parameterTypes )
+    SimpleMethodSignature( String methodNameExpr, List<String> parameterTypes)
     {
       this.methodNameExpr = methodNameExpr;
       this.parameterTypes = parameterTypes;
@@ -216,7 +217,15 @@ class ExtCodeGen
      */
     public boolean isSameAs( AbstractSrcMethod<?> method )
     {
-      if( !method.getSimpleName().matches(methodNameExpr) || method.getParameters().size() != parameterTypes.size() )
+      if( !method.getSimpleName().matches( methodNameExpr ) )
+      {
+        return false;
+      }
+      if( parameterTypes == null )
+      {
+        return true;
+      }
+      if( method.getParameters().size() != parameterTypes.size() )
       {
         return false;
       }
@@ -225,8 +234,8 @@ class ExtCodeGen
       while( thisParamIter.hasNext() )
       {
         String thisParam = thisParamIter.next();
-        SrcParameter methodParam = methodParamIter.next();
-        if( !thisParam.equals( methodParam.getType().getFqName() ) )
+        String methodParam = methodParamIter.next().getType().getFqName();
+        if( !any.class.getName().equals( thisParam ) && !thisParam.equals( methodParam ) )
         {
           return false;
         }
@@ -338,12 +347,19 @@ class ExtCodeGen
         methodNameExpr = methodNameExpr.substring( 1, methodNameExpr.length() - 1 );
 
         // Extract the parameter types
-        List<SrcArgument> paramTypeArgs =
-          ( (SrcAnnotationExpression) methodDefinition.getArgument( MethodSignature.paramTypes ).getValue() )
-            .getArguments();
-        List<String> paramTypes = paramTypeArgs.stream()
-          .map( paramType -> getFqnFromClass.apply( paramType.getValue().toString() ) )
-          .collect( Collectors.toList() );
+        List<String> paramTypes;
+        if( methodDefinition.getArgument( MethodSignature.paramTypes ) == null )
+        {
+          paramTypes = null;
+        }
+        else
+        {
+          List<SrcArgument> paramTypeArgs = ( (SrcAnnotationExpression) methodDefinition
+            .getArgument( MethodSignature.paramTypes ).getValue() ).getArguments();
+          paramTypes = paramTypeArgs.stream()
+            .map( paramType -> getFqnFromClass.apply( paramType.getValue().toString() ) )
+            .collect( Collectors.toList() );
+        }
 
         // collect the method definitions
         methodDefinitions.add( new SimpleMethodSignature( methodNameExpr, paramTypes ) );

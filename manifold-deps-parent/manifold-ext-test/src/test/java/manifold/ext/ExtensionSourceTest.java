@@ -49,7 +49,29 @@ public class ExtensionSourceTest extends TestCase
     // extensions from MyStringExtSource4 \\
 
     // Matching with regex name
-    assertThat( nullString.contentEquals( "Foo" )).isFalse();
-    assertThat( text.contentEquals(text) ).isTrue();
+    assertThat( nullString.contentEquals( "Foo" ) ).isFalse();
+    assertThat( text.contentEquals( text ) ).isTrue();
+
+    // //////////////////////////////////
+
+    // extensions from MyStringExtSource5 \\
+
+    // Matching with any parameter types
+    assertThat( nullString.lastIndexOf( 'b' ) ).isEqualTo( -1 );
+    assertThat( text.lastIndexOf( 'b' ) ).isEqualTo( 11 );
+    assertThat( nullString.lastIndexOf( "b", 5 ) ).isEqualTo( -1 );
+    assertThat( text.lastIndexOf( "b", 5 ) ).isEqualTo( 3 );
+    // Not intercepted
+    assertThatNullPointerException().isThrownBy( () -> nullString.lastIndexOf( 'b', 5 ) );
+
+    // //////////////////////////////////
+
+    // extensions from MyStringExtSource6 \\
+
+    // Matching with any parameter type, parameter can be char or string
+    assertThat( nullString.indexOf( 'a' ) ).isEqualTo( -1 );
+    assertThat( text.indexOf( 'a' ) ).isEqualTo( 2 );
+    assertThat( nullString.indexOf( "a" ) ).isEqualTo( -1 );
+    assertThat( text.indexOf( "a" ) ).isEqualTo( 2 );
   }
 }

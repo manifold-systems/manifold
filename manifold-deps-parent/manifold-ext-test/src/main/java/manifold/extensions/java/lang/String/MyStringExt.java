@@ -20,6 +20,7 @@ import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.ExtensionMethodType;
 import manifold.ext.rt.api.ExtensionSource;
 import manifold.ext.rt.api.MethodSignature;
+import manifold.rt.api.anno.any;
 
 @Extension
 @ExtensionSource(
@@ -47,7 +48,26 @@ import manifold.ext.rt.api.MethodSignature;
   type = ExtensionMethodType.INCLUDE,
   overrideExistingMethods = true,
   methods = {
+    // regex as method name
     @MethodSignature( name = "content.*", paramTypes = { String.class, CharSequence.class } )
+  })
+
+@ExtensionSource(
+  source = MyStringExtSource5.class,
+  type = ExtensionMethodType.INCLUDE,
+  overrideExistingMethods = true,
+  methods = {
+    // Any params
+    @MethodSignature( name = "lastIndexOf" )
+  })
+
+@ExtensionSource(
+  source = MyStringExtSource6.class,
+  type = ExtensionMethodType.INCLUDE,
+  overrideExistingMethods = true,
+  methods = {
+    // wildcard for the second parameter
+    @MethodSignature( name = "indexOf", paramTypes = { String.class, any.class } )
   })
 
 public class MyStringExt
