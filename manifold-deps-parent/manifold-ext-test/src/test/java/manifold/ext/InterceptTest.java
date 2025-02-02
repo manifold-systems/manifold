@@ -29,4 +29,27 @@ public class InterceptTest extends TestCase
         // intercept negative amount
         assertEquals( "negative amount", interceptObject.repeatSelf( -1 ) );
     }
+
+    public void testInterceptSuperMethod()
+    {
+        InterceptTest.InterceptObjectSub interceptObjectSub = new InterceptTest.InterceptObjectSub( "12-" );
+        // Steps:
+        // 1. interceptObjectSub increases the number by one,
+        // 2. next the extension method is called,
+        // 3. and finally the repeatSelf method if the InterceptObject class
+        assertEquals( "12-12-", interceptObjectSub.repeatSelf( 1 ) );
+        // intercept negative amount
+        assertEquals( "negative amount", interceptObjectSub.repeatSelf( -2 ) );
+    }
+
+    public static class InterceptObjectSub extends InterceptObject {
+        public InterceptObjectSub(String text) {
+            super(text);
+        }
+
+        public String repeatSelf(int times)
+        {
+            return super.repeatSelf( times + 1 );
+        }
+    }
 }

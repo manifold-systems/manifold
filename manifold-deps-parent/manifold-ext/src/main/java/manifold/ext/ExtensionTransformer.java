@@ -17,7 +17,6 @@
 package manifold.ext;
 
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.*;
@@ -30,7 +29,6 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCTypeCast;
-import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
@@ -38,7 +36,6 @@ import com.sun.tools.javac.util.*;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
-import manifold.api.gen.SrcParameter;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
@@ -61,6 +58,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Function;
@@ -993,11 +991,12 @@ public class ExtensionTransformer extends TreeTranslator
   {
     // If methodCall is an extension method, rewrite it accordingly
     boolean[] isSmartStatic = {false};
-    Symbol.MethodSymbol extMethod = findExtMethod( methodCall, isSmartStatic );
+    InterceptType[] interceptType = {null};
+    Symbol.MethodSymbol extMethod = findExtMethod( methodCall, isSmartStatic, interceptType );
     if( extMethod != null )
     {
       // Replace with extension method call
-      methodCall = replaceExtCall( methodCall, extMethod, isSmartStatic[0] );
+      methodCall = replaceExtCall( methodCall, extMethod, isSmartStatic[0], interceptType[0] );
     }
     return methodCall;
   }
@@ -1402,11 +1401,12 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     boolean isSmartStatic[] = {false};
-    Symbol.MethodSymbol method = findExtMethod( tree, isSmartStatic );
+    InterceptType[] interceptType = {null};
+    Symbol.MethodSymbol method = findExtMethod( tree, isSmartStatic, interceptType );
     if( method != null )
     {
       // Replace with extension method call
-      result = replaceExtCall( tree, method, isSmartStatic[0] );
+      result = replaceExtCall( tree, method, isSmartStatic[0], interceptType[0] );
     }
     else if( isStructuralMethod( tree ) )
     {
@@ -2600,8 +2600,153 @@ public class ExtensionTransformer extends TreeTranslator
     return castCall;
   }
 
-  private JCTree.JCMethodInvocation replaceExtCall( JCTree.JCMethodInvocation tree, Symbol.MethodSymbol method, boolean isSmartStatic )
+  private JCTree.JCMethodInvocation replaceExtCall( JCTree.JCMethodInvocation tree, Symbol.MethodSymbol method,
+    boolean isSmartStatic, InterceptType interceptType )
   {
+    if( interceptType == InterceptType.NONE )
+    {
+      return tree;
+    }
+    if( interceptType == InterceptType.REFLECTION )
+    {
+      // Calls the method using reflection, i.e.
+      // ReflectUtil.invokeDefault(<interceptObject>, <InterceptObject class>, <methodName>, <parameter types>, <arguments>)
+
+      // Get necessary utility instances from the compiler context.
+      TreeMaker make = _tp.getTreeMaker();
+      Names names = Names.instance( _tp.getContext() );
+      Types types = Types.instance( _tp.getContext() );
+      JavacElements elements = JavacElements.instance( _tp.getContext() );
+
+      Symbol.ClassSymbol reflectUtilClassSymbol = elements.getTypeElement( ReflectUtil.class.getName() );
+
+      // ------------------------------------------------------------------------
+      // 1. Create an identifier for ReflectUtil and set its symbol and type.
+      JCTree.JCIdent reflectUtilIdent = make.Ident( reflectUtilClassSymbol.name );
+      reflectUtilIdent.sym = reflectUtilClassSymbol;
+      reflectUtilIdent.type = reflectUtilClassSymbol.type;
+
+      // ------------------------------------------------------------------------
+      // 2. Build the method select for "invokeDefault".
+      JCTree.JCFieldAccess invokeDefaultSelect = make.Select( reflectUtilIdent, names.fromString( "invokeDefault" ) );
+
+      // 3. Look up the actual method symbol for invokeDefault in ReflectUtil.
+      //    Iterate over the enclosed elements and pick one that matches the name
+      //    and has 5 correct parameters.
+      // TODO cache this?
+      Symbol.MethodSymbol invokeDefaultSym = null;
+      for( Symbol sym : reflectUtilClassSymbol.getEnclosedElements() )
+      {
+        if( sym instanceof Symbol.MethodSymbol && sym.getSimpleName().contentEquals( "invokeDefault" ) )
+        {
+          // Check if parameter types matches
+          Symbol.MethodSymbol ms = (Symbol.MethodSymbol) sym;
+          if( ms.getParameters().size() == 5
+            && Object.class.getName().equals( ms.getParameters().get( 0 ).type.tsym.toString() )
+            && Class.class.getName().equals( ms.getParameters().get( 1 ).type.tsym.toString() )
+            && String.class.getName().equals( ms.getParameters().get( 2 ).type.tsym.toString() )
+            && "java.lang.Class<?>[]".equals( ms.getParameters().get( 3 ).type.toString() )
+            && "java.lang.Object[]".equals( ms.getParameters().get( 4 ).type.toString() ) )
+          {
+            invokeDefaultSym = ms;
+            break;
+          }
+        }
+      }
+      if( invokeDefaultSym == null )
+      {
+        throw new IllegalStateException( "Cannot resolve method 'invokeDefault' in ReflectUtil" );
+      }
+
+      // Set the symbol and type on the method select.
+      invokeDefaultSelect.sym = invokeDefaultSym;
+      invokeDefaultSelect.type = invokeDefaultSym.type;
+
+      // ------------------------------------------------------------------------
+      // 4. Build the arguments list for invokeDefault.
+      // Expected parameters: (Object receiver, Class<?> iface, String name, Class<?>[] params, Object[] args)
+
+      // (a) Receiver:
+      // Assuming the original invocation is of the form "receiver.method(...)".
+      JCTree.JCFieldAccess meth = (JCTree.JCFieldAccess) tree.meth;
+      JCTree.JCIdent receiver = (JCTree.JCIdent) meth.getExpression(); // the original receiver expression
+
+      // (b) Receiver class literal: build "receiver.getClass()" as a class literal.
+      // Then, create a type object for the receiver’s type.
+      JCTree.JCExpression receiverType = make.Type( receiver.sym.type );
+      JCTree.JCFieldAccess receiverClassExpr = make.Select( receiverType, names.fromString( "class" ) );
+      Type classType = types.erasure(elements.getTypeElement("java.lang.Class").asType());
+      receiverClassExpr.type = new Type.ClassType(
+        classType.getEnclosingType(),
+        List.of(receiver.sym.type), // Generic argument: SomeType -> Class<SomeType>
+        classType.tsym
+      );
+      receiverClassExpr.sym = receiverClassExpr.type.tsym;
+
+      // (c) Method name literal:
+      JCTree.JCExpression methodNameExpr = make.Literal( meth.name.toString() );
+
+      // (d) Parameter types array:
+      // Convert each parameter type of the original method into a class literal (e.g. int.class, String.class, etc.).
+      List<JCTree.JCExpression> paramTypesList = List.nil();
+      for( com.sun.tools.javac.code.Type paramType : meth.type.getParameterTypes() )
+      {
+        JCTree.JCFieldAccess paramTypeLiteral = make.Select( make.Type( paramType ), names.fromString( "class" ) );
+        paramTypeLiteral.type = paramTypeLiteral.selected.type;
+        paramTypeLiteral.sym = paramTypeLiteral.selected.type.tsym;
+        paramTypesList = paramTypesList.append( paramTypeLiteral );
+      }
+
+      // Look up the java.lang.Class symbol.
+      Symbol.ClassSymbol classSymbol = elements.getTypeElement( "java.lang.Class" );
+      // Create an identifier for Class and set its symbol/type.
+      JCTree.JCIdent classIdent = make.Ident( names.fromString( "Class" ) );
+      classIdent.sym = classSymbol;
+      classIdent.type = classSymbol.type;
+
+      // Build the new array expression for the parameter types.
+      JCTree.JCNewArray parameterArray = make.NewArray(
+        classIdent,     // element type
+        List.nil(),     // no explicit dimensions
+        paramTypesList  // parameters
+      );
+      // Set the array type to Class[].
+      parameterArray.type = types.erasure( types.makeArrayType( classSymbol.type ) );
+
+      // (e) Argument array:
+      // Use the original method invocation’s argument expressions (tree.args) to build an Object[].
+      Symbol.ClassSymbol objectSymbol = elements.getTypeElement( "java.lang.Object" );
+      JCTree.JCIdent objectIdent = make.Ident( names.fromString( "Object" ) );
+      objectIdent.sym = objectSymbol;
+      objectIdent.type = objectSymbol.type;
+      JCTree.JCNewArray argumentArray = make.NewArray(
+        objectIdent,   // element type
+        List.nil(),    // no explicit dimensions
+        tree.args      // the argument expressions
+      );
+      // Set the type to Object[].
+      argumentArray.type = types.makeArrayType( objectSymbol.type );
+
+      // Create the argument list in the expected order.
+      List<JCTree.JCExpression> args = List.of(
+        receiver,           // the original receiver
+        receiverClassExpr,  // its class literal
+        methodNameExpr,     // the method name as a literal string
+        parameterArray,     // array of parameter type literals
+        argumentArray       // array of argument expressions
+      );
+
+      // ------------------------------------------------------------------------
+      // 5. Build the method invocation.
+      JCTree.JCMethodInvocation methodInvocation = make.Apply(
+        List.nil(),          // no type arguments
+        invokeDefaultSelect, // the method select (ReflectUtil.invokeDefault)
+        args                 // the argument list
+      );
+      methodInvocation.type = objectSymbol.type;
+
+      return methodInvocation;
+    }
     Symtab symTab = _tp.getSymtab();
     JCExpression methodSelect = tree.getMethodSelect();
     if( methodSelect instanceof JCTree.JCFieldAccess )
@@ -3004,7 +3149,11 @@ public class ExtensionTransformer extends TreeTranslator
     }
   }
 
-  private Symbol.MethodSymbol findExtMethod( JCTree.JCMethodInvocation tree, boolean[] isSmartStatic )
+  private enum InterceptType {
+    NONE, NORMAL, REFLECTION;
+  }
+
+  private Symbol.MethodSymbol findExtMethod( JCTree.JCMethodInvocation tree, boolean[] isSmartStatic , InterceptType[] interceptType )
   {
     Symbol sym = null;
     if( tree.meth instanceof JCTree.JCFieldAccess )
@@ -3039,11 +3188,8 @@ public class ExtensionTransformer extends TreeTranslator
         isSmartStatic[0] = (boolean)annotation.values.get( 2 ).snd.getValue();
         boolean isIntercept = (boolean)annotation.values.get( 3 ).snd.getValue();
 
-        if ( isIntercept && !shouldInterceptMethod( tree, sym ) )
-        {
-          // Do not replace an intercepted method call in the method declaration of the intercepted method
-          return null;
-        }
+        interceptType[0] = isIntercept ? getInterceptType( tree, sym ) : null;
+
         BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getModule() ).getJavacTask_PlainFileMgr();
         Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
         if( classSymbol == null )
@@ -3092,16 +3238,20 @@ public class ExtensionTransformer extends TreeTranslator
   }
 
   /**
-   * Determines whether a method invocation should be intercepted. A method should not be intercepted if
-   * it is invoked from within the body of the method being intercepted (i.e., the invocation is part of
-   * the method’s own execution).
+   * Determines the appropriate interception type for a method invocation.
+   * A method should be invoked via reflection if it is called from within the body of the method being intercepted
+   * (i.e., the invocation is part of the method's own execution).
    *
    * @param tree The method invocation represented as a {@link JCTree.JCMethodInvocation} tree.
-   * @param sym The symbol representing the method being called. This is the method to check for interception.
-   *
-   * @return true if the method should be intercepted; false otherwise.
+   * @param sym The symbol representing the method being invoked. This is the method to be checked for interception.
+   * @return The {@link InterceptType} describing how the method should be intercepted, which can be:
+   *         <ul>
+   *         <li>{@code InterceptType.REFLECTION} - for methods to be invoked via reflection</li>
+   *         <li>{@code InterceptType.NORMAL} - for methods that can be intercepted normally using the extension method</li>
+   *         <li>{@code InterceptType.NONE} - for methods that should not be intercepted</li>
+   *         </ul>
    */
-  private boolean shouldInterceptMethod( JCTree.JCMethodInvocation tree, Symbol sym )
+  private InterceptType getInterceptType( JCTree.JCMethodInvocation tree, Symbol sym )
   {
     Tree parent = _tp.getParent( tree );
     // Traverse up the tree to find the method declaration
@@ -3110,10 +3260,10 @@ public class ExtensionTransformer extends TreeTranslator
       parent = _tp.getParent( parent );
     }
     JCTree.JCMethodDecl methodDecl = (JCTree.JCMethodDecl) parent;
-    // If the method name doesn't match, it means we're not calling the same method, so it can be intercepted
+    // If the method name doesn't match, it means we're not calling the same method, so it can be intercepted normally
     if( !methodDecl.name.toString().equals( sym.name.toString() ) )
     {
-      return true;
+      return InterceptType.NORMAL;
     }
     // Determine how many parameters to subtract for the comparison
     int paramsToSubtract = 0;
@@ -3137,26 +3287,36 @@ public class ExtensionTransformer extends TreeTranslator
       if( !tree.toString().split( "\\.", 2 )[0].equals( objectName ) )
       {
         // The method does not call its parent. The current object name differs from the parameters name.
-        return true;
+        return InterceptType.NORMAL;
       }
     }
     // Ensure that the number of arguments matches the number of parameters minus any ignored ones
     if( methodDecl.params.length() - paramsToSubtract != tree.args.length() )
     {
-      // If the argument count doesn't match the parameter count, it can be intercepted
-      return true;
+      // If the argument count doesn't match the parameter count, it can be intercepted normally
+      return InterceptType.NORMAL;
     }
     // Compare the argument types to the method parameter types (ignoring the first parameter if needed)
     for( int i = 1; i < methodDecl.params.length(); i++ )
     {
       if( !methodDecl.params.get( i ).type.tsym.equals( tree.args.get( i - paramsToSubtract ).type.tsym ) )
       {
-        // If the argument type doesn't match the parameter type, it can be intercepted
-        return true;
+        // If the argument type doesn't match the parameter type, it can be intercepted normally
+        return InterceptType.NORMAL;
       }
     }
-    // If all checks pass, the method is calling itself and should not be intercepted
-    return false;
+    boolean isInterceptMethod = ( (JCTree.JCMethodDecl) parent ).getModifiers().annotations.stream()
+      .anyMatch( anno -> Intercept.class.getName().equals( anno.type.toString() ) );
+    boolean isStatic = ( (JCTree.JCFieldAccess) tree.meth ).sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC );
+    if( isInterceptMethod && !isStatic )
+    {
+      return InterceptType.REFLECTION;
+    }
+    else if( "super".equals( ( (JCTree.JCFieldAccess) tree.meth ).selected.toString() ) )
+    {
+      return InterceptType.NORMAL;
+    }
+    return InterceptType.NONE;
   }
 
   //## todo: cache these

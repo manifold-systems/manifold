@@ -1,9 +1,9 @@
 package manifold.extensions.abc.InterceptObject;
 
+import abc.InterceptObject;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.Intercept;
 import manifold.ext.rt.api.This;
-import abc.InterceptObject;
 
 @Extension
 public class InterceptObjectExt
