@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-package manifold.ext.rt.api;
+package manifold.extensions.java.lang.String;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-/**
- * Annotation used to define method signatures, consisting of the method name, and it parameter types
- */
-@Retention(RetentionPolicy.CLASS)
-public @interface MethodSignature
+public class MyStringExtSource4
 {
-    /** The name of the method. This can be a regular expression */
-    String name = "name";
-    String name();
-
-    /** the parameter types of the method */
-    String paramTypes = "paramTypes";
-    Class[] paramTypes();
+  public static boolean contentEquals( String thiz, CharSequence cs )
+  {
+    return thiz != null && thiz.contentEquals( cs );
+  }
 }
+

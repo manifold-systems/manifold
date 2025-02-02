@@ -41,6 +41,15 @@ import manifold.ext.rt.api.MethodSignature;
   }
 )
 @ExtensionSource( source = MyStringExtSource3.class, overrideExistingMethods = true )
+
+@ExtensionSource(
+  source = MyStringExtSource4.class,
+  type = ExtensionMethodType.INCLUDE,
+  overrideExistingMethods = true,
+  methods = {
+    @MethodSignature( name = "content.*", paramTypes = { String.class, CharSequence.class } )
+  })
+
 public class MyStringExt
 {
 }

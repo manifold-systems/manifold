@@ -43,5 +43,13 @@ public class ExtensionSourceTest extends TestCase
     // All methods are included, nothing is configured
     assertThat( nullString.toLowerCase() ).isNull();
     assertThat( text.toLowerCase() ).isEqualTo( "  abc  foo bar " );
+
+    // //////////////////////////////////
+
+    // extensions from MyStringExtSource4 \\
+
+    // Matching with regex name
+    assertThat( nullString.contentEquals( "Foo" )).isFalse();
+    assertThat( text.contentEquals(text) ).isTrue();
   }
 }

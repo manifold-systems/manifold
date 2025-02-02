@@ -197,12 +197,12 @@ class ExtCodeGen
    */
   private static class SimpleMethodSignature
   {
-    public final String methodName;
+    public final String methodNameExpr;
     public final List<String> parameterTypes;
 
-    SimpleMethodSignature( String methodName, List<String> parameterTypes )
+    SimpleMethodSignature( String methodNameExpr, List<String> parameterTypes )
     {
-      this.methodName = methodName;
+      this.methodNameExpr = methodNameExpr;
       this.parameterTypes = parameterTypes;
     }
 
@@ -216,7 +216,7 @@ class ExtCodeGen
      */
     public boolean isSameAs( AbstractSrcMethod<?> method )
     {
-      if( !method.getSimpleName().equals( methodName ) || method.getParameters().size() != parameterTypes.size() )
+      if( !method.getSimpleName().matches(methodNameExpr) || method.getParameters().size() != parameterTypes.size() )
       {
         return false;
       }
@@ -334,8 +334,8 @@ class ExtCodeGen
         SrcAnnotationExpression methodDefinition = (SrcAnnotationExpression) methodDefinitionArg.getValue();
 
         // Extract the method name
-        String methodName = methodDefinition.getArgument( MethodSignature.name ).getValue().toString();
-        methodName = methodName.substring( 1, methodName.length() - 1 );
+        String methodNameExpr = methodDefinition.getArgument( MethodSignature.name ).getValue().toString();
+        methodNameExpr = methodNameExpr.substring( 1, methodNameExpr.length() - 1 );
 
         // Extract the parameter types
         List<SrcArgument> paramTypeArgs =
@@ -346,7 +346,7 @@ class ExtCodeGen
           .collect( Collectors.toList() );
 
         // collect the method definitions
-        methodDefinitions.add( new SimpleMethodSignature( methodName, paramTypes ) );
+        methodDefinitions.add( new SimpleMethodSignature( methodNameExpr, paramTypes ) );
       } );
     }
 
