@@ -16,6 +16,8 @@
 
 package manifold.ext.rt.api;
 
+import manifold.rt.api.anno.any;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -29,7 +31,7 @@ public @interface MethodSignature
     String name = "name";
     String name();
 
-    /** the parameter types of the method */
+    /** the parameter types of the method. Use {@link any} as a wildcard for a specific parameter */
     String paramTypes = "paramTypes";
     Class[] paramTypes() default { NullPointerException.class };
 }

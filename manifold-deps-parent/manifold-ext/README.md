@@ -781,6 +781,14 @@ For example, to include (or exclude) only specific methods from `StringUtils`, y
     } )
 ```
 
+The `name` value can be specified as a regular expression.
+
+There are several ways to configure how parameter types are matched:
+* Omitting `paramTypes`: Intercepts all methods with the specified name, regardless of their parameter types.
+* Empty `paramTypes`: Intercepts only methods with the same name and no parameters.
+* Non-empty `paramTypes`: Intercepts methods with the specified name and matching parameter types. You can use `any.class` for a parameter type that matches any class type.
+  * For example, `@MethodSignature(name = "foo", paramTypes = { String.class, any.class })` matches methods like `foo(String, int)` as well as `foo(String, String)` (and other variations for the second parameter).
+
 ### Manually Generating Extension Classes
 
 Manifold also provides the option to manually generate extension classes by creating your own type manifolds.
