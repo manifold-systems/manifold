@@ -970,9 +970,13 @@ public class SrcClassUtil
         addArguments( annoExpr, value.fst, value.snd );
         if( value.snd instanceof Attribute.Array )
         {
-          multipleAnnotations = true;
-          ( (SrcAnnotationArrayExpression) annoExpr.getArguments().get( 0 ).getValue() ).getArguments()
-            .forEach( arg -> srcAnnotated.addAnnotation( (SrcAnnotationExpression) arg.getValue() ) );
+          java.util.List<SrcArgument> arguments =
+            ( (SrcAnnotationArrayExpression) annoExpr.getArguments().get( 0 ).getValue() ).getArguments();
+          multipleAnnotations = arguments.stream().allMatch( arg -> arg.getValue() instanceof SrcAnnotationExpression );
+          if( multipleAnnotations )
+          {
+            arguments.forEach( arg -> srcAnnotated.addAnnotation( (SrcAnnotationExpression) arg.getValue() ) );
+          }
         }
       }
       if( !multipleAnnotations )
