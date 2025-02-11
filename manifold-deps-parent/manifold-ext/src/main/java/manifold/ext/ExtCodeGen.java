@@ -33,13 +33,13 @@ import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.ForwardingExtensionMethod;
 import manifold.ext.rt.api.Expires;
 import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.Intercept;
 import manifold.ext.rt.api.This;
 import manifold.ext.rt.api.ThisClass;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavacPlugin;
 import manifold.rt.api.Array;
 import manifold.rt.api.util.Pair;
-import manifold.util.JreUtil;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -410,14 +410,10 @@ class ExtCodeGen
     }
   }
 
-  private void addExtensionMethod( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler )
+  private void addExtensionMethod( AbstractSrcMethod<?> method, SrcClass extendedType,
+    DiagnosticListener<JavaFileObject> errorHandler )
   {
     if( !isExtensionMethod( method, extendedType ) )
-    {
-      return;
-    }
-
-    if( warnIfDuplicate( method, extendedType, errorHandler ) )
     {
       return;
     }
@@ -427,13 +423,33 @@ class ExtCodeGen
 
     boolean isInstanceExtensionMethod = isInstanceExtensionMethod( method, extendedType );
 
-    SrcMethod srcMethod = new SrcMethod( extendedType );
-    long modifiers = method.getModifiers();
-    if( extendedType.isInterface() && isInstanceExtensionMethod )
+    boolean isInterceptMethod = method.getAnnotation( Intercept.class ) != null;
+
+    AbstractSrcMethod srcMethod;
+    if( isInterceptMethod )
     {
-      // extension method must be default method in interface to not require implementation
-      modifiers |= Flags.DEFAULT;
+      srcMethod = findMethod( method, extendedType );
+      if( srcMethod == null )
+      {
+        errorHandler.report( new JavacDiagnostic( null, Diagnostic.Kind.ERROR, 0, 0, 0,
+          ExtIssueMsg.MSG_INTERCEPTION_NOT_FOUND.get( method.signature(), ( (SrcClass) method.getOwner() ).getName(), extendedType.getName() ) ) );
+        return;
+      }
     }
+    else
+    {
+      if( warnIfDuplicate( method, extendedType, errorHandler ) )
+      {
+        return;
+      }
+      srcMethod = new SrcMethod( extendedType );
+
+      long modifiers = method.getModifiers();
+      if( extendedType.isInterface() && isInstanceExtensionMethod )
+      {
+        // extension method must be default method in interface to not require implementation
+        modifiers |= Flags.DEFAULT;
+      }
 
 //## Don't mark extension methods on classes as final, it otherwise blocks extended classes from implementing an interface with the same method signature
 //    else
@@ -442,84 +458,87 @@ class ExtCodeGen
 //      modifiers |= Modifier.FINAL;
 //    }
 
-    if( isInstanceExtensionMethod )
-    {
-      // remove static for instance method
-      modifiers &= ~Modifier.STATIC;
-    }
+      if( isInstanceExtensionMethod )
+      {
+        // remove static for instance method
+        modifiers &= ~Modifier.STATIC;
+      }
 
-    srcMethod.modifiers( modifiers );
+      srcMethod.modifiers( modifiers );
+
+      srcMethod.returns( method.getReturnType() );
+
+      String name = method.getSimpleName();
+      srcMethod.name( name );
+      List typeParams = method.getTypeVariables();
+
+      // extension method must reflect extended type's type vars before its own
+      int extendedTypeVarCount = extendedType.getTypeVariables().size();
+      for( int i = isInstanceExtensionMethod ? extendedTypeVarCount : 0; i < typeParams.size(); i++ )
+      {
+        SrcType typeVar = (SrcType) typeParams.get( i );
+        srcMethod.addTypeVar( typeVar );
+      }
+
+      List params = method.getParameters();
+
+      // exclude @This param
+      int firstParam = isInstanceExtensionMethod || hasThisClassAnnotation( method ) ? 1 : 0;
+
+      for( int i = firstParam; i < params.size(); i++ )
+      {
+        SrcParameter param = (SrcParameter) params.get( i );
+        SrcParameter p = new SrcParameter( param.getSimpleName(), param.getType() );
+        for( SrcAnnotationExpression anno : param.getAnnotations() )
+        {
+          // ensure annotations on parameters such as @NotNull map correctly
+          p.addAnnotation( anno );
+        }
+        srcMethod.addParam( p );
+      }
+
+      for( Object throwType : method.getThrowTypes() )
+      {
+        srcMethod.addThrowType( (SrcType) throwType );
+      }
+
+      if( delegateCalls )
+      {
+        // delegate to the extension method
+
+        delegateCall( method, isInstanceExtensionMethod, srcMethod );
+      }
+      else
+      {
+        // stub the body
+
+        srcMethod.body( new SrcStatementBlock()
+          .addStatement(
+            new SrcRawStatement()
+              .rawText( "throw new " + RuntimeException.class.getSimpleName() + "(\"Should not exist at runtime!\");" ) ) );
+      }
+
+      extendedType.addMethod( srcMethod );
+    }
 
     if( !delegateCalls )
     {
       // mark as extension method for efficient lookup during method call replacement
       srcMethod.addAnnotation(
         new SrcAnnotationExpression( ExtensionMethod.class )
-          .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() )
-          .addArgument( "isStatic", boolean.class, !isInstanceExtensionMethod )
-          .addArgument( "isSmartStatic", boolean.class, hasThisClassAnnotation( method ) ) );
+          .addArgument( ExtensionMethod.extensionClass, String.class, ( (SrcClass) method.getOwner() ).getName() )
+          .addArgument( ExtensionMethod.isStatic, boolean.class, !isInstanceExtensionMethod )
+          .addArgument( ExtensionMethod.isSmartStatic, boolean.class, hasThisClassAnnotation( method ) )
+          .addArgument( ExtensionMethod.isIntercept, boolean.class, isInterceptMethod ) );
     }
     else
     {
       srcMethod.addAnnotation( new SrcAnnotationExpression( ForwardingExtensionMethod.class ) );
     }
 
-    srcMethod.returns( method.getReturnType() );
-
-    String name = method.getSimpleName();
-    srcMethod.name( name );
-    List typeParams = method.getTypeVariables();
-
-    // extension method must reflect extended type's type vars before its own
-    int extendedTypeVarCount = extendedType.getTypeVariables().size();
-    for( int i = isInstanceExtensionMethod ? extendedTypeVarCount : 0; i < typeParams.size(); i++ )
-    {
-      SrcType typeVar = (SrcType)typeParams.get( i );
-      srcMethod.addTypeVar( typeVar );
-    }
-
-    List params = method.getParameters();
-
-    // exclude @This param
-    int firstParam = isInstanceExtensionMethod || hasThisClassAnnotation( method ) ? 1 : 0;
-
-    for( int i = firstParam; i < params.size(); i++ )
-    {
-      SrcParameter param = (SrcParameter)params.get( i );
-      SrcParameter p = new SrcParameter( param.getSimpleName(), param.getType() );
-      for( SrcAnnotationExpression anno: param.getAnnotations() )
-      {
-        // ensure annotations on parameters such as @NotNull map correctly
-        p.addAnnotation( anno );
-      }
-      srcMethod.addParam( p );
-    }
-
-    for( Object throwType : method.getThrowTypes() )
-    {
-      srcMethod.addThrowType( (SrcType)throwType );
-    }
-
-    if( delegateCalls )
-    {
-      // delegate to the extension method
-
-      delegateCall( method, isInstanceExtensionMethod, srcMethod );
-    }
-    else
-    {
-      // stub the body
-
-      srcMethod.body( new SrcStatementBlock()
-                        .addStatement(
-                          new SrcRawStatement()
-                            .rawText( "throw new " + RuntimeException.class.getSimpleName() + "(\"Should not exist at runtime!\");" ) ) );
-    }
-
-    extendedType.addMethod( srcMethod );
   }
 
-  private void delegateCall( AbstractSrcMethod method, boolean isInstanceExtensionMethod, SrcMethod srcMethod )
+  private void delegateCall( AbstractSrcMethod method, boolean isInstanceExtensionMethod, AbstractSrcMethod<?> srcMethod )
   {
     StringBuilder call = new StringBuilder();
     SrcType returnType = srcMethod.getReturnType();
