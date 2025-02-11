@@ -209,11 +209,10 @@ text.trim(); // returns 'myTestString'
 ```
 
 > [!IMPORTANT]  
-> **Method invocations in external code cannot be intercepted.** 
+>**An interceptor works only on calls that compile with the interceptor.**
 > 
-> This means that any method calls made within code outside of the current context, such as those in third-party libraries,
-> are not subject to interception.
-> Any logic or behavior defined in external code remains unaffected by the interception mechanism.
+> For instance, calls to `trim()` from the preceding example are intercepted when compiled with `MyStringExtension`. Calls
+> compiled without this extension are not intercepted.
 
 ## Generics
 
