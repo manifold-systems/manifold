@@ -1,6 +1,6 @@
 ﻿# Manifold : CSV (comma-separated values)
 
-![latest](https://img.shields.io/badge/latest-v2024.1.54-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.55-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -324,11 +324,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-csv-rt:2024.1.54'
+    implementation 'systems.manifold:manifold-csv-rt:2024.1.55'
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2024.1.54'
-    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2024.1.54'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2024.1.55'
+    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2024.1.55'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -364,7 +364,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.54</manifold.version>
+        <manifold.version>2024.1.55</manifold.version>
     </properties>
     
     <dependencies>
@@ -408,10 +408,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-csv`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-csv/2024.1.54/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-csv/2024.1.54)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-csv/2024.1.55/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-csv/2024.1.55)
 
 `manifold-csv-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-csv-rt/2024.1.54/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-csv-rt/2024.1.54)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-csv-rt/2024.1.55/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-csv-rt/2024.1.55)
 
 # License
 
