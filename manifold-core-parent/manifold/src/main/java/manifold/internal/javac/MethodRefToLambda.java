@@ -108,9 +108,10 @@ public class MethodRefToLambda
           args.tail
         ).setType( methodRef.sym.type.getReturnType() );
       case SUPER:
+        Type type = ( (JCTree.JCIdent) methodRef.expr ).sym.owner.type;
         return make.Apply(
           List.nil(),
-          IDynamicJdk.instance().Select( make, make.Super( sym.owner.type, sym.owner.type.tsym ), sym ),
+          IDynamicJdk.instance().Select( make, make.Super( type, type.tsym ), sym ),
           args
         ).setType( methodRef.sym.type.getReturnType() );
       case STATIC:
