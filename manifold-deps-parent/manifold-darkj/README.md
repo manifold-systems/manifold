@@ -1,6 +1,6 @@
 # Manifold : Dark Java
 
-![latest](https://img.shields.io/badge/latest-v2024.1.54-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.55-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -159,7 +159,7 @@ repositories {
 }
 
 dependencies {
-    implementation group: 'systems.manifold', name: 'manifold-darkj', version: '2024.1.54'
+    implementation group: 'systems.manifold', name: 'manifold-darkj', version: '2024.1.55'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
@@ -168,7 +168,7 @@ dependencies {
         compile files( "${System.properties['java.home']}/../lib/tools.jar" )
     }
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-darkj', version: '2024.1.54'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-darkj', version: '2024.1.55'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -215,7 +215,7 @@ rootProject.name = 'MyDarkJavaProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.54</manifold.version>
+        <manifold.version>2024.1.55</manifold.version>
     </properties>
     
     <dependencies>
@@ -283,7 +283,7 @@ rootProject.name = 'MyDarkJavaProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.54</manifold.version>
+        <manifold.version>2024.1.55</manifold.version>
     </properties>
     
     <dependencies>

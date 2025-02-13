@@ -42,4 +42,7 @@ public @interface ExtensionMethod
 
   String isSmartStatic = "isSmartStatic";
   boolean isSmartStatic();
+
+  String isIntercept = "isIntercept";
+  boolean isIntercept();
 }

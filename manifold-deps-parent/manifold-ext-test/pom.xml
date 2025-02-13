@@ -4,7 +4,7 @@
     <parent>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-deps-parent</artifactId>
-      <version>2024.1.54-SNAPSHOT</version>
+      <version>2024.1.55-SNAPSHOT</version>
     </parent>
 
     <artifactId>manifold-ext-test</artifactId>
@@ -22,7 +22,7 @@
         <groupId>systems.manifold</groupId>
         <artifactId>manifold-ext-middle-test</artifactId>
         <version>${project.version}</version>
-        <scope>test</scope>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>systems.manifold</groupId>
@@ -39,6 +39,12 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.jspecify</groupId>
+        <artifactId>jspecify</artifactId>
+        <version>1.0.0</version>
         <scope>compile</scope>
       </dependency>
     </dependencies>

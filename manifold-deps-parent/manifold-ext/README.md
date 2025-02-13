@@ -1,6 +1,6 @@
 # Manifold : Java Extensions
 
-![latest](https://img.shields.io/badge/latest-v2024.1.54-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.55-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -179,6 +179,40 @@ Call static extensions just as if they were on the extended class:
 ```java
 String.lineSeparator()
 ```
+
+## Intercepting Methods
+
+It's possible to intercept (existing) methods, allowing you to modify their logic or introduce custom behavior 
+before or after the original method executes. 
+The method's signature remains unchanged, meaning the return type, parameters, and any declared exceptions must be 
+preserved.
+To intercept a method, simply annotate the (extension) method with `@Intercept`.
+
+Consider the following example:
+```java
+package extensions.java.lang.String;
+
+@Extension
+public class MyStringExtension {
+    @Intercept
+    public static String trim(@This String thiz) {
+        return thiz == null ? null : thiz.trim();
+    }
+}
+```
+
+```java
+String text = null;
+text.trim(); // returns null
+text = "  myTestString  ";
+text.trim(); // returns 'myTestString'
+```
+
+> [!IMPORTANT]  
+>**An interceptor works only on calls that compile with the interceptor.**
+> 
+> For instance, calls to `trim()` from the preceding example are intercepted when compiled with `MyStringExtension`. Calls
+> compiled without this extension are not intercepted.
 
 ## Generics
 
@@ -2142,12 +2176,12 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-ext-rt:2024.1.54'
+    implementation 'systems.manifold:manifold-ext-rt:2024.1.55'
 
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2024.1.54'
-    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2024.1.54'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2024.1.55'
+    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2024.1.55'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -2183,7 +2217,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.54</manifold.version>
+        <manifold.version>2024.1.55</manifold.version>
     </properties>
     
     <dependencies>
@@ -2233,10 +2267,10 @@ with javadoc.
 # Javadoc 
 
 `manifold-ext`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2024.1.54/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2024.1.54)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2024.1.55/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2024.1.55)
 
 `manifold-ext-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2024.1.54/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2024.1.54)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2024.1.55/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2024.1.55)
 
 # License
 
