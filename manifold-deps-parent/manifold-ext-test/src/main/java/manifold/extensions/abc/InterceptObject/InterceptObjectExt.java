@@ -4,6 +4,7 @@ import abc.InterceptObject;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.Intercept;
 import manifold.ext.rt.api.This;
+import org.jspecify.annotations.Nullable;
 
 @Extension
 public class InterceptObjectExt
@@ -32,5 +33,11 @@ public class InterceptObjectExt
   public static String repeatSelf( @This InterceptObject interceptObject, int times )
   {
     return times < 0 ? "negative amount" : interceptObject.repeatSelf( times );
+  }
+
+  @Intercept
+  public static String foo( @Nullable @This InterceptObject interceptObject )
+  {
+    return interceptObject == null ? null : interceptObject.foo();
   }
 }
