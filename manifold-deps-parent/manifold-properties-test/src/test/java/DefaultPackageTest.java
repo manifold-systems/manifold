@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.*;
 
-/**
- */
-public class DefaultPackageTest extends TestCase
+import org.junit.jupiter.api.Test;
+
+class DefaultPackageTest
 {
-  public void testDefaultPackage()
+  @Test
+  void testDefaultPackage()
   {
-    assertEquals( "value1", DefaultPackageProps.Value1.toString() );
-    assertEquals( "sub", DefaultPackageProps.Value1.Sub );
+    assertThat( DefaultPackageProps.Value1 ).hasToString( "value1" );
+    assertThat( DefaultPackageProps.Value1.Sub ).hasToString( "sub" );
   }
 }

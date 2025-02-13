@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
 import manifold.api.fs.IFile;
+import manifold.api.gen.SrcRawExpression;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.rt.api.util.ManIdentifierUtil;
@@ -31,7 +32,7 @@ import manifold.api.util.cache.FqnCache;
  */
 class Model extends AbstractSingleFileModel
 {
-  private FqnCache<String> _cache;
+  private FqnCache<SrcRawExpression> _cache;
 
   public Model( IManifoldHost host, String fqn, Set<IFile> files )
   {
@@ -39,13 +40,13 @@ class Model extends AbstractSingleFileModel
     buildCache( fqn, getFile() );
   }
 
-  public Model( IManifoldHost host, String fqn, FqnCache<String> cache )
+  public Model( IManifoldHost host, String fqn, FqnCache<SrcRawExpression> cache )
   {
     super( host, fqn, Collections.emptySet() );
     _cache = cache;
   }
 
-  public FqnCache<String> getCache()
+  public FqnCache<SrcRawExpression> getCache()
   {
     return _cache;
   }
@@ -64,11 +65,11 @@ class Model extends AbstractSingleFileModel
       Properties properties = new Properties();
       properties.load( propertiesStream );
 
-      FqnCache<String> cache = new FqnCache<>( fqn, true, ManIdentifierUtil::makeIdentifier );
+      FqnCache<SrcRawExpression> cache = new FqnCache<>( fqn, true, ManIdentifierUtil::makeIdentifier );
 
       for( String key : properties.stringPropertyNames() )
       {
-        cache.add( key, properties.getProperty( key ) );
+        cache.add( key, createExpression ( key, properties.getProperty( key ) ) );
       }
       _cache = cache;
     }
@@ -76,5 +77,9 @@ class Model extends AbstractSingleFileModel
     {
       throw new RuntimeException( e );
     }
+  }
+
+  protected SrcRawExpression createExpression( String key, String value ){
+    return  new SrcRawExpression( String.class, value);
   }
 }

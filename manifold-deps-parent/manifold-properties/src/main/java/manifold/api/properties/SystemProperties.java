@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import manifold.api.gen.SrcRawExpression;
 import manifold.api.host.IManifoldHost;
 import manifold.rt.api.util.ManIdentifierUtil;
 import manifold.api.util.cache.FqnCache;
@@ -41,8 +43,9 @@ public class SystemProperties
                      LocklessLazyVar.make(
                        () ->
                        {
-                         FqnCache<String> cache = new FqnCache<>( FQN, true, ManIdentifierUtil::makeIdentifier );
-                         _keys.forEach( key -> cache.add( key, System.getProperty( key ) ) );
+                         FqnCache<SrcRawExpression> cache = new FqnCache<>( FQN, true, ManIdentifierUtil::makeIdentifier );
+                         _keys.forEach( key -> cache.add( key,
+                             new SrcRawExpression( String.class , System.getProperty( key ) ) ) );
                          return new Model( host, FQN, cache );
                        } ) );
     return systemProps;

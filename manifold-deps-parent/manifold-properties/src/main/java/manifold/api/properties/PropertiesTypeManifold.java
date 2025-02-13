@@ -19,13 +19,16 @@ package manifold.api.properties;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+
 import manifold.api.fs.IFile;
-import manifold.api.gen.SrcClass;
+import manifold.api.gen.SrcRawExpression;
 import manifold.api.host.IModule;
+import manifold.api.properties.ResourceBundleFiles.Type;
 import manifold.api.type.JavaTypeManifold;
 import manifold.api.util.cache.FqnCache;
 import manifold.api.util.cache.FqnCacheNode;
@@ -35,9 +38,20 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
 {
   private static final Set<String> FILE_EXTENSIONS = Collections.singleton( "properties" );
 
+
   public void init( IModule module )
   {
-    init( module, (fqn,files) -> new Model( getModule().getHost(), fqn, files ) );
+    init( module, this::createModel);
+  }
+
+  private Model createModel(String _fqn, Set<IFile> files){
+    return new Model(getModule().getHost(), _fqn, files ) {
+      protected SrcRawExpression createExpression( String key, String value ){
+        return ResourceBundleFiles.getType(_fqn) == Type.DEFAULT
+            ? new SrcRawExpression( ResourceBundelCodeGen.FIELD_RESOURCE_BUNDLE + ".getString(\"" + key + "\")")
+            : super.createExpression(key, value);
+      }
+    };
   }
 
   @Override
@@ -47,30 +61,58 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
+  public boolean handlesFile( IFile file )
+  {
+    if(handlesFileExtension( file.getExtension() ) ) {
+      getFqnForFile(file).ifPresent(fqn -> ResourceBundleFiles.addFile(file, fqn));
+      return true;
+    }
+    return false;
+  }
+
+  @Override
   protected Map<String, LocklessLazyVar<Model>> getPeripheralTypes()
   {
-    return SystemProperties.make( getModule().getHost() );
+    ResourceBundleFiles.removeSingleFileResourceBundles();
+    return SystemProperties.make( getModule().getHost()  );
+  }
+
+  private Optional<String> getFqnForFile( IFile file ) {
+    return Optional.ofNullable(getModule().getPathCache().getFqnForFile( file )).map(fqns -> fqns.iterator().next());
   }
 
   @Override
   public boolean isInnerType( String topLevel, String relativeInner )
   {
     Model model = getModel( topLevel );
-    FqnCache<String> cache = model == null ? null : model.getCache();
+    FqnCache<SrcRawExpression> cache = model == null ? null : model.getCache();
     if( cache == null )
     {
       return false;
     }
-    FqnCacheNode<String> node = cache.getNode( relativeInner );
+    FqnCacheNode<SrcRawExpression> node = cache.getNode( relativeInner );
     return node != null && !node.isLeaf();
   }
 
   @Override
-  protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs,
+      String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     List<IFile> files = findFilesForType( topLevelFqn );
-    SrcClass srcClass = new PropertiesCodeGen( model.getCache(), files.isEmpty() ? null : files.get( 0 ), topLevelFqn ).make( getModule(), location, errorHandler );
-    StringBuilder sb = srcClass.render( new StringBuilder(), 0 );
-    return sb.toString();
+    Type resourceBundleType = ResourceBundleFiles.getType(topLevelFqn);
+    switch(resourceBundleType){
+      case DEFAULT:
+        return new ResourceBundelCodeGen( model.getCache(), files.isEmpty() ? null : files.get(0), topLevelFqn)
+            .make(getModule(), location, errorHandler)
+            .render( new StringBuilder(), 0 ).toString();
+      case SPECIFIC:
+        return "";
+      case NONE:
+        return new PropertiesCodeGen( model.getCache(), files.isEmpty() ? null : files.get(0), topLevelFqn)
+            .make(getModule(), location, errorHandler)
+            .render( new StringBuilder(), 0 ).toString();
+      default:
+        throw new IllegalStateException();
+    }
   }
 }
