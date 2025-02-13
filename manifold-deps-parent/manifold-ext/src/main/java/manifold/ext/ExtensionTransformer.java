@@ -26,7 +26,6 @@ import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.comp.Resolve;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCTypeCast;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -58,7 +57,6 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.File;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Function;
@@ -2673,12 +2671,12 @@ public class ExtensionTransformer extends TreeTranslator
 
       // (b) Receiver class literal: build "receiver.getClass()" as a class literal.
       // Then, create a type object for the receiver’s type.
-      JCTree.JCExpression receiverType = make.Type( receiver.sym.type );
+      JCTree.JCExpression receiverType = make.Type( receiver.sym.type.unannotatedType() );
       JCTree.JCFieldAccess receiverClassExpr = make.Select( receiverType, names.fromString( "class" ) );
       Type classType = types.erasure(elements.getTypeElement("java.lang.Class").asType());
       receiverClassExpr.type = new Type.ClassType(
         classType.getEnclosingType(),
-        List.of(receiver.sym.type), // Generic argument: SomeType -> Class<SomeType>
+        List.of(receiver.sym.type.unannotatedType()), // Generic argument: SomeType -> Class<SomeType>
         classType.tsym
       );
       receiverClassExpr.sym = receiverClassExpr.type.tsym;
@@ -3267,21 +3265,11 @@ public class ExtensionTransformer extends TreeTranslator
     }
     // Determine how many parameters to subtract for the comparison
     int paramsToSubtract = 0;
-    if( !methodDecl.params.isEmpty() )
-    {
-      List<JCAnnotation> annotations = methodDecl.getParameters().get( 0 ).getModifiers().getAnnotations();
-      if( !annotations.isEmpty() )
-      {
-        String annotationFqn = annotations.get( 0 ).getAnnotationType().type.toString();
-        if( This.class.getTypeName().equals( annotationFqn ) || ThisClass.class.getTypeName().equals( annotationFqn ) )
-        {
-          // If the method's first parameter is annotated with @This or @ThisClass, it should be ignored.
-          paramsToSubtract = 1;
-        }
-      }
-    }
-
-    if( paramsToSubtract != 0 )
+    if( !methodDecl.params.isEmpty() &&
+      methodDecl.getParameters().get( 0 ).getModifiers().getAnnotations().stream()
+        .map( annotation -> annotation.getAnnotationType().type.toString() )
+        .anyMatch( annotationFqn -> This.class.getTypeName().equals( annotationFqn )
+          || ThisClass.class.getTypeName().equals( annotationFqn ) ) )
     {
       String objectName = methodDecl.params.get( 0 ).name.toString();
       if( !tree.toString().split( "\\.", 2 )[0].equals( objectName ) )
@@ -3289,6 +3277,7 @@ public class ExtensionTransformer extends TreeTranslator
         // The method does not call its parent. The current object name differs from the parameters name.
         return InterceptType.NORMAL;
       }
+      paramsToSubtract = 1;
     }
     // Ensure that the number of arguments matches the number of parameters minus any ignored ones
     if( methodDecl.params.length() - paramsToSubtract != tree.args.length() )
