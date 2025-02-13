@@ -1186,17 +1186,6 @@ public interface ManAttr
     return false;
   }
 
-  default void checkReference( JCTree.JCMemberReference tree )
-  {
-    boolean isAutoReturnType =
-      tree.sym instanceof Symbol.MethodSymbol && isAutoType( ((Symbol.MethodSymbol)tree.sym).getReturnType() );
-    if( isAutoReturnType )
-    {
-      // Method references not supported with tuple/anonymous return type
-      getLogger().error( tree.pos, "proc.messager", IssueMsg.MSG_ANON_RETURN_METHOD_REF_NOT_SUPPORTED.get( tree.sym.flatName() ) );
-    }
-  }
-
   static boolean isSynthetic( Symbol.MethodSymbol m )
   {
     return (m.flags() & Flags.SYNTHETIC) != 0 ||
