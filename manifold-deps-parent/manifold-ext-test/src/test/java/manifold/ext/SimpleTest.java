@@ -111,7 +111,7 @@ public class SimpleTest extends SimpleTestSuper
     assertEquals( Collections.singletonList( "testbarSuper" ),
       Stream.of( "test" ).map( super::appendBarSuper ).collect( Collectors.toList() ) );
     // super method in other package
-    assertEquals( Collections.singletonList( "foo supertest" ),
+    assertEquals( Collections.singletonList( "foo supertestfoo supertest2" ),
       Stream.of( new SubClass2() ).map( SubClass2::foo ).map( SuperClass2.DeferredJoiner::get).collect( Collectors.toList() ) );
 
     // Supplier

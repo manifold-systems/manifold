@@ -108,9 +108,12 @@ public class MethodRefToLambda
           args.tail
         ).setType( methodRef.sym.type.getReturnType() );
       case SUPER:
+        Symbol currentClass = methodRef.expr instanceof JCTree.JCIdent ?
+          ( (JCTree.JCIdent) methodRef.expr ).sym.owner : // super.foo()
+          ( (JCTree.JCFieldAccess) methodRef.expr ).sym.owner; // Superclass.super.foo()
         return make.Apply(
           List.nil(),
-          IDynamicJdk.instance().Select( make, make.Super( sym.owner.type, sym.owner.type.tsym ), sym ),
+          IDynamicJdk.instance().Select( make, make.Super( sym.owner.type, currentClass.type.tsym ), sym ),
           args
         ).setType( methodRef.sym.type.getReturnType() );
       case STATIC:

@@ -20,7 +20,8 @@ public class SuperClass2
 
     public DeferredJoiner add( Supplier<String> text  )
     {
-      joiner = () -> joiner.get() + text.get();
+      String s = joiner.get();
+      joiner = () -> s + text.get();
       return this;
     }
 
