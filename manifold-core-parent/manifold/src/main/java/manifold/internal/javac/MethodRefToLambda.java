@@ -110,7 +110,7 @@ public class MethodRefToLambda
       case SUPER:
         Symbol currentClass = methodRef.expr instanceof JCTree.JCIdent ?
           ( (JCTree.JCIdent) methodRef.expr ).sym.owner : // super.foo()
-          ( (JCTree.JCFieldAccess) methodRef.expr ).sym.owner; // Superclass.super.foo()
+          ( (JCTree.JCFieldAccess) methodRef.expr ).sym.owner; // Subclass.super.foo()
         return make.Apply(
           List.nil(),
           IDynamicJdk.instance().Select( make, make.Super( sym.owner.type, currentClass.type.tsym ), sym ),
