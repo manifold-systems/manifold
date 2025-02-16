@@ -15,7 +15,7 @@
  */
 
 package manifold.ext;
-import static manifold.api.util.JavacUtil.*;
+import static manifold.api.util.JCTreeUtil.*;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.BasicJavacTask;
