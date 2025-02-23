@@ -1413,10 +1413,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             return;
         }
       }
-      result = repalceWithGetter( tree );
+      result = replaceWithGetter( tree );
     }
 
-    public JCExpression repalceWithGetter( JCFieldAccess tree )
+    public JCExpression replaceWithGetter( JCFieldAccess tree )
     {
       // replace foo.bar with foo.getBar()
       //
@@ -1527,9 +1527,28 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
         JCMethodInvocation methodCall;
         Attribute.Compound staticAnno = getAnnotationMirror( tree.sym, Static.class );
-        JCExpression receiver = (tree.sym.owner.type.isInterface() ? staticAnno != null : tree.sym.isStatic())
-          ? make.Type( tree.sym.owner.type )
-          : make.This( _backingSymbols.peek().fst.type ).setPos( tree.pos );
+        boolean isStatic = tree.sym.owner.type.isInterface() ? staticAnno != null : tree.sym.isStatic();
+        JCExpression receiver;
+        if( isStatic )
+        {
+          // method is static
+          receiver = make.Type( tree.sym.owner.type );
+        }
+        else
+        {
+          // method is non-static
+          Type thisType = _backingSymbols.peek().fst.type;
+          if( getTypes().isSubtype( thisType, getMethod.owner.type ) )
+          {
+            // method is on this or super type
+            receiver = make.This( _backingSymbols.peek().fst.type ).setPos( tree.pos );
+          }
+          else
+          {
+            // method is on enclosing type, like OuterType.this.getFoo()
+            receiver = make.QualThis( getMethod.owner.type ).setPos( tree.pos );
+          }
+        }
         methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, getMethod ).setPos( tree.pos ), List.nil() );
         methodCall = configMethod( tree, getMethod, methodCall );
 
@@ -1550,6 +1569,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       TreeMaker make = getTreeMaker();
 
+      MethodSymbol setMethod;
       JCExpression lhs;
       Type lhsSelectedType;
       Symbol lhsSym;
@@ -1561,6 +1581,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         lhsSelectedType = fieldAccess.selected.type;
         lhsSym = fieldAccess.sym;
         lhsSelected = fieldAccess.selected;
+
+        setMethod = isWritableProperty( lhsSym )
+                    ? resolveSetMethod( lhsSelectedType, lhsSym, Types.instance( _context ) )
+                    : null;
       }
       else if( tree.lhs instanceof JCIdent )
       {
@@ -1582,10 +1606,42 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             return;
           }
           lhsSym = ident.sym;
+
+          setMethod = isWritableProperty( lhsSym )
+                      ? resolveSetMethod( lhsSelectedType, lhsSym, Types.instance( _context ) )
+                      : null;
           Attribute.Compound staticAnno = getAnnotationMirror( lhsSym, Static.class );
-          lhsSelected = (lhsSym.owner.type.isInterface() ? staticAnno != null : lhsSym.isStatic())
-            ? make.Type( lhsSym.owner.type )
-            : make.This( lhsSelectedType ).setPos( tree.pos );
+          boolean isStatic = lhsSym.owner.type.isInterface() ? staticAnno != null : lhsSym.isStatic();
+          if( setMethod != null )
+          {
+            if( isStatic )
+            {
+              // method is static
+              lhsSelected = make.Type( lhsSym.owner.type );
+            }
+            else
+            {
+              // method is non-static
+              Type thisType = _backingSymbols.peek().fst.type;
+              if( getTypes().isSubtype( thisType, setMethod.owner.type ) )
+              {
+                // method is on this or super type
+                lhsSelected = make.This( lhsSelectedType ).setPos( tree.pos );
+              }
+              else
+              {
+                // method is on enclosing type, like OuterType.this.getFoo()
+                lhsSelected = make.QualThis( setMethod.owner.type ).setPos( tree.pos );
+              }
+            }
+          }
+          else
+          {
+            // for error reporting (since setMethod is null)
+            lhsSelected = (lhsSym.owner.type.isInterface() ? staticAnno != null : lhsSym.isStatic())
+                          ? make.Type( lhsSym.owner.type )
+                          : make.This( lhsSelectedType ).setPos( tree.pos );
+          }
         }
         else
         {
@@ -1606,10 +1662,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       JCMethodDecl methodDecl = _methodDefs.isEmpty() ? null : _methodDefs.peek();
 
       // replace  foo.bar = baz  with  foo.setBar(baz)
-
-      MethodSymbol setMethod = isWritableProperty( lhsSym )
-        ? resolveSetMethod( lhsSelectedType, lhsSym, Types.instance( _context ) )
-        : null;
 
       if( setMethod != null )
       {
@@ -1798,7 +1850,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         // replace the arg with a getter call
         arg = tree.arg instanceof JCIdent
           ? replaceWithGetter( (JCIdent)tree.arg )
-          : repalceWithGetter( (JCFieldAccess)tree.arg );
+          : replaceWithGetter( (JCFieldAccess)tree.arg );
         arg.setPos( tree.pos );
 
         // now, tempify the arg, since it must be preserved as the result of the post inc/dec
@@ -2172,16 +2224,16 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     }
 
     Type fieldType = types.memberType( type, field ); // the type of the field as a member of `type` e.g., a field  of type List<T> inside Bar<T> as seen from class Foo that extends Bar<String> ...
-    MethodSymbol method = ManAttr.getMethodSymbol( types, type, fieldType, getGetterName( field, true ), (ClassSymbol)type.tsym, 0 );
+    MethodSymbol method = ManAttr.getEnclosingMethodSymbol( types, type, fieldType, getGetterName( field, true ), (ClassSymbol)type.tsym, 0 );
     if( method == null )
     {
-      method = ManAttr.getMethodSymbol( types, type, fieldType, getGetterName( field, false ), (ClassSymbol)type.tsym, 0 );
+      method = ManAttr.getEnclosingMethodSymbol( types, type, fieldType, getGetterName( field, false ), (ClassSymbol)type.tsym, 0 );
       if( method == null )
       {
         // If class is a record, try getting property from conventional, user-defined getter method
         if( field.owner != null && field.owner.getKind().name().equals( "RECORD" ) )
         {
-          method = ManAttr.getMethodSymbol( types, type, fieldType, getGetterName( field, false, false ), (ClassSymbol)type.tsym, 0 );;
+          method = ManAttr.getEnclosingMethodSymbol( types, type, fieldType, getGetterName( field, false, false ), (ClassSymbol)type.tsym, 0 );;
         }
 
       }
@@ -2202,14 +2254,14 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     }
 
     Type fieldType = types.memberType( type, field ); // the type of the field as a member of `type` e.g., a field  of type List<T> inside Bar<T> as seen from class Foo that extends Bar<String> ...
-    MethodSymbol setter = ManAttr.getMethodSymbol( types, type, fieldType, getSetterName( field.name ), (ClassSymbol)type.tsym, 1 );
+    MethodSymbol setter = ManAttr.getEnclosingMethodSymbol( types, type, fieldType, getSetterName( field.name ), (ClassSymbol)type.tsym, 1 );
 
     // handle property where isXxx is both field name and getter name isXxx(), look for setter by name of xxx.
     if( setter == null && isIsName( field.name.toString() ) && resolveGetMethod( type, field ) != null )
     {
       Names names = Names.instance( getContext() );
       Name name = names.fromString( ManStringUtil.uncapitalize( field.name.toString().substring( 2 ) ) );
-      setter = ManAttr.getMethodSymbol( types, type, fieldType, getSetterName( name ), (ClassSymbol)type.tsym, 1 );
+      setter = ManAttr.getEnclosingMethodSymbol( types, type, fieldType, getSetterName( name ), (ClassSymbol)type.tsym, 1 );
     }
     return setter;
   }
