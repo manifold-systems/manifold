@@ -1433,8 +1433,45 @@ public class ExtensionTransformer extends TreeTranslator
   @Override
   public void visitReference( JCTree.JCMemberReference tree )
   {
-    visitLambda( MethodRefToLambda.convert( _tp, tree ) );
+    if( isExtensionMethod( tree.sym ) || isStructuralMethod( tree.sym ) )
+    {
+      // Method references for extension methods and structural methods must be transformed to lambdas
+
+      visitLambda( MethodRefToLambda.convert( _tp, tree ) );
+    }
+    else
+    {
+      super.visitReference( tree );
+    }
   }
+
+  private boolean isStructuralMethod( Symbol sym )
+  {
+    if( sym != null && !sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
+    {
+      if( !isObjectMethod( sym ) )
+      {
+        return TypesUtil.isStructuralInterface( _tp.getTypes(), sym.owner );
+      }
+    }
+    return false;
+  }
+
+  private boolean isExtensionMethod( Symbol sym )
+  {
+    if( sym instanceof Symbol.MethodSymbol )
+    {
+      for( Attribute.Compound annotation : sym.getAnnotationMirrors() )
+      {
+        if( annotation.type.toString().equals( ExtensionMethod.class.getName() ) )
+        {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
 
   @SuppressWarnings( "WeakerAccess" )
   public static boolean isJailbreakReceiver( JCTree tree )
