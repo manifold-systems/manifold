@@ -24,4 +24,9 @@ public class InterceptObject
     }
     return stringBuilder.toString();
   }
+
+  public String foo( )
+  {
+    return "foo";
+  }
 }

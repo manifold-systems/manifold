@@ -42,6 +42,12 @@ public class InterceptTest extends TestCase
         assertEquals( "negative amount", interceptObjectSub.repeatSelf( -2 ) );
     }
 
+    public void testInterceptMethodThisNotFirstAnnotation(){
+        InterceptTest.InterceptObjectSub interceptObjectSub = null;
+        assertEquals( null, interceptObjectSub.foo() );
+        assertEquals( "foo",  new InterceptTest.InterceptObjectSub( "" ).foo() );
+    }
+
     public static class InterceptObjectSub extends InterceptObject {
         public InterceptObjectSub(String text) {
             super(text);
