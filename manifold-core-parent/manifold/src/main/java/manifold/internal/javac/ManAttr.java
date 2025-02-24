@@ -1085,6 +1085,18 @@ public interface ManAttr
       ( t1, t2 ) -> types.isAssignable( t1, t2 ) || isAssignableWithGenerics( types, t1, t2 ) );
   }
 
+  static Symbol.MethodSymbol getEnclosingMethodSymbol( Types types, Type left, Type right, String opName, Symbol.ClassSymbol sym, int paramCount )
+  {
+    Symbol.MethodSymbol methodSymbol = getEnclosingMethodSymbol( types, left, right, opName, sym, paramCount,
+      ( t1, t2 ) -> types.isSameType( t1, t2 ) );
+    if( methodSymbol != null )
+    {
+      return methodSymbol;
+    }
+    return getEnclosingMethodSymbol( types, left, right, opName, sym, paramCount,
+      ( t1, t2 ) -> types.isAssignable( t1, t2 ) || isAssignableWithGenerics( types, t1, t2 ) );
+  }
+
   static boolean isAssignableWithGenerics( Types types, Type t1, Type t2 )
   {
     if( t2 instanceof Type.TypeVar )
@@ -1160,6 +1172,34 @@ public interface ManAttr
     }
 
     return null;
+  }
+
+  static Symbol.MethodSymbol getEnclosingMethodSymbol( Types types, Type left, Type right, String opName, Symbol.ClassSymbol sym,
+                                              int paramCount, BiPredicate<Type, Type> matcher )
+  {
+    if( sym == null )
+    {
+      return null;
+    }
+
+    Symbol.MethodSymbol methodSymbol = getMethodSymbol( types, left, right, opName, sym, paramCount, matcher );
+    if( methodSymbol != null )
+    {
+      return methodSymbol;
+    }
+
+    if( sym.isStatic() )
+    {
+      return null;
+    }
+
+    Symbol enclosingElement = sym.getEnclosingElement();
+    if( !(enclosingElement instanceof Symbol.ClassSymbol) )
+    {
+      return null;
+    }
+
+    return getEnclosingMethodSymbol( types, left, right, opName, (Symbol.ClassSymbol)enclosingElement, paramCount, matcher );
   }
 
   static boolean checkConcatenation( JCTree.JCLiteral tree, CharSequence chars, HostKind hostKind, Log logger )
