@@ -5,6 +5,7 @@ import manifold.api.type.BasicIncrementalCompileDriver;
 import manifold.api.type.ClassType;
 import manifold.api.type.ContributorKind;
 import manifold.ext.rt.api.Structural;
+import manifold.ext.rt.api.auto;
 
 import javax.swing.*;
 import java.awt.Rectangle;
@@ -145,6 +146,27 @@ public class SimpleTest extends SimpleTestSuper
 //    // no error should be thrown during compilation
 //    Consumer<ItemEvent> itemListener = null;
 //    new JComboBox<>().addItemListener(itemListener::accept);
+  }
+
+  public void testAutoReturnTypeInMethodRef()
+  {
+    // non-primitive return type
+    assertEquals( Collections.singletonList( "testauto" ),
+      Stream.of( "test" ).map( SimpleTest::returnAuto ).collect( Collectors.toList() ) );
+
+    // primitive return type
+    assertEquals( Collections.singletonList( 1 ),
+      Stream.of( "test" ).map( SimpleTest::returnAutoPrimitive ).collect( Collectors.toList() ) );
+  }
+
+  public static auto returnAuto(String text)
+  {
+    return text + "auto";
+  }
+
+  public static auto returnAutoPrimitive(String text)
+  {
+    return 1;
   }
 
   public static String appendBarStatic(String text){
