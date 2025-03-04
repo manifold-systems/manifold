@@ -41,6 +41,7 @@ import manifold.internal.javac.ITupleTypeProvider;
 import manifold.internal.javac.JavacPlugin;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.tuple.rt.internal.GeneratedTuple;
+import manifold.util.ReflectUtil;
 
 import static manifold.tuple.TupleTypeProvider.BASE_NAME;
 
@@ -158,7 +159,7 @@ public class TupleTypeManifold extends BaseService implements ITypeManifold
     ClassLoader newLoader = getClass().getClassLoader();
     if( newLoader != null )
     {
-      Thread.currentThread().setContextClassLoader( newLoader );
+      ReflectUtil.setContextClassLoader( newLoader );
     }
     Map<String, String> fieldsMap;
     try
@@ -167,7 +168,7 @@ public class TupleTypeManifold extends BaseService implements ITypeManifold
     }
     finally
     {
-      Thread.currentThread().setContextClassLoader( prevLoader );
+      ReflectUtil.setContextClassLoader( prevLoader );
     }
     if( fieldsMap == null )
     {
@@ -208,7 +209,7 @@ public class TupleTypeManifold extends BaseService implements ITypeManifold
     ClassLoader newLoader = getClass().getClassLoader();
     if( newLoader != null )
     {
-      Thread.currentThread().setContextClassLoader( newLoader );
+      ReflectUtil.setContextClassLoader( newLoader );
     }
     try
     {
@@ -219,7 +220,7 @@ public class TupleTypeManifold extends BaseService implements ITypeManifold
     }
     finally
     {
-      Thread.currentThread().setContextClassLoader( prevLoader );
+      ReflectUtil.setContextClassLoader( prevLoader );
     }
   }
 
