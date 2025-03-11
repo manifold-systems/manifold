@@ -455,12 +455,15 @@ class PropertyInference
       {
         int weakest = weakest( getAccess( (int)exField.flags_field ), getAccess( flags ) );
 
-        if( exField.enclClass() == classSym )
+        int declaredAccess = (int)exField.flags_field & (PUBLIC | PROTECTED | PRIVATE);
+        if( isExitingFieldAccessible( classSym, exField, declaredAccess ) )
         {
-          // make the existing field accessible according to the weakest of property methods
-          int declaredAccess = (int)exField.flags_field & (PUBLIC | PROTECTED | PRIVATE);
-          exField.flags_field = exField.flags_field & ~(PUBLIC | PROTECTED | PRIVATE) | weakest;
-          addField( exField, classSym, varClass, declaredAccess, false );
+          if( exField.enclClass() == classSym )
+          {
+            // make the existing field accessible according to the weakest of property methods
+            exField.flags_field = exField.flags_field & ~(PUBLIC | PROTECTED | PRIVATE) | weakest;
+            addField( exField, classSym, varClass, declaredAccess, false );
+          }
           return null; // don't create another one
         }
         if( isPropertyField( exField ) )
@@ -471,6 +474,52 @@ class PropertyInference
       return null; // existing field is in conflict, don't create another one
     }
     return new Pair<>( MAX_VALUE, null ); // no existing field, create one
+  }
+
+  /**
+   * Keep field refs to *auto* prop fields as-is when they have access to the existing field as it was originally
+   * declared. Basically, auto-properties are for the convenience of *consumers* of the declaring class. If the author
+   * of the class wants to access stuff inside his implementation using property syntax, he should explicitly declare
+   * properties.
+   * <p/>
+   * See {@code PropertyProcessor#keepRefToField()}
+   */
+  private boolean isExitingFieldAccessible( ClassSymbol classSym, VarSymbol exField, int mod )
+  {
+    boolean isInferredProperty = exField.getAnnotationMirrors().stream()
+      .anyMatch( anno -> anno.type.tsym.getQualifiedName().toString().equals( auto.class.getTypeName() ) );
+    boolean propertyField = !isInferredProperty && isPropertyField( exField );
+    switch( mod )
+    {
+      case PUBLIC:
+        if( !propertyField )
+        {
+          // field is public
+          return true;
+        }
+        // fall through
+      case PROTECTED:
+        if( !propertyField && classSym.isSubClass( exField.enclClass(), Types.instance( context() ) ) )
+        {
+          // sublcass of field's class
+          return true;
+        }
+        // fall through
+      case 0: // PACKAGE
+        if( !propertyField && exField.enclClass().packge() == classSym.packge() )
+        {
+          // same package as field's class
+          return true;
+        }
+        // fall through
+      case PRIVATE:
+        if( exField.enclClass() == classSym )
+        {
+          // same class as field
+          return true;
+        }
+    }
+    return false;
   }
 
   private Symbol[] findExistingFieldInAncestry( Name name, Symbol.TypeSymbol c, ClassSymbol origin )

@@ -1989,18 +1989,26 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       int declaredAccess = getDeclaredAccess( auto );
       switch( declaredAccess )
       {
-        case PRIVATE:
-          // same class as field
-          return classDecl.sym.outermostClass() == sym.outermostClass();
-        case 0: // PACKAGE
-          // same package as field's class
-          return classDecl.sym.packge() == sym.packge();
-        case PROTECTED:
-          // sublcass of field's class
-          return classDecl.sym.isSubClass( sym.enclClass(), Types.instance( _context ) );
         case PUBLIC:
           // field is public, no dice
           return true;
+        case PROTECTED:
+          // sublcass of field's class
+          if( classDecl.sym.isSubClass( sym.enclClass(), Types.instance( _context ) ) )
+          {
+            return true;
+          }
+          // fall through
+        case 0: // PACKAGE
+          // same package as field's class
+          if( classDecl.sym.packge() == sym.packge() )
+          {
+            return true;
+          }
+          // fall through
+        case PRIVATE:
+          // same class as field
+          return classDecl.sym.outermostClass() == sym.outermostClass();
         case -1: // indicates no existing field
           if( tree instanceof JCIdent && !_methodDefs.isEmpty() && _methodDefs.peek().sym.enclClass().isAnonymous() )
           {
