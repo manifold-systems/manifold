@@ -25,13 +25,17 @@ public class OverrideTest
   @Test
   public void testInferredOverrideAccessesFieldDirectly()
   {
-    assertEquals( "Child", new OverrideClasses.Child().baz ); // baz field is not accessible here bc it's private, so the inferred property is used here, calls getBaz()
-    assertEquals( "Child", new OverrideClasses.Child().getBaz() ); // getBaz() accesses baz field directly bc it is accessible
+    OverrideClasses.Child child = OverrideClasses.newChild();
+    assertEquals( "Child", child.baz ); // baz field is not accessible here bc it's private, so the inferred property is used here, calls getBaz()
+    assertEquals( "Child", child.getBaz() ); // getBaz() accesses baz field directly bc it is accessible
 
-    assertEquals( "Parent", new OverrideClasses.Child().foo ); // foo field is directly accessible here bc it's protected
-    assertEquals( "Child", new OverrideClasses.Child().getFoo() ); // getFoo() accesses foo field directly bc it is accessible
+    assertEquals( "Parent", child.foo ); // foo field is directly accessible here bc it's protected
+    assertEquals( "Child", child.getFoo() ); // getFoo() accesses foo field directly bc it is accessible
 
-    assertEquals( "Parent", new OverrideClasses.Child().bar ); // bar field is directly accessible here bc it's package-private
-    assertEquals( "Child", new OverrideClasses.Child().getBar() );
+    assertEquals( "Parent", child.bar ); // bar field is directly accessible here bc it's package-private
+    assertEquals( "Child", child.getBar() );
+
+    assertEquals( "Outer", new OverrideClasses().outer );
+//    assertEquals( "Enclosing", child.blad );
   }
 }

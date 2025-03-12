@@ -1992,13 +1992,15 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         case PUBLIC:
           // field is public, no dice
           return true;
+
         case PROTECTED:
-          // sublcass of field's class
+          // subclass of field's class
           if( classDecl.sym.isSubClass( sym.enclClass(), Types.instance( _context ) ) )
           {
             return true;
           }
           // fall through
+
         case 0: // PACKAGE
           // same package as field's class
           if( classDecl.sym.packge() == sym.packge() )
@@ -2006,9 +2008,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             return true;
           }
           // fall through
+
         case PRIVATE:
-          // same class as field
-          return classDecl.sym.outermostClass() == sym.outermostClass();
+          // same enclosing class as field
+          return classDecl.sym.isEnclosedBy( sym.enclClass() ) || sym.enclClass().isEnclosedBy( classDecl.sym );
+
         case -1: // indicates no existing field
           if( tree instanceof JCIdent && !_methodDefs.isEmpty() && _methodDefs.peek().sym.enclClass().isAnonymous() )
           {
@@ -2016,6 +2020,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             reportError( tree, MSG_NASTY_INFERRED_PROPERTY_REF.get( sym.name ) );
           }
           return false;
+
         default:
           throw new IllegalStateException( "Unknown or invalid access privilege: " + declaredAccess );
       }

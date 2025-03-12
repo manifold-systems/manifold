@@ -18,6 +18,13 @@ package manifold.ext.props.infer;
 
 public class OverrideClasses
 {
+  private String outer = "Enclosing";
+
+  String getOuter()
+  {
+    return "Outer";
+  }
+
   static class Parent
   {
     protected String foo = "Parent";
@@ -40,7 +47,12 @@ public class OverrideClasses
     }
   }
 
-  static class Child extends Parent
+  static Child newChild()
+  {
+    return new OverrideClasses().new Child();
+  }
+
+  class Child extends Parent
   {
     @Override
     String getFoo()
@@ -67,5 +79,10 @@ public class OverrideClasses
     {
       return "Child";
     }
+
+//    String getBlad()
+//    {
+//      return outer;
+//    }
   }
 }

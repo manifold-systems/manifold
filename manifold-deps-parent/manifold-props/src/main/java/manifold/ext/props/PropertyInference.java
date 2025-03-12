@@ -476,14 +476,6 @@ class PropertyInference
     return new Pair<>( MAX_VALUE, null ); // no existing field, create one
   }
 
-  /**
-   * Keep field refs to *auto* prop fields as-is when they have access to the existing field as it was originally
-   * declared. Basically, auto-properties are for the convenience of *consumers* of the declaring class. If the author
-   * of the class wants to access stuff inside his implementation using property syntax, he should explicitly declare
-   * properties.
-   * <p/>
-   * See {@code PropertyProcessor#keepRefToField()}
-   */
   private boolean isExitingFieldAccessible( ClassSymbol classSym, VarSymbol exField, int mod )
   {
     boolean isInferredProperty = exField.getAnnotationMirrors().stream()
