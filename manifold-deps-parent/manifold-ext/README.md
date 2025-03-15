@@ -1,6 +1,6 @@
 # Manifold : Java Extensions
 
-![latest](https://img.shields.io/badge/latest-v2025.1.3-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2025.1.4-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -2181,12 +2181,12 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-ext-rt:2025.1.3'
+    implementation 'systems.manifold:manifold-ext-rt:2025.1.4'
 
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2025.1.3'
-    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2025.1.3'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2025.1.4'
+    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2025.1.4'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -2222,7 +2222,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2025.1.3</manifold.version>
+        <manifold.version>2025.1.4</manifold.version>
     </properties>
     
     <dependencies>
@@ -2272,10 +2272,10 @@ with javadoc.
 # Javadoc 
 
 `manifold-ext`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2025.1.3/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2025.1.3)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2025.1.4/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2025.1.4)
 
 `manifold-ext-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2025.1.3/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2025.1.3)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2025.1.4/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2025.1.4)
 
 # License
 
