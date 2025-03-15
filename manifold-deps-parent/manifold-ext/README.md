@@ -1138,7 +1138,7 @@ projects use operator overloading and unit expressions extensively.
 
 
 # Unit Expressions
->**⚠ _Experimental Feature_**
+>**⚠️ _Experimental Feature_**
 
 Extending [operator overloading](#operator-overloading) further, Manifold seamlessly plugs into the Java compiler to
 provide Unit Expressions. In a nutshell unit expressions provide a powerfully concise syntax combining concatenative and
@@ -1750,6 +1750,11 @@ public class Foo {
   }
 }
 ```
+
+> ⚠️ When using the `--release` compiler option to target older JDKs, the `@Jailbreak` annotation has no effect on JDK
+> library types like `java.lang.String`. This is because the JDK does not include binaries from older versions. Instead,
+> it provides only stubbed type information (via the `ct.sym` file), which excludes private fields and methods. As a result,
+> the compiler does not merely treat private members as inaccessible—it sees them as nonexistent.
 
 ### Use With Static Members
 
