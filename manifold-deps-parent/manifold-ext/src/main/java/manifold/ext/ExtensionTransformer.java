@@ -1656,6 +1656,13 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitAnnotation( JCTree.JCAnnotation tree )
   {
     super.visitAnnotation( tree );
+
+    if( _tp.isGenerate() )
+    {
+      // Don't process tree during GENERATE, parents are not available
+      return;
+    }
+
     if( tree.getAnnotationType().type == null || !Self.class.getTypeName().equals( tree.getAnnotationType().type.tsym.toString() ) )
     {
       return;
