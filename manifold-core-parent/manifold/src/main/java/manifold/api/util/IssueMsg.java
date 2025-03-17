@@ -30,7 +30,6 @@ public class IssueMsg
   public static final IssueMsg MSG_AUTO_RETURN_MORE_SPECIFIC_TYPE = new IssueMsg( "Cannot return 'auto', return a more specific type" );
   public static final IssueMsg MSG_AUTO_UNABLE_TO_RESOLVE_TYPE = new IssueMsg( "Unable to infer 'auto' type here" );
   public static final IssueMsg MSG_AUTO_CANNOT_INFER_FROM_NULL = new IssueMsg( "'auto' cannot infer from just 'null', cast 'null' or replace 'auto' with a type" );
-  public static final IssueMsg MSG_ANON_RETURN_METHOD_REF_NOT_SUPPORTED = new IssueMsg( "Method reference '{0}' must be invoked as a lambda expression here" );
 
   public static final IssueMsg MSG_OPT_PARAMS_POSITIONAL_BEFORE_NAMED = new IssueMsg( "Positional arguments must appear before named arguments" );
   public static final IssueMsg MSG_OPT_PARAMS_MISSING_REQ_ARG = new IssueMsg( "missing required argument: '{0}'" );
