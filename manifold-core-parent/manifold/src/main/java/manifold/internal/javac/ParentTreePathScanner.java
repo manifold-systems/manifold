@@ -18,17 +18,24 @@ package manifold.internal.javac;
 
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreeScanner;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+
+import com.sun.tools.javac.tree.JCTree;
 import manifold.rt.api.util.Stack;
 
 public class ParentTreePathScanner extends TreeScanner<Tree, Void>
 {
   private final Map<Tree, Tree> _parents;
-  private Stack<Tree> _parent;
+  private final Map<Integer, List<Tree>> _parentsByPos;
+  private final Stack<Tree> _parent;
 
-  ParentTreePathScanner( Map<Tree, Tree> parents )
+  ParentTreePathScanner( Map<Tree, Tree> parents, Map<Integer, List<Tree>> parentsByPos )
   {
     _parents = parents;
+    _parentsByPos = parentsByPos;
     _parent = new Stack<>();
     _parent.push( null );
   }
@@ -44,6 +51,12 @@ public class ParentTreePathScanner extends TreeScanner<Tree, Void>
     }
 
     _parents.put( path, _parent.peek() );
+    if( path instanceof JCTree )
+    {
+      _parentsByPos.computeIfAbsent( ((JCTree)path).pos, __ -> new ArrayList<>() )
+        .add( _parent.peek() );
+    }
+
     _parent.push( path );
     try
     {
