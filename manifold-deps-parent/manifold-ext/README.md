@@ -1,6 +1,6 @@
 # Manifold : Java Extensions
 
-![latest](https://img.shields.io/badge/latest-v2025.1.0-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2025.1.5-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -1138,7 +1138,7 @@ projects use operator overloading and unit expressions extensively.
 
 
 # Unit Expressions
->**⚠ _Experimental Feature_**
+>**⚠️ _Experimental Feature_**
 
 Extending [operator overloading](#operator-overloading) further, Manifold seamlessly plugs into the Java compiler to
 provide Unit Expressions. In a nutshell unit expressions provide a powerfully concise syntax combining concatenative and
@@ -1751,6 +1751,11 @@ public class Foo {
 }
 ```
 
+> ⚠️ When using the `--release` compiler option to target older JDKs, the `@Jailbreak` annotation has no effect on JDK
+> library types like `java.lang.String`. This is because the JDK does not include binaries from older versions. Instead,
+> it provides only stubbed type information (via the `ct.sym` file), which excludes private fields and methods. As a result,
+> the compiler does not merely treat private members as inaccessible—it sees them as nonexistent.
+
 ### Use With Static Members
 
 Since Java does not permit you to annotate the type in a static expression, you must use an instance:
@@ -2176,12 +2181,12 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-ext-rt:2025.1.0'
+    implementation 'systems.manifold:manifold-ext-rt:2025.1.5'
 
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2025.1.0'
-    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2025.1.0'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2025.1.5'
+    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2025.1.5'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -2217,7 +2222,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2025.1.0</manifold.version>
+        <manifold.version>2025.1.5</manifold.version>
     </properties>
     
     <dependencies>
@@ -2267,10 +2272,10 @@ with javadoc.
 # Javadoc 
 
 `manifold-ext`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2025.1.0/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2025.1.0)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2025.1.5/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2025.1.5)
 
 `manifold-ext-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2025.1.0/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2025.1.0)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2025.1.5/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2025.1.5)
 
 # License
 
