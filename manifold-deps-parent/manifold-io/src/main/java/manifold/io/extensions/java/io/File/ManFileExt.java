@@ -18,6 +18,7 @@ package manifold.io.extensions.java.io.File;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.FileAlreadyExistsException;
@@ -78,7 +79,7 @@ public class ManFileExt
   @Extension
   public static File createTempDir() throws IOException
   {
-    return createTempDir( "tmp", null, null );
+    return Files.createTempDirectory("tmp").toFile();
   }
 
   /**
