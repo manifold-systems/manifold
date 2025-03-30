@@ -172,7 +172,7 @@
                 <filter>
                   <artifact>*:*</artifact>
                   <excludes>
-                    <!-- manifold's license supersede's dependency license copied to root -->
+                    <!-- manifold's license supersedes dependency license copied to root -->
                     <exclude>LICENSE.*</exclude>
                   </excludes>
                 </filter>
