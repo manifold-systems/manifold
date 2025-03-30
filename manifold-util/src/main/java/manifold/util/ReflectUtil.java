@@ -34,7 +34,7 @@ import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 import manifold.util.concurrent.LocklessLazyVar;
 
-import static manifold.util.NecessaryEvilUtil.getUnsafe;
+import static manifold.util.JdkAccessUtil.getUnhelmeted;
 
 /**
  * A Java reflection utility.  Use it to efficiently access classes by name, get/set field values,
@@ -54,6 +54,7 @@ import static manifold.util.NecessaryEvilUtil.getUnsafe;
  * (Use <b>@Jailbreak</b> to avoid writing reflection code.
  * See <a href="http://manifold.systems/docs.html#type-safe-reflection">Type-safe Reflection</a>.)
  */
+@SuppressWarnings("rawtypes")
 public class ReflectUtil
 {
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, ConcurrentHashSet<Method>>> _methodsByName = new ConcurrentWeakHashMap<>();
@@ -67,7 +68,7 @@ public class ReflectUtil
     try
     {
       Field overrideField = FakeAccessibleObject.class.getDeclaredField( "override" );
-      return getUnsafe().objectFieldOffset( overrideField );
+      return getUnhelmeted().objectFieldOffset( overrideField );
     }
     catch( Exception e )
     {
@@ -146,7 +147,7 @@ public class ReflectUtil
 
   static
   {
-    NecessaryEvilUtil.disableJava9IllegalAccessWarning();
+    JdkAccessUtil.disableJava9IllegalAccessWarning();
   }
 
   /**
@@ -908,7 +909,7 @@ public class ReflectUtil
   {
     try
     {
-      getUnsafe().putBooleanVolatile( m, _overrideOffset.get(), true );
+      getUnhelmeted().putBooleanVolatile( m, _overrideOffset.get(), true );
 //      method( m, "setAccessible0", boolean.class ).invoke( true );
     }
     catch( Exception e )
@@ -1210,17 +1211,9 @@ public class ReflectUtil
 
   private static void addRawMethodToCache( Class cls, Method m, String name )
   {
-    ConcurrentMap<String, ConcurrentHashSet<Method>> methodsByName = _methodsByName.get( cls );
-    if( methodsByName == null )
-    {
-      _methodsByName.put( cls, methodsByName = new ConcurrentHashMap<>() );
-    }
-    ConcurrentHashSet<Method> methods = methodsByName.get( name );
-    if( methods == null )
-    {
-      methodsByName.put( name, methods = new ConcurrentHashSet<>( 2 ) );
-    }
-    methods.add( m );
+    _methodsByName.computeIfAbsent( cls, k -> new ConcurrentHashMap<>() )
+      .computeIfAbsent( name, k -> new ConcurrentHashSet<>( 2 ) )
+      .add( m );
   }
 
   private static MethodRef getMethodFromCache( Class cls, String name, Class... params )
@@ -1357,20 +1350,6 @@ public class ReflectUtil
       {
         if( JreUtil.isJava11orLater() )
         {
-          // this is a failed attempt at circumventing reflection checks, but keeping it here to revisit
-//          field = (Field)constructor( Field.class,
-//            Class.class, String.class, Class.class, int.class, boolean.class, int.class, String.class, byte[].class )
-//            .newInstance( field.getDeclaringClass(), field.getName(), field.getType(), field.getModifiers() & ~Modifier.FINAL,
-//              false, // trustedFinal
-//              field( field, "slot" ).get(),
-//              field( field, "signature" ).get(),
-//              field( field, "annotations" ).get() );
-//          setAccessible( field );
-
-//          getUnsafe().putObject( ctx == null ? getUnsafe().staticFieldBase( field ) : ctx,
-//            Modifier.isStatic( field.getModifiers() )
-//            ? getUnsafe().staticFieldOffset( field ) // if this method is removed from Unsafe, write our own version of it
-//            : getUnsafe().objectFieldOffset( field ), value );
           // using jdk.internal.misc.Unsafe to bypass sun.misc.Unsafe restrictions on records and hidden classes
           Object unsafe = method( "jdk.internal.misc.Unsafe", "getUnsafe" ).invokeStatic();
           LiveMethodRef putReference = JreUtil.isJava17orLater()
@@ -1448,12 +1427,8 @@ public class ReflectUtil
 
   private static void addRawFieldToCache( Class cls, Field f )
   {
-    ConcurrentMap<String, Field> fieldsByName = _fieldsByName.get( cls );
-    if( fieldsByName == null )
-    {
-      _fieldsByName.put( cls, fieldsByName = new ConcurrentHashMap<>() );
-    }
-    fieldsByName.put( f.getName(), f );
+    _fieldsByName.computeIfAbsent( cls, k -> new ConcurrentHashMap<>() )
+      .put( f.getName(), f );
   }
 
   private static Field getRawFieldFromCache( Class cls, String name )
@@ -1908,6 +1883,19 @@ public class ReflectUtil
       }
     }
     return propertyName;
+  }
+
+  /**
+   * Uses reflection to set {@code Thread#contextClassLoader} primarily to sidestep a bug introduced in the JDK where if
+   * a {@code SecurityManager} is set, {@code ForkJoinPool} uses {@code InoccuousForkJoinWorkerThread} which overrides
+   * {@code setContextClassLoader()} to prevent it from being used by throwing an exception. It is best to use reflection
+   * to set the contextClassLoader directly.
+   * <p/>
+   * Note, the JDK issue happens when launching the IntelliJ {@code runIde} task for plugin dev.
+   */
+  public static void setContextClassLoader( ClassLoader cl )
+  {
+    ReflectUtil.field( Thread.currentThread(), "contextClassLoader" ).set( cl );
   }
 
   //## not necessary (until Unsafe goes away), using Unsafe.putObjectVolatile() to set 'override' directly

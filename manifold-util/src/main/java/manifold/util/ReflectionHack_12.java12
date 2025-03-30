@@ -35,7 +35,7 @@ public class ReflectionHack_12
   {
     try
     {
-      Unsafe unsafe = NecessaryEvilUtil.getUnsafe();
+      Unsafe unsafe = JdkAccessUtil.getUnsafe();
 
       // Must approximate the {@link AccessibleObject#override} field offset (because it is one of the filtered fields)
       long overrideOffset = AccessibleObject_layout.getOverrideOffset( unsafe );
@@ -44,8 +44,8 @@ public class ReflectionHack_12
 
       Method addOpens = Module.class.getDeclaredMethod( "implAddOpens", String.class, Module.class );
       unsafe.putObject( addOpens, overrideOffset, true );
-      addOpens.invoke( String.class.getModule(), "jdk.internal.reflect", NecessaryEvilUtil.class.getModule() );
-      //SharedSecrets.getJavaLangAccess().addExports( String.class.getModule(), "jdk.internal.reflect", NecessaryEvilUtil.class.getModule() );
+      addOpens.invoke( String.class.getModule(), "jdk.internal.reflect", JdkAccessUtil.class.getModule() );
+      //SharedSecrets.getJavaLangAccess().addExports( String.class.getModule(), "jdk.internal.reflect", JdkAccessUtil.class.getModule() );
 
       Set<String> allFilter = Reflection.ALL_MEMBERS;
       Field e0 = allFilter.getClass().getDeclaredField( "e0" );

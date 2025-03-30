@@ -57,6 +57,7 @@ import manifold.rt.api.util.Pair;
 import manifold.ext.rt.RuntimeMethods;
 import manifold.graphql.rt.api.request.Executor;
 import manifold.rt.api.DisableStringLiteralTemplates;
+import manifold.util.ReflectUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -1593,7 +1594,7 @@ class GqlParentType
   {
     // must use *this* class loader so that, in the case of IJ plugin, any custom ICoercionProviders will be included
     ClassLoader prevLoader = Thread.currentThread().getContextClassLoader();
-    Thread.currentThread().setContextClassLoader( getClass().getClassLoader() );
+    ReflectUtil.setContextClassLoader( getClass().getClassLoader() );
     try
     {
       for( ICoercionProvider coercer : CoercionProviders.get() )
@@ -1611,7 +1612,7 @@ class GqlParentType
     }
     finally
     {
-      Thread.currentThread().setContextClassLoader( prevLoader );
+      ReflectUtil.setContextClassLoader( prevLoader );
     }
   }
 

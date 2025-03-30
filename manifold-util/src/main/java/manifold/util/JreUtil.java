@@ -160,6 +160,42 @@ public class JreUtil
     return JAVA_VERSION >= 21;
   }
 
+  public static boolean isJava23()
+  {
+    return JAVA_VERSION == 23;
+  }
+  public static boolean isJava23orLater()
+  {
+    return JAVA_VERSION >= 23;
+  }
+
+  public static boolean isJava24()
+  {
+    return JAVA_VERSION == 24;
+  }
+  public static boolean isJava24orLater()
+  {
+    return JAVA_VERSION >= 24;
+  }
+
+  public static boolean isJava25()
+  {
+    return JAVA_VERSION == 25;
+  }
+  public static boolean isJava25orLater()
+  {
+    return JAVA_VERSION >= 25;
+  }
+
+  public static boolean isJava26()
+  {
+    return JAVA_VERSION == 26;
+  }
+  public static boolean isJava26orLater()
+  {
+    return JAVA_VERSION >= 26;
+  }
+
   public static boolean isJava9Modular_compiler( Object/*Context*/ ctx )
   {
     if( _modular == null )
@@ -208,6 +244,8 @@ public class JreUtil
       }
       else
       {
+        JdkAccessUtil.bypassJava9Security();
+
         //noinspection ConstantConditions
         Object /*Module*/ manifoldModule = ReflectUtil.method( Class.class, "getModule" ).invoke( JreUtil.class );
         _modularRuntime = (boolean)ReflectUtil.method( manifoldModule, "isNamed" ).invoke();

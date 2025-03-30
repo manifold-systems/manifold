@@ -18,8 +18,11 @@ package manifold.internal.javac;
 
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
+import com.sun.tools.javac.tree.JCTree;
+import manifold.rt.api.util.Pair;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -30,7 +33,7 @@ import java.util.function.Supplier;
 public class ParentMap
 {
   private final Supplier<CompilationUnitTree> _compilationUnitSupplier;
-  private final Map<CompilationUnitTree, Map<Tree, Tree>> _parents;
+  private final Map<CompilationUnitTree, Pair<Map<Tree, Tree>, Map<Integer, List<Tree>>>> _parents;
 
   public ParentMap( Supplier<CompilationUnitTree> compilationUnitSupplier )
   {
@@ -45,11 +48,42 @@ public class ParentMap
 
   public Tree getParent( Tree child, CompilationUnitTree compilationUnitTree )
   {
-    Map<Tree, Tree> parents = _parents.computeIfAbsent( compilationUnitTree, cu -> {
+    Pair<Map<Tree, Tree>, Map<Integer, List<Tree>>> parents = _parents.computeIfAbsent( compilationUnitTree, cu -> {
       Map<Tree, Tree> map = new HashMap<>();
-      new ParentTreePathScanner( map ).scan( cu, null );
-      return map;
+      Map<Integer, List<Tree>> map2 = new HashMap<>();
+      new ParentTreePathScanner( map, map2 ).scan( cu, null );
+      return new Pair<>( map, map2 );
     } );
-    return parents.get( child );
+    Tree tree = parents.getFirst().get( child );
+    if( tree == null && child instanceof JCTree )
+    {
+      tree = getParentByPos( (JCTree)child, parents );
+    }
+    return tree;
+  }
+
+  // sometimes, such as during speculative attribution, a tree is copied and worked on independently,
+  // as a consequence the copied tree won't match a tree in the map, we are forced to find the parent
+  // based on some other means like position in file
+  //
+  // todo: maybe add an alternative public method here to access the list directly? For now, returning outermost parent.
+  private static Tree getParentByPos( JCTree child, Pair<Map<Tree, Tree>, Map<Integer, List<Tree>>> parents )
+  {
+    Tree tree = null;
+    List<Tree> posParents = parents.getSecond().get( child.pos );
+    if( posParents != null )
+    {
+      if( posParents.size() == 1 )
+      {
+        tree = posParents.get( 0 );
+      }
+      else
+      {
+        tree = posParents.stream()
+          .filter( t -> t instanceof JCTree && ((JCTree)t).pos != child.pos )
+          .findFirst().orElse( null );
+      }
+    }
+    return tree;
   }
 }
