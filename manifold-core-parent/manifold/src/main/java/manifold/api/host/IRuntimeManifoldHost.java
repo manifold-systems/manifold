@@ -18,7 +18,7 @@ package manifold.api.host;
 
 import java.io.File;
 import java.util.List;
-import manifold.util.NecessaryEvilUtil;
+import manifold.util.JdkAccessUtil;
 
 /**
  * A Manifold host exclusive to the runtime environment.  Responsible for
@@ -37,7 +37,7 @@ public interface IRuntimeManifoldHost extends IManifoldHost
   default void preBootstrap()
   {
     // reflectively make modules accessible such as java.base and jdk.compiler
-    NecessaryEvilUtil.bypassJava9Security();
+    JdkAccessUtil.bypassJava9Security();
   }
 
   /**

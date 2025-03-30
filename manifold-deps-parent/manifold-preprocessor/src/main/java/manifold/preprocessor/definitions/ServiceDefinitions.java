@@ -19,6 +19,7 @@ package manifold.preprocessor.definitions;
 import manifold.api.fs.IFile;
 import manifold.preprocessor.api.SymbolProvider;
 import manifold.rt.api.util.ServiceUtil;
+import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 
 import java.util.*;
@@ -75,7 +76,7 @@ public class ServiceDefinitions extends Definitions
       if( cl != null )
       {
         // a non-null cl here is an IDE module class loader
-        Thread.currentThread().setContextClassLoader( cl );
+        ReflectUtil.setContextClassLoader( cl );
       }
     }
     else
@@ -97,7 +98,7 @@ public class ServiceDefinitions extends Definitions
     finally
     {
 
-      Thread.currentThread().setContextClassLoader( currentLoader );
+      ReflectUtil.setContextClassLoader( currentLoader );
     }
   }
 }

@@ -79,7 +79,7 @@ import manifold.rt.api.util.ServiceUtil;
 import manifold.util.JreUtil;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.util.ManExceptionUtil;
-import manifold.util.NecessaryEvilUtil;
+import manifold.util.JdkAccessUtil;
 import manifold.rt.api.util.Pair;
 import manifold.util.ReflectUtil;
 import manifold.rt.api.util.StreamUtil;
@@ -106,7 +106,7 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     try
     {
-      NecessaryEvilUtil.bypassJava9Security();
+      JdkAccessUtil.bypassJava9Security();
       // ClassFinder is new in Java 9, its presence indicates Java 9 or later
       CLASSFINDER_CLASS = Class.forName( "com.sun.tools.javac.code.ClassFinder", false, ClassReader.class.getClassLoader() );
       MODULES_CLASS = Class.forName( "com.sun.tools.javac.comp.Modules", false, ClassReader.class.getClassLoader() );
@@ -162,7 +162,7 @@ public class JavacPlugin implements Plugin, TaskListener
     INSTANCE = this;
 
     // calling this here because the line below this references the type `BasicJavacTask`, which is in a jdk module needing exposure
-    NecessaryEvilUtil.bypassJava9Security();
+    JdkAccessUtil.bypassJava9Security();
 
     _javacTask = (BasicJavacTask)task;
 
@@ -172,7 +172,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
     if( JreUtil.isJava16orLater() )
     {
-      NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
+      JdkAccessUtil.openModule( getContext(), "jdk.compiler" );
     }
 
     _host = new JavacManifoldHost();
@@ -417,7 +417,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
         modules.add( module );
 
-        NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
+        JdkAccessUtil.openModule( getContext(), "jdk.compiler" );
 
         if( JavacUtil.getSourceNumber() > 8 ) // don't override if -source 8
         {
@@ -1027,7 +1027,7 @@ public class JavacPlugin implements Plugin, TaskListener
       _initialized = true;
 
       // Must perform shenanigans early
-      NecessaryEvilUtil.bypassJava9Security();
+      JdkAccessUtil.bypassJava9Security();
 
       // Initialize the Javac host environment
       getHost().initialize( deriveSourcePath(), deriveClasspath(), deriveOutputPath() );

@@ -17,7 +17,7 @@
 package manifold.ext.rt;
 
 import manifold.rt.api.IBootstrap;
-import manifold.util.NecessaryEvilUtil;
+import manifold.util.JdkAccessUtil;
 
 public class BootstrapExtRt implements IBootstrap
 {
@@ -29,7 +29,7 @@ public class BootstrapExtRt implements IBootstrap
     if( !_booted )
     {
       _booted = true;
-      NecessaryEvilUtil.bypassJava9Security( false );
+      JdkAccessUtil.bypassJava9Security( false );
     }
     return true;
   }

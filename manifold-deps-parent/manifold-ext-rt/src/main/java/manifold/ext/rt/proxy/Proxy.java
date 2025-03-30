@@ -645,7 +645,6 @@ public class Proxy implements java.io.Serializable {
   {
     if( !JreUtil.isJava8() )
     {
-//      return NecessaryEvilUtil.getUnsafe().defineClass( name, b, off, len, loader, null );
       loader = (ClassLoader)ReflectUtil.method( module, "getClassLoader" ).invoke();
     }
     return (Class<?>)ReflectUtil.method( loader, "defineClass", String.class, byte[].class, int.class, int.class )

@@ -55,7 +55,7 @@ public class Util
   {
     try
     {
-      Class<?> Neu = Class.forName( "manifold.util.NecessaryEvilUtil", true, cl );
+      Class<?> Neu = Class.forName( "manifold.util.JdkAccessUtil", true, cl );
       Neu.getMethod( "bypassJava9Security" ).invoke( null );
     }
     catch( Exception e )

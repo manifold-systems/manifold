@@ -21,32 +21,19 @@ import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
-import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 
-public class NecessaryEvilUtil
+import static manifold.util.JreUtil.isJava23orLater;
+import static manifold.util.JreUtil.isJava24orLater;
+
+public class JdkAccessUtil
 {
-  private static Unsafe UNSAFE = null;
-
-  public static Unsafe getUnsafe()
+  public static Unhelmeted getUnhelmeted()
   {
-    if( UNSAFE != null )
-    {
-      return UNSAFE;
-    }
-
-    try
-    {
-      Field theUnsafe = Unsafe.class.getDeclaredField( "theUnsafe" );
-      theUnsafe.setAccessible( true );
-      return UNSAFE = (Unsafe)theUnsafe.get( null );
-    }
-    catch( Throwable t )
-    {
-      throw new RuntimeException( "The 'Unsafe' class is not accessible" );
-    }
+    return Unhelmeted.getUnhelmeted();
   }
 
   public static void bypassJava9Security()
@@ -62,7 +49,7 @@ public class NecessaryEvilUtil
   public static void disableJava9IllegalAccessWarning()
   {
     // runtime
-    disableJava9IllegalAccessWarning( NecessaryEvilUtil.class.getClassLoader() );
+    disableJava9IllegalAccessWarning( JdkAccessUtil.class.getClassLoader() );
     // compile-time
     disableJava9IllegalAccessWarning( Thread.currentThread().getContextClassLoader() );
   }
@@ -70,7 +57,7 @@ public class NecessaryEvilUtil
   // Disable Java 9 warnings re "An illegal reflective access operation has occurred"
   public static void disableJava9IllegalAccessWarning( ClassLoader cl )
   {
-    if( JreUtil.isJava8() )
+    if( JreUtil.isJava8() || JreUtil.isJava17orLater() )
     {
       return;
     }
@@ -79,7 +66,7 @@ public class NecessaryEvilUtil
     {
       Class cls = Class.forName( "jdk.internal.module.IllegalAccessLogger", false, cl );
       Field logger = cls.getDeclaredField( "logger" );
-      getUnsafe().putObjectVolatile( cls, getUnsafe().staticFieldOffset( logger ), null );
+      getUnhelmeted().putObjectVolatile( cls, getUnhelmeted().staticFieldOffset( logger ), null );
     }
     catch( Throwable ignore )
     {
@@ -93,6 +80,21 @@ public class NecessaryEvilUtil
       return;
     }
 
+    if( useInternalUnsafe() )
+    {
+      // requires:  --add-exports=java.base/jdk.internal.access=ALL-UNNAMED (or "manifold-util" in multi-module mode)
+      try
+      {
+        Class<?> tenderizeClass = Class.forName( "manifold.util.Tenderizer" );
+        Object instance = tenderizeClass.getDeclaredField( "INSTANCE" ).get( null );
+        tenderizeClass.getDeclaredMethod( "tenderize" ).invoke( instance );
+      }
+      catch( Throwable t )
+      {
+        throw new RuntimeException( t );
+      }
+    }
+
     try
     {
       Class<?> classModule = ReflectUtil.type( "java.lang.Module" );
@@ -101,16 +103,20 @@ public class NecessaryEvilUtil
       //
       // Module: manifold jars
       //
-//      Object /*Module*/ manifoldModule = ReflectUtil.method( Class.class, "getModule" ).invoke( NecessaryEvilUtil.class );
-      Object /*Module*/ manifoldModule = ReflectUtil.field( "java.lang.Module", "EVERYONE_MODULE" ).getStatic();
+      Object /*Module*/ thisModule = ReflectUtil.method( Class.class, "getModule" ).invoke( JdkAccessUtil.class );
+      Object /*Module*/ javaBase = ReflectUtil.method( Class.class, "getModule" ).invoke( String.class );
+      addExportsOrOpens.invoke( javaBase, "jdk.internal.misc", thisModule, true, true );
+      addExportsOrOpens.invoke( javaBase, "java.lang", thisModule, true, true );
+
+      Object /*Module*/ everyoneModule = ReflectUtil.field( "java.lang.Module", "EVERYONE_MODULE" ).getStatic();
 
       // Open select packages in java.base module for reflective access
-      openRuntimeModules( addExportsOrOpens, manifoldModule );
+      openRuntimeModules( addExportsOrOpens, everyoneModule );
 
       if( fullJdk )
       {
         // Open select packages in jdk.compiler for reflective access
-        openCompilerModules( addExportsOrOpens, manifoldModule );
+        openCompilerModules( addExportsOrOpens, everyoneModule );
       }
     }
     catch( Throwable e )
@@ -262,90 +268,85 @@ public class NecessaryEvilUtil
     }
   }
 
-  //## no need for shenanigans here since ReflectUtil uses Class#getDeclaredMethods0/Fields0 to bypass java12 blacklisting
-//    of fields. Leaving this commented out code here in case it is needed to address future jdk changes.
-//
-//  static
-//  {
-//    makeReflectionGreatAgain();
-//  }
-//
-//  // Shutdown Oracle's attempt at blacklisting fields and methods from reflection introduced in Java 12
-//  private static void makeReflectionGreatAgain()
-//  {
-//    if( JreUtil.isJava12orLater() )
-//    {
-//      try
-//      {
-//        Unsafe unsafe = NecessaryEvilUtil.getUnsafe();
-//
-//        // Must approximate the AccessibleObject#override field offset (because it is one of the filtered fields)
-//        long overrideOffset = AccessibleObject_layout.getOverrideOffset( unsafe );
-//
-//        // Reflection.class.reflectionData.declaredFields = Reflection.class.getDeclaredFields0()
-//        // then you can use ReflectUtil to: Reflection.fieldFilterMap = emptyMap()
-//        // now reflection is great again
-//
-//        Class<?> moduleClass = ReflectUtil.type( "java.lang.Module" );
-//        Method addOpens = moduleClass.getDeclaredMethod( "implAddOpens", String.class, moduleClass );
-//        unsafe.putObject( addOpens, overrideOffset, true );
-//        ReflectUtil.MethodRef getModule = ReflectUtil.method( Class.class, "getModule" );
-//        addOpens.invoke( getModule.invoke( String.class ), "jdk.internal.reflect", getModule.invoke( NecessaryEvilUtil.class ) );
-//
-//        Class<?> reflectionClass = ReflectUtil.type( "jdk.internal.reflect.Reflection" );
-//        ReflectUtil.method( (Object)reflectionClass, "reflectionData" ).invoke(); // to ensure initialization of reflectionData
-//        SoftReference reflectionData = (SoftReference)ReflectUtil.field( (Object)reflectionClass, "reflectionData" ).get();
-//        ReflectUtil.LiveMethodRef getDeclaredFields0 = ReflectUtil.method( (Object)reflectionClass, "getDeclaredFields0", boolean.class );
-//        ReflectUtil.field( reflectionData.get(), "declaredPublicFields" ).set( getDeclaredFields0.invoke( true ) );
-//        ReflectUtil.field( reflectionData.get(), "declaredFields" ).set( getDeclaredFields0.invoke( false ) );
-//
-//        // erase the internal blacklist
-//        ReflectUtil.field( reflectionClass, "fieldFilterMap" ).setStatic( Collections.emptyMap() );
-//      }
-//      catch( Throwable e )
-//      {
-//        throw new RuntimeException( e );
-//      }
-//    }
-//  }
-//
-//  //## this strategy works, but I'm keeping this as a backup in case the above strategy is thwarted by a newer jdk
-//  //    release such as if getDeclaredFields0 is removed or some other change.
-//  //
-//  //  static
-//  //  {
-//  //    if( JreUtil.isJava12orLater() )
-//  //    {
-//  //      try
-//  //      {
-//  //        // Shutdown Oracle's attempt at blacklisting fields and methods from reflection in Java 12
-//  //        Class<?> hackClass = Class.forName( NecessaryEvilUtil.class.getPackage().getName() + ".ReflectionHack_12" );
-//  //        Method hackReflection = hackClass.getMethod( "hackReflection" );
-//  //        hackReflection.invoke( null );
-//  //      }
-//  //      catch( Throwable e )
-//  //      {
-//  //        throw new RuntimeException( e );
-//  //      }
-//  //    }
-//  //  }
-//
-//  @SuppressWarnings({"unused", "WeakerAccess"})
-//  static abstract class AccessibleObject_layout
-//  {
-//    boolean override;
-//    volatile Object securityCheckCache;
-//
-//    static long getOverrideOffset( Unsafe unsafe )
-//    {
-//      try
-//      {
-//        return unsafe.objectFieldOffset( AccessibleObject_layout.class.getDeclaredField( "override" ) );
-//      }
-//      catch( NoSuchFieldException e )
-//      {
-//        throw new RuntimeException( e );
-//      }
-//    }
-//  }
+  private static Boolean useInternalUnsafe;
+  static boolean useInternalUnsafe()
+  {
+    if( useInternalUnsafe != null )
+    {
+      return useInternalUnsafe;
+    }
+
+    if( !isJava23orLater() )
+    {
+      // use sun.misc.Unsafe for earlier JDK versions
+      return useInternalUnsafe = false;
+    }
+
+    try
+    {
+      Method getModule = Class.class.getMethod( "getModule" );
+      Object /*Module*/ manifoldUtil = getModule.invoke( JdkAccessUtil.class );
+      Object /*Module*/ javaBase = getModule.invoke( String.class );
+      boolean isJdkInternalAccessExported = (boolean)javaBase.getClass().getMethod( "isExported", String.class, javaBase.getClass() )
+        .invoke( javaBase, "jdk.internal.access", manifoldUtil );
+      if( isJdkInternalAccessExported )
+      {
+        // prefer internal Unsafe when jdk.internal.access is exported (on the command line)
+        return useInternalUnsafe = true;
+      }
+    }
+    catch( Throwable e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+
+    try
+    {
+      Field theUnsafe = sun.misc.Unsafe.class.getDeclaredField( "theUnsafe" );
+      theUnsafe.setAccessible( true );
+      sun.misc.Unsafe unsafe = (sun.misc.Unsafe)theUnsafe.get( null );
+      long offset = unsafe.staticFieldOffset( JdkAccessUtil.class.getDeclaredField( "useInternalUnsafe" ) );
+      if( offset >= 0 )
+      {
+        // above staticFieldOffset() call may trigger a warning if `--sun-misc-unsafe-memory-access=allow` is not on cmd line
+        logWarningInstructions();
+        return useInternalUnsafe = false;
+      }
+    }
+    catch( Throwable ignore )
+    {
+    }
+    // whelp, sun.misc.Unsafe no longer supports features we use. However, since "jdk.internal.access" was not exported
+    // on the command line, the "jdk.internal.misc.Unsafe" can't be used. Print a message with a remedy.
+    logErrorInstructions();
+    useInternalUnsafe = true;
+    throw new ManifoldInitException();
+  }
+
+  private static void logErrorInstructions()
+  {
+    System.err.println( "#  Manifold requires the following Java process option:\n" +
+                        "#      --add-exports=java.base/jdk.internal.access=ALL-UNNAMED\n" +
+                        "#  If you are using the Java Platform Module System (JPMS), use this instead:\n" +
+                        "#      --add-exports=java.base/jdk.internal.access=manifold.util\n" );
+  }
+
+  private static void logWarningInstructions()
+  {
+    if( !isJava24orLater() )
+    {
+      // JDKs prior to 24 do not print a warning message concerning use of Unsafe
+      return;
+    }
+
+    List<String> values = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments();
+    if( values.stream().noneMatch( arg -> arg.contains( "--sun-misc-unsafe-memory-access=allow" ) ) )
+    {
+      // this message prints immediately after JDK's Unsafe warning message
+      System.err.println( "#  To remove this warning add the following Java process option:\n" +
+                          "#      --add-exports=java.base/jdk.internal.access=ALL-UNNAMED\n" +
+                          "#  If you are using the Java Platform Module System (JPMS), use this instead:\n" +
+                          "#      --add-exports=java.base/jdk.internal.access=manifold.util\n" );
+    }
+  }
 }

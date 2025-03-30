@@ -18,7 +18,7 @@ package manifold.internal.javac;
 
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
-import manifold.util.NecessaryEvilUtil;
+import manifold.util.JdkAccessUtil;
 
 /**
  * The {@link JavacPlugin} can't be used directly with Java 16+ because stricter accessibility changes were added to
@@ -33,7 +33,7 @@ public class JavacPluginBootstrap implements Plugin
 
   public JavacPluginBootstrap()
   {
-    NecessaryEvilUtil.bypassJava9Security();
+    JdkAccessUtil.bypassJava9Security();
     _delegate = new JavacPlugin();
   }
 
