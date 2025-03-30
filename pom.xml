@@ -4,7 +4,7 @@
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
-  <version>2025.1.5-SNAPSHOT</version>
+  <version>2025.1.6-SNAPSHOT</version>
 
   <name>Manifold :: Parent</name>
   <description>
@@ -153,7 +153,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.7.0</version>
+          <version>3.8.0</version>
           <configuration>
             <source>${java-source-ver}</source>
             <target>${java-target-ver}</target>
@@ -212,7 +212,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.6.0</version>
         </plugin>
       </plugins>
     </pluginManagement>

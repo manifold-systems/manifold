@@ -1,0 +1,40 @@
+package manifold.util;
+
+import jdk.internal.access.SharedSecrets;
+
+import java.lang.Module;
+
+/**
+ * !!! Compiled separately with JDK 23 !!!
+ * <p/>
+ * !!! This class requires --add-exports=java.base/jdk.internal.access=ALL-UNNAMED (or manifold.util with multi-module use)<br>
+ * <br>
+ * Opens java.base packages jdk.internal.misc and java.lang to enable reflective
+ * access to internals for JDKs where sun.misc.Unsafe is effectively gone, ~JDK 26.
+ * The reality at this time is we only need this class for reassigning final fields
+ * and accessing members that are otherwise inaccessible, which requires shenanigans.
+ */
+class Tenderizer
+{
+    static final Tenderizer INSTANCE = new Tenderizer();
+
+    private Boolean _tenderized;
+
+    private Tenderizer() {}
+
+    void tenderize()
+    {
+        if( _tenderized != null )
+        {
+            return;
+        }
+
+        _tenderized = false;
+        Module javaBase = String.class.getModule();
+        Module mine = getClass().getModule();
+        // SharedSecrets is accessible here because --add-exports=java.base/jdk.internal.access is required on the cmd line
+        SharedSecrets.getJavaLangAccess().addOpens( javaBase, "jdk.internal.misc", mine );
+        SharedSecrets.getJavaLangAccess().addOpens( javaBase, "java.lang", mine );
+        _tenderized = true;
+    }
+}

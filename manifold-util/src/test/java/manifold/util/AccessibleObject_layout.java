@@ -18,7 +18,6 @@ package manifold.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import sun.misc.Unsafe;
 
 // Duplicate the field layout of AccessibleObject so we can get the offset of the `override` field
 @SuppressWarnings({"unused", "WeakerAccess"})
@@ -53,11 +52,11 @@ public class AccessibleObject_layout implements AnnotatedElement
     return new Annotation[0];
   }
 
-  static long getOverrideOffset( Unsafe unsafe )
+  static long getOverrideOffset()
   {
     try
     {
-      return unsafe.objectFieldOffset( AccessibleObject_layout.class.getDeclaredField( "override" ) );
+      return Unhelmeted.getUnhelmeted().objectFieldOffset( AccessibleObject_layout.class.getDeclaredField( "override" ) );
     }
     catch( NoSuchFieldException e )
     {
