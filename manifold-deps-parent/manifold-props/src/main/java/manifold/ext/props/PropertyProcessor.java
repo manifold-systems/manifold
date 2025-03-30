@@ -1538,7 +1538,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         {
           // method is non-static
           Type thisType = _backingSymbols.peek().fst.type;
-          if( getTypes().isSubtype( thisType, getMethod.owner.type ) )
+          if( getTypes().isSubtype( getTypes().erasure( thisType ), getTypes().erasure( getMethod.owner.type ) ) )
           {
             // method is on this or super type
             receiver = make.This( _backingSymbols.peek().fst.type ).setPos( tree.pos );
@@ -1623,7 +1623,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             {
               // method is non-static
               Type thisType = _backingSymbols.peek().fst.type;
-              if( getTypes().isSubtype( thisType, setMethod.owner.type ) )
+              if( getTypes().isSubtype( getTypes().erasure( thisType ), getTypes().erasure( setMethod.owner.type ) ) )
               {
                 // method is on this or super type
                 lhsSelected = make.This( lhsSelectedType ).setPos( tree.pos );

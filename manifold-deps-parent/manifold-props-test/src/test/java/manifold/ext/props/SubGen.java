@@ -32,9 +32,9 @@ public class SubGen extends BaseGen<String, Integer>
 //  @override @var String finalProp;
 
 
-  public SubGen( List<String> names, Integer result )
+  public SubGen( List<String> nameses, Integer result )
   {
-    this.names = names;
+    names = nameses;
     this.result = result;
   }
 }
