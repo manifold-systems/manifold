@@ -5,6 +5,7 @@ import manifold.api.type.BasicIncrementalCompileDriver;
 import manifold.api.type.ClassType;
 import manifold.api.type.ContributorKind;
 import manifold.ext.rt.api.Structural;
+import manifold.ext.sup.SuperClass2;
 
 import javax.swing.*;
 import java.awt.Rectangle;
@@ -115,6 +116,9 @@ public class SimpleTest extends SimpleTestSuper
     // super method
     assertEquals( Collections.singletonList( "testbarSuper" ),
       Stream.of( "test" ).map( super::appendBarSuper ).collect( Collectors.toList() ) );
+    // super method in other package
+    assertEquals( Collections.singletonList( "foo supertestfoo supertest2" ),
+      Stream.of( new SubClass2() ).map( SubClass2::foo ).map( SuperClass2.DeferredJoiner::get).collect( Collectors.toList() ) );
 
     // Supplier
     assertEquals( new LinkedHashSet<>( Arrays.asList( "foo", "bar" ) ),

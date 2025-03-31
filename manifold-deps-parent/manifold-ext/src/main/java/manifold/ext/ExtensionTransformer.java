@@ -65,6 +65,7 @@ import static com.sun.tools.javac.code.Flags.*;
 import static com.sun.tools.javac.code.TypeTag.*;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
+import static manifold.util.JreUtil.isJava8;
 
 /**
  *
@@ -2701,12 +2702,12 @@ public class ExtensionTransformer extends TreeTranslator
 
       // (b) Receiver class literal: build "receiver.getClass()" as a class literal.
       // Then, create a type object for the receiver’s type.
-      JCTree.JCExpression receiverType = make.Type( receiver.sym.type.unannotatedType() );
+      JCTree.JCExpression receiverType = make.Type( getUnderlyingType( receiver.sym.type ) );
       JCTree.JCFieldAccess receiverClassExpr = make.Select( receiverType, names.fromString( "class" ) );
-      Type classType = types.erasure(elements.getTypeElement("java.lang.Class").asType());
+      Type classType = types.erasure( elements.getTypeElement( "java.lang.Class" ).asType() );
       receiverClassExpr.type = new Type.ClassType(
         classType.getEnclosingType(),
-        List.of(receiver.sym.type.unannotatedType()), // Generic argument: SomeType -> Class<SomeType>
+        List.of( getUnderlyingType( receiver.sym.type ) ), // Generic argument: SomeType -> Class<SomeType>
         classType.tsym
       );
       receiverClassExpr.sym = receiverClassExpr.type.tsym;
@@ -2867,6 +2868,13 @@ public class ExtensionTransformer extends TreeTranslator
       return extCall;
     }
     return tree;
+  }
+
+  private static Type getUnderlyingType( Type type )
+  {
+    return isJava8()
+      ? type.unannotatedType()
+      : (Type)ReflectUtil.method( type, "stripMetadata" ).invoke();
   }
 
   private JCTree.JCMethodInvocation replaceWithReflection( JCTree.JCMethodInvocation tree )

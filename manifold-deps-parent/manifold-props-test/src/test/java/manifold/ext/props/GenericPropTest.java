@@ -128,4 +128,18 @@ public class GenericPropTest extends TestCase
     props.list_String_Array = list_String_Array;
     assertEquals( list_String_Array, props.list_String_Array );
   }
+
+  public void testSubGen()
+  {
+    SubGen subGen = new SubGen( Arrays.asList( "a", "b" ), 5 );
+    assertEquals( Arrays.asList( "a", "b" ), subGen.names );
+    assertEquals( 5, (int)subGen.result );
+  }
+
+  public void testSimpleGen()
+  {
+    SimpleGen.Child child = new SimpleGen.Child();
+    child.foo = "hi";
+    assertEquals( "hi", child.testMe() );
+  }
 }
