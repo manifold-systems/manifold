@@ -1,8 +1,10 @@
 package manifold.internal.javac;
 
+import com.sun.source.tree.MemberReferenceTree;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.List;
@@ -38,7 +40,7 @@ public class MethodRefToLambda
       JCTree.JCLambda lambda = make.Lambda( params, body );
       lambda.setPos( methodRef.pos );
 
-      lambda.type = createReturnType( methodRef, params );
+      lambda.type = createReturnType( tp, methodRef, params );
       IDynamicJdk.instance().setTargets( lambda, List.of(  lambda.type ) );
       return lambda;
     } catch( Throwable e )
@@ -145,7 +147,7 @@ public class MethodRefToLambda
     }
   }
 
-  private static Type createReturnType( JCTree.JCMemberReference methodRef, List<JCTree.JCVariableDecl> params )
+  private static Type createReturnType( TypeProcessor tp, JCTree.JCMemberReference methodRef, List<JCTree.JCVariableDecl> params )
   {
     // Use parameter types for arguments, replacing some problematic types, such as IntersectionClassType
     List<Type> typeArgs = List.nil();
@@ -159,7 +161,14 @@ public class MethodRefToLambda
     }
     if( typeArgumentsIter.hasNext() )
     {
-      typeArgs = typeArgs.append( typeArgumentsIter.next() );
+      Type returnType = typeArgumentsIter.next();
+      // If return type is Object, replace it in case there is a more specific type
+      // This is the case for methods returning 'auto'
+      if( returnType.toString().equals( Object.class.getName() ) )
+      {
+        returnType = methodRef.sym.type.getReturnType();
+      }
+      typeArgs = typeArgs.append( returnType );
     }
 
     return new Type.ClassType(
@@ -168,5 +177,4 @@ public class MethodRefToLambda
       methodRef.type.tsym
     );
   }
-
 }
