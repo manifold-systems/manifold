@@ -202,6 +202,10 @@ public class ExpressionTest {
       fail();
      #endif
 
+     #if !FALSE && FALSE
+      fail();
+     #endif
+
      #if !!TRUE
     success = true;
      #endif
