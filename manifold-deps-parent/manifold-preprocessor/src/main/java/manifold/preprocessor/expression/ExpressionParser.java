@@ -135,7 +135,7 @@ public class ExpressionParser
 
     if( match( ExpressionTokenType.Not ) )
     {
-      Expression expr = parseExpression();
+      Expression expr = parseUnaryExpression();
       return new NotExpression( expr, offset, expr.getEndOffset() );
     }
     else if( match( ExpressionTokenType.OpenParen ) )
