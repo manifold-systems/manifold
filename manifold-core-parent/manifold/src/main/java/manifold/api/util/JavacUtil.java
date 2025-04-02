@@ -17,15 +17,12 @@
 package manifold.api.util;
 
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Options;
 import manifold.internal.javac.JavacPlugin;
 import manifold.util.JreUtil;
 
 import javax.lang.model.SourceVersion;
-import java.util.Arrays;
 
 public class JavacUtil
 {
