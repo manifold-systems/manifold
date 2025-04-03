@@ -48,6 +48,14 @@ public class InterceptTest extends TestCase
         assertEquals( "foo",  new InterceptTest.InterceptObjectSub( "" ).foo() );
     }
 
+    public void testInterceptInVariableDeclaration(){
+        assertEquals( "Hello test",  new InterceptVariableDecl().foo );
+    }
+
+    public static class InterceptVariableDecl {
+        private final String foo = ((InterceptObject) null).sayHello( "test" );
+    }
+
     public static class InterceptObjectSub extends InterceptObject {
         public InterceptObjectSub(String text) {
             super(text);
