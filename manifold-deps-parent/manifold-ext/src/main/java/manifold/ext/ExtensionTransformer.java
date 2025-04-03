@@ -3296,6 +3296,10 @@ public class ExtensionTransformer extends TreeTranslator
     // Traverse up the tree to find the method declaration
     while( !( parent instanceof JCTree.JCMethodDecl ) )
     {
+      if( parent == null )
+      {
+        return InterceptType.NORMAL;
+      }
       parent = _tp.getParent( parent );
     }
     JCTree.JCMethodDecl methodDecl = (JCTree.JCMethodDecl) parent;
