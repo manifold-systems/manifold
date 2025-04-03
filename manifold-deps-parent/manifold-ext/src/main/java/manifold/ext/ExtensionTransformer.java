@@ -15,7 +15,7 @@
  */
 
 package manifold.ext;
-
+import static manifold.api.util.JCTreeUtil.*;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.BasicJavacTask;
@@ -56,7 +56,6 @@ import manifold.util.concurrent.ConcurrentHashSet;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.File;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Function;
@@ -1735,7 +1734,7 @@ public class ExtensionTransformer extends TreeTranslator
           List<JCTree.JCVariableDecl> parameters = declMethod.getParameters();
           for( JCTree.JCVariableDecl param : parameters )
           {
-            if( hasAnnotation( param.getModifiers().getAnnotations(), This.class ) )
+            if( hasAnnotation( param, This.class ) )
             {
               return true;
             }
@@ -1807,7 +1806,7 @@ public class ExtensionTransformer extends TreeTranslator
     Map<String, Set<String>> typeNames = new HashMap<>();
     for( JCTree.JCAnnotation anno : tree.getModifiers().getAnnotations() )
     {
-      if( anno.getAnnotationType().type.toString().equals( Precompile.class.getCanonicalName() ) )
+      if( isAnnotationOfType( anno, Precompile.class ) )
       {
         getTypesToCompile( anno, typeNames );
       }
@@ -1945,7 +1944,7 @@ public class ExtensionTransformer extends TreeTranslator
       Set<Object> drivers = new HashSet<>();
       for( JCTree.JCAnnotation anno : tree.getModifiers().getAnnotations() )
       {
-        if( anno.getAnnotationType().type.toString().equals( IncrementalCompile.class.getCanonicalName() ) )
+        if( isAnnotationOfType( anno, IncrementalCompile.class ) )
         {
           getIncrementalCompileDrivers( anno, drivers );
         }
@@ -2147,7 +2146,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   private void verifyExtensionInterfaces( JCTree.JCClassDecl tree )
   {
-    if( !hasAnnotation( tree.getModifiers().getAnnotations(), Extension.class ) )
+    if( !hasAnnotation( tree, Extension.class ) )
     {
       return;
     }
@@ -2431,9 +2430,8 @@ public class ExtensionTransformer extends TreeTranslator
     {
       JCTree.JCVariableDecl param = parameters.get( i );
       long methodModifiers = tree.getModifiers().flags;
-      boolean This;
-      if( (This = hasAnnotation( param.getModifiers().getAnnotations(), This.class )) ||
-        hasAnnotation( param.getModifiers().getAnnotations(), ThisClass.class ) )
+      boolean This = hasAnnotation( param, This.class );
+      if( This || hasAnnotation( param, ThisClass.class ) )
       {
         thisAnnoFound = true;
 
@@ -2482,7 +2480,7 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
 
-    if( thisAnnoFound || hasAnnotation( tree.getModifiers().getAnnotations(), Extension.class ) )
+    if( thisAnnoFound || hasAnnotation( tree, Extension.class ) )
     {
       long methodModifiers = tree.getModifiers().flags;
       if( !Modifier.isStatic( (int)methodModifiers ) )
@@ -2514,7 +2512,7 @@ public class ExtensionTransformer extends TreeTranslator
   {
     if( parent instanceof JCTree.JCClassDecl )
     {
-      return hasAnnotation( ((JCTree.JCClassDecl)parent).getModifiers().getAnnotations(), Extension.class );
+      return hasAnnotation( (JCTree.JCClassDecl)parent, Extension.class );
     }
     return false;
   }
@@ -2567,18 +2565,6 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
     return getEnclosingSymbol( parentOf.apply( tree ), ctx, parentOf );
-  }
-
-  private boolean hasAnnotation( List<JCTree.JCAnnotation> annotations, Class<? extends Annotation> annoClass )
-  {
-    for( JCTree.JCAnnotation anno : annotations )
-    {
-      if( anno.getAnnotationType().type.toString().equals( annoClass.getCanonicalName() ) )
-      {
-        return true;
-      }
-    }
-    return false;
   }
 
   private JCTree.JCMethodInvocation replaceStructuralCall( JCTree.JCMethodInvocation theCall )
@@ -3237,8 +3223,9 @@ public class ExtensionTransformer extends TreeTranslator
         boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
         isSmartStatic[0] = (boolean)annotation.values.get( 2 ).snd.getValue();
         boolean isIntercept = (boolean)annotation.values.get( 3 ).snd.getValue();
+        boolean isExtensionSource = (boolean) annotation.values.get( 4 ).snd.getValue();
 
-        interceptType[0] = isIntercept ? getInterceptType( tree, sym ) : null;
+        interceptType[0] = isIntercept ? getInterceptType( tree, sym, isExtensionSource ) : null;
 
         BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getModule() ).getJavacTask_PlainFileMgr();
         Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
@@ -3265,7 +3252,7 @@ public class ExtensionTransformer extends TreeTranslator
             Symbol.MethodSymbol extMethodSym = (Symbol.MethodSymbol)elem;
             List<Symbol.VarSymbol> extParams = extMethodSym.getParameters();
             List<Symbol.VarSymbol> calledParams = ((Symbol.MethodSymbol)sym).getParameters();
-            int thisOffset = isStatic && !isSmartStatic[0] ? 0 : 1;
+            int thisOffset = isStatic && !isSmartStatic[0] && !isExtensionSource ? 0 : 1;
             if( extParams.size() - thisOffset != calledParams.size() )
             {
               continue;
@@ -3294,6 +3281,8 @@ public class ExtensionTransformer extends TreeTranslator
    *
    * @param tree The method invocation represented as a {@link JCTree.JCMethodInvocation} tree.
    * @param sym The symbol representing the method being invoked. This is the method to be checked for interception.
+   * @param isExtensionSource A flag indicating whether the source of the method is an `ExtensionSource`.
+   *                          If true, special handling is applied to the first parameter (which isn't annotated).
    * @return The {@link InterceptType} describing how the method should be intercepted, which can be:
    *         <ul>
    *         <li>{@code InterceptType.REFLECTION} - for methods to be invoked via reflection</li>
@@ -3301,7 +3290,7 @@ public class ExtensionTransformer extends TreeTranslator
    *         <li>{@code InterceptType.NONE} - for methods that should not be intercepted</li>
    *         </ul>
    */
-  private InterceptType getInterceptType( JCTree.JCMethodInvocation tree, Symbol sym )
+  private InterceptType getInterceptType( JCTree.JCMethodInvocation tree, Symbol sym, boolean isExtensionSource )
   {
     Tree parent = _tp.getParent( tree );
     // Traverse up the tree to find the method declaration
@@ -3321,11 +3310,11 @@ public class ExtensionTransformer extends TreeTranslator
     }
     // Determine how many parameters to subtract for the comparison
     int paramsToSubtract = 0;
-    if( !methodDecl.params.isEmpty() &&
-      methodDecl.getParameters().get( 0 ).getModifiers().getAnnotations().stream()
-        .map( annotation -> annotation.getAnnotationType().type.toString() )
-        .anyMatch( annotationFqn -> This.class.getTypeName().equals( annotationFqn )
-          || ThisClass.class.getTypeName().equals( annotationFqn ) ) )
+    if(
+      // Source of the method is an ExtensionSource, first parameter isn't annotated, but should be ignored
+      isExtensionSource ||
+        // If the method's first parameter is annotated with @This or @ThisClass, it should be ignored.
+        ( !methodDecl.params.isEmpty() && hasAnnotation( methodDecl.getParameters().get( 0 ), This.class, ThisClass.class ) ) )
     {
       String objectName = methodDecl.params.get( 0 ).name.toString();
       if( !tree.toString().split( "\\.", 2 )[0].equals( objectName ) )

@@ -11,6 +11,7 @@ import javax.swing.*;
 import java.awt.Rectangle;
 import java.awt.event.ItemEvent;
 import java.io.Serializable;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -65,6 +66,11 @@ public class SimpleTest extends SimpleTestSuper
     ContributorKind.Primary.hiContributorKind();
     ClassType.Enum.hiClassType();
     new BasicIncrementalCompileDriver(true).hiBasic();
+  }
+
+  public void testExtensionUtilityClass(){
+    // isDirectory method should exist
+    assertFalse(Paths.get("X:\\invalid_path").isDirectory());
   }
 
   public void testExtensionWithMethodRef()
