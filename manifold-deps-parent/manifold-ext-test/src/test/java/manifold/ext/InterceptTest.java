@@ -49,7 +49,7 @@ public class InterceptTest extends TestCase
     }
 
     public void testInterceptInVariableDeclaration(){
-        assertEquals( "Hello test",  new InterceptVariableDecl().foo );
+        assertEquals( "hello test",  new InterceptVariableDecl().foo );
     }
 
     public static class InterceptVariableDecl {
