@@ -23,6 +23,7 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -36,29 +37,30 @@ public class JdkAccessUtil
     return Unhelmeted.getUnhelmeted();
   }
 
-  public static void bypassJava9Security()
+  public static void openModules()
   {
-    bypassJava9Security( true );
+    openModules( true );
   }
-  public static void bypassJava9Security( boolean fullJdk )
+  public static void openModules( boolean fullJdk )
   {
-    disableJava9IllegalAccessWarning();
-    openModules( fullJdk );
+    muteJava9Warning();
+    _openModules( fullJdk );
   }
 
-  public static void disableJava9IllegalAccessWarning()
+  public static void muteJava9Warning()
   {
     // runtime
-    disableJava9IllegalAccessWarning( JdkAccessUtil.class.getClassLoader() );
+    muteJava9Warning( JdkAccessUtil.class.getClassLoader() );
     // compile-time
-    disableJava9IllegalAccessWarning( Thread.currentThread().getContextClassLoader() );
+    muteJava9Warning( Thread.currentThread().getContextClassLoader() );
   }
 
   // Disable Java 9 warnings re "An illegal reflective access operation has occurred"
-  public static void disableJava9IllegalAccessWarning( ClassLoader cl )
+  public static void muteJava9Warning( ClassLoader cl )
   {
     if( JreUtil.isJava8() || JreUtil.isJava17orLater() )
     {
+      // warning is specific to JDK 11
       return;
     }
 
@@ -73,7 +75,7 @@ public class JdkAccessUtil
     }
   }
 
-  private static void openModules( boolean fullJdk )
+  private static void _openModules( boolean fullJdk )
   {
     if( JreUtil.isJava8() )
     {
@@ -289,9 +291,13 @@ public class JdkAccessUtil
       Object /*Module*/ javaBase = getModule.invoke( String.class );
       boolean isJdkInternalAccessExported = (boolean)javaBase.getClass().getMethod( "isExported", String.class, javaBase.getClass() )
         .invoke( javaBase, "jdk.internal.access", manifoldUtil );
+      if( !isJdkInternalAccessExported )
+      {
+        isJdkInternalAccessExported = tryExportJdkInternalAccess( javaBase, manifoldUtil );
+      }
       if( isJdkInternalAccessExported )
       {
-        // prefer internal Unsafe when jdk.internal.access is exported (on the command line)
+        // prefer internal Unsafe when jdk.internal.access is exported
         return useInternalUnsafe = true;
       }
     }
@@ -321,6 +327,33 @@ public class JdkAccessUtil
     logErrorInstructions();
     useInternalUnsafe = true;
     throw new ManifoldInitException();
+  }
+
+  // check if 'java.lang' is open (such is the case inside IntelliJ) and if so, export `jdk.internal.access` dynamically
+  private static boolean tryExportJdkInternalAccess( Object javaBase, Object manifoldUtil ) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
+  {
+    boolean isJavaLangOpen = (boolean)javaBase.getClass().getMethod( "isOpen", String.class, javaBase.getClass() )
+      .invoke( javaBase, "java.lang", manifoldUtil );
+    if( !isJavaLangOpen )
+    {
+      // `java.lang` is not open to our module from `java.base`
+      return false;
+    }
+    // `java.lang` is open, we can use that to dynamically export `jdk.internal.access`
+    Method getDeclaredMethods0 = Class.class.getDeclaredMethod( "getDeclaredMethods0", boolean.class );
+    getDeclaredMethods0.setAccessible( true );
+    Method[] methods = (Method[])getDeclaredMethods0.invoke( javaBase.getClass(), false );
+    for( Method method : methods )
+    {
+      if( method.getName().equals( "implAddExportsOrOpens" ) && method.getParameterTypes().length == 4 )
+      {
+        // dynamically export java.base/jdk.internal.access
+        method.setAccessible( true );
+        method.invoke( javaBase, "jdk.internal.access", manifoldUtil, false, true );
+        return true;
+      }
+    }
+    throw new IllegalAccessException( "Should have exported jdk.internal.access" );
   }
 
   private static void logErrorInstructions()

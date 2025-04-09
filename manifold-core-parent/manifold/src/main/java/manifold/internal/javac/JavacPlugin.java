@@ -106,7 +106,7 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     try
     {
-      JdkAccessUtil.bypassJava9Security();
+      JdkAccessUtil.openModules();
       // ClassFinder is new in Java 9, its presence indicates Java 9 or later
       CLASSFINDER_CLASS = Class.forName( "com.sun.tools.javac.code.ClassFinder", false, ClassReader.class.getClassLoader() );
       MODULES_CLASS = Class.forName( "com.sun.tools.javac.comp.Modules", false, ClassReader.class.getClassLoader() );
@@ -162,7 +162,7 @@ public class JavacPlugin implements Plugin, TaskListener
     INSTANCE = this;
 
     // calling this here because the line below this references the type `BasicJavacTask`, which is in a jdk module needing exposure
-    JdkAccessUtil.bypassJava9Security();
+    JdkAccessUtil.openModules();
 
     _javacTask = (BasicJavacTask)task;
 
@@ -1027,7 +1027,7 @@ public class JavacPlugin implements Plugin, TaskListener
       _initialized = true;
 
       // Must perform shenanigans early
-      JdkAccessUtil.bypassJava9Security();
+      JdkAccessUtil.openModules();
 
       // Initialize the Javac host environment
       getHost().initialize( deriveSourcePath(), deriveClasspath(), deriveOutputPath() );

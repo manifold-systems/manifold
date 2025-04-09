@@ -33,7 +33,7 @@ public class JavacPluginBootstrap implements Plugin
 
   public JavacPluginBootstrap()
   {
-    JdkAccessUtil.bypassJava9Security();
+    JdkAccessUtil.openModules();
     _delegate = new JavacPlugin();
   }
 

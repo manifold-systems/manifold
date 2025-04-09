@@ -147,7 +147,7 @@ public class ReflectUtil
 
   static
   {
-    JdkAccessUtil.disableJava9IllegalAccessWarning();
+    JdkAccessUtil.muteJava9Warning();
   }
 
   /**

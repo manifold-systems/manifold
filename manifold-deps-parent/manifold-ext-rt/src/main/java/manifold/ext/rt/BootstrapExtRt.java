@@ -29,7 +29,7 @@ public class BootstrapExtRt implements IBootstrap
     if( !_booted )
     {
       _booted = true;
-      JdkAccessUtil.bypassJava9Security( false );
+      JdkAccessUtil.openModules( false );
     }
     return true;
   }
