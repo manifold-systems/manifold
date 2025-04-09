@@ -37,7 +37,7 @@ public interface IRuntimeManifoldHost extends IManifoldHost
   default void preBootstrap()
   {
     // reflectively make modules accessible such as java.base and jdk.compiler
-    JdkAccessUtil.bypassJava9Security();
+    JdkAccessUtil.openModules();
   }
 
   /**

@@ -244,7 +244,7 @@ public class JreUtil
       }
       else
       {
-        JdkAccessUtil.bypassJava9Security();
+        JdkAccessUtil.openModules();
 
         //noinspection ConstantConditions
         Object /*Module*/ manifoldModule = ReflectUtil.method( Class.class, "getModule" ).invoke( JreUtil.class );
