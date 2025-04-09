@@ -256,30 +256,44 @@ You can also generate a compiler error with the [`#error`](#error) directive.
 
 
 ## Symbols
-Similar to a variable in Java, a preprocessor symbol has a name and an optional value. There are five ways a symbol can
-be defined:
-1. Locally in the source file via `#define`
-2. Using a `build.properties` file in the directory ancestry beginning with the root source directory
-3. Using the `-Akey[=value]` option on the javac command line
-4. From compiler and JVM environment settings such as Java source version, JPMS mode, operating system, etc.    
-5. From custom SymbolProvider SPI implementations such as the Android Studio build variant symbols
 
-Symbol scoping rules model a hierarchy of maps, where symbols are accessed in leaf-first order where the leaf
-symbols are controlled by the `#define` and `#undef` directives in the compiling source file.  Parent symbols
-correspond with 2 - 5 above.
+A preprocessor symbol in Manifold functions similarly to a variable in Java. It has a name and an optional value. Symbols
+can be defined in five ways, with precedence as follows:
 
-Note the effects of `#define` and `#undef` are limited to the file scope. This means `#define` symbols are not
-available to other files.  Similarly, parent symbols masked with `#undef` are unaffected in other files.
+1. Locally within the source file using `#define`
+2. Via the `-Akey[=value]` option on the `javac` command line
+3. Through a `build.properties` file located in the directory ancestry starting from the root source directory
+4. From compiler and JVM environment settings, such as Java source version, JPMS mode, operating system, etc.
+5. From custom `SymbolProvider` SPI implementations, such as Android Studio build variant symbols
+
+Symbol scoping follows a hierarchy of maps, where symbols are accessed in leaf-first order. Leaf symbols are controlled
+by the `#define` and `#undef` directives within the compiling source file. Parent symbols correspond to the definitions
+from options 2 through 5.
+
+Note: The effects of `#define` and `#undef` are limited to the file scope. This means `#define` symbols are not available
+in other files, and `#undef` will only affect the current file, leaving parent symbols unaffected in other files.
 
 >Note Manifold's preprocessor is designed exclusively for conditional compilation, you can't use `#define` for
 constant values or macro substitution as you can with a C/C++ preprocessor.
 
 
+### Symbols as compiler arguments
+
+You can define symbols on the javac command line via the `-Akey[=value]` option.  For example:
+```
+javac -Acustomer.level=Ultimate ...
+```
+or
+```
+javac -ACUSTOMER_LEVEL_ULTIMATE ...
+```
+
 ### `build.properties` files
 
-You can provide global symbols using `build.properties` files placed in the ancestry of directories beginning with a
+You can provide symbols using `build.properties` files placed in the ancestry of directories beginning with a
 source root directory.  Although a symbol defined as a property can have a string value, sometimes it is preferable to
-design property names to have the value encoded in the name.
+design property names to have the value encoded in the name. Note, `-Akey[=value]` command line args have precedence over
+symbols defined in properties files.
 
 Instead of this:
 
@@ -288,23 +302,11 @@ customer.type = ABC
 customer.level = Ultimate
 ```
 
-Do this:
+You can do this:
 
 ```properties
 CUSTOMER_TYPE_ABC =
 CUSTUMER_LEVEL_ULTIMATE =
-```
-
-### Symbols as compiler arguments
-
-Similar to `build.properties` you can define symbols on the javac command line via the `-Akey[=value]` option.  For
-example:
-```
-javac -Acustomer.level=Ultimate ...
-```
-or
-```
-javac -ACUSTOMER_LEVEL_ULTIMATE ...
 ```
 
 ### Environment settings symbols
