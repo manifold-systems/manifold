@@ -6,7 +6,7 @@ layout: default
 
 [Common Questions](#common-questions) • [Getting Help](#getting-help) • [Troubleshooting](#troubleshooting)
 
-## Common Questions
+# Common Questions
 
 #### Q: Does Manifold support Java 21? 17? 8?
 Yes -- Manifold fully supports all LTS versions since JDK 8, including 8, 11, 17, and 21. Each release keeps pace with
@@ -63,7 +63,13 @@ Add the corresponding `manifold-*` dependency (or dependencies) to your project,
 compiler argument. [Setup](https://github.com/manifold-systems/manifold#projects) can vary slightly depending on whether
 you're using Java 8 or Java 9+, so refer to the Setup section in the subproject’s README for full details. 
 
-## Getting Help
+### Q: Who uses Manifold?
+
+Here are some companies currently using Manifold:
+
+<img width="70%" height="70%" src="http://manifold.systems/images/companies.png">
+
+# Getting Help
 
 #### Q: Where can I find help?
 
@@ -77,7 +83,7 @@ request, or an idea, go [here](https://github.com/manifold-systems/manifold/issu
 **Private Email**  
 If your question or issue is more urgent or confidential, don't hesitate to email us at [info@manifold.systems](mailto:info@manifold.systems).
 
-## Troubleshooting
+# Troubleshooting
 
 #### Q: I updated to the latest Manifold IntelliJ plugin, but now IntelliJ is showing error messages. What's going on?
 This usually happens when your project dependencies are out of sync with the latest version of Manifold. When you load
@@ -113,9 +119,3 @@ a Manifold feature as an error, you can often fix it by making a small change at
 
 If that doesn't resolve the problem, try closing and reloading the project. If the issue persists, please report it as
 an [issue](https://github.com/manifold-systems/manifold/issues) on Manifold's GitHub repo.
-
-### Q: Who uses Manifold?
-
-Here are some companies currently using Manifold:
-
-<img width="70%" height="70%" src="http://manifold.systems/images/companies.png">
