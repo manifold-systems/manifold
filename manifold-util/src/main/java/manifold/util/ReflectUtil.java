@@ -1887,7 +1887,7 @@ public class ReflectUtil
 
   /**
    * Uses reflection to set {@code Thread#contextClassLoader} primarily to sidestep a bug introduced in the JDK where if
-   * a {@code SecurityManager} is set, {@code ForkJoinPool} uses {@code InoccuousForkJoinWorkerThread} which overrides
+   * a {@code SecurityManager} is set, {@code ForkJoinPool} uses {@code InnocuousForkJoinWorkerThread} which overrides
    * {@code setContextClassLoader()} to prevent it from being used by throwing an exception. It is best to use reflection
    * to set the contextClassLoader directly.
    * <p/>

@@ -9,6 +9,7 @@
 * [Extension Classes via `@Extension`](#extension-classes-via-extension)
   * [The `extensions` Package](#the-extensions-package)
   * [Extension Methods](#extension-methods)
+  * [Intercepting Methods](#intercepting-methods)
   * [Generics](#generics)
   * [Inner Classes](#inner-classes)
   * [Extension Properties](#extension-properties)
