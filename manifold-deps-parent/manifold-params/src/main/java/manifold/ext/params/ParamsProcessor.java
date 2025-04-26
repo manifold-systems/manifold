@@ -472,6 +472,11 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       {
         flags |= Flags.DEFAULT;
       }
+      else if( (flags & Flags.ABSTRACT) != 0 )
+      {
+        flags &= ~Flags.ABSTRACT;
+      }
+
       copy.mods.flags = flags;
       // mark with @manifold_params for IJ use
       JCAnnotation paramsAnno = make.Annotation(
@@ -554,6 +559,10 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         (classDecl().mods.flags & Flags.INTERFACE) != 0 )
       {
         mods |= Flags.DEFAULT;
+      }
+      else if( (mods & Flags.ABSTRACT) != 0 )
+      {
+        mods &= ~Flags.ABSTRACT;
       }
       JCModifiers modifiers = make.Modifiers( mods ); //todo: annotations? hard to know which ones should be reflected.
 
