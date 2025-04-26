@@ -49,6 +49,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static com.sun.source.util.TaskEvent.Kind.ENTER;
+import static com.sun.source.util.TaskEvent.Kind.GENERATE;
 import static manifold.ext.params.ParamsIssueMsg.*;
 
 public class ParamsProcessor implements ICompilerComponent, TaskListener
@@ -201,7 +203,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
   @Override
   public void started( TaskEvent e )
   {
-    if( e.getKind() != TaskEvent.Kind.ENTER )
+    if( e.getKind() != ENTER && e.getKind() != GENERATE )
     {
       return;
     }
@@ -216,9 +218,16 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         if( tree instanceof JCClassDecl )
         {
           JCClassDecl classDecl = (JCClassDecl)tree;
-          if( e.getKind() == TaskEvent.Kind.ENTER )
+          switch( e.getKind() )
           {
-            classDecl.accept( new Enter_Start() );
+            case ENTER:
+              classDecl.accept( new Enter_Start() );
+              break;
+            case GENERATE:
+              classDecl.accept( new Enter_Generate() );
+              break;
+            default:
+              throw new IllegalStateException( "Unexpected kind: " + e.getKind() );
           }
         }
       }
@@ -399,14 +408,9 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
       ArrayList<JCTree> defs = _newDefs.peek().snd;
 
-      // Generate an inner class to encapsulate default values and as a means to assign default values to unassigned params.
-      // The tuple expr used to call the method is transformed into a new-expression on the generated inner class.
-      JCClassDecl paramsClass = makeParamsClass( optParamsMeth, make, copier );
-      defs.add( paramsClass );
-
       // Generate a method having the above generated inner class as its single parameter, this method delegates calls to
       // the original optional params method.
-      JCMethodDecl paramsMethod = makeParamsMethod( optParamsMeth, paramsClass, make, copier );
+      JCMethodDecl paramsMethod = makeParamsMethod( optParamsMeth, make, copier );
       defs.add( paramsMethod );
 
       // Generate telescoping methods, for binary compatibility and for handling call sites having all positional arguments.
@@ -530,130 +534,21 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         make.Ident( name ) );
     }
 
-    // make a static inner class reflecting the parameters of the method
-    //
-    // String foo(String name, int age = 100) {...}
-    // static class $foo<T> {
-    //   String name;
-    //   int age = 100;
-    //   $foo(EncClass<T> foo, String name,  boolean isAge,int age) {
-    //     this.name = name;
-    //     this.age = isAge ? age : this.age;
-    //   }
-    // }
-    private JCClassDecl makeParamsClass( JCMethodDecl targetMethod, TreeMaker make, TreeCopier<?> copier )
-    {
-      // name & modifiers
-      JCModifiers modifiers = make.Modifiers( Flags.PUBLIC | Flags.STATIC );
-      modifiers.pos = make.pos;
-      Names names = getNames();
-      Name typeName = targetMethod.getName();
-      boolean isConstructor = typeName.equals( getNames().init );
-      if( isConstructor )
-      {
-        typeName = getNames().fromString( "constructor" );
-      }
-
-      JCAnnotation paramsAnno = make.Annotation(
-        memberAccess( make, manifold_params.class.getTypeName() ),
-        List.of( getTreeMaker().Literal(
-          targetMethod.params.stream().map( e -> "_" + (e.init == null ? "" : "opt$") + e.name ).reduce( "", (a,b) -> a+b ) ) ) );
-      modifiers.annotations = modifiers.annotations.append( paramsAnno );
-
-      // params class name is composed of the method name and its required parameters,
-      // this convention allows for a method to be overloaded with multiple optional params methods while maintaining
-      // binary compatibility
-      Name name = names.fromString( "$" + typeName + "_" +
-        targetMethod.params.stream().filter( e -> e.init == null ).map( e -> "_" + e.name ).reduce( "", (a,b) -> a+b ) );
-
-      // Type params (copy from method and, if target method is nonstatic, from the enclosing class)
-      List<JCTypeParameter> typeParams = List.nil();
-      typeParams = typeParams.appendList( copier.copy( List.from( targetMethod.getTypeParameters() ) ) );
-      boolean isStaticMethod = (targetMethod.getModifiers().flags & Flags.STATIC) != 0;
-      if( !isStaticMethod )
-      {
-        typeParams = typeParams.appendList( copier.copy( List.from( classDecl().getTypeParameters().stream()
-          .map( e -> make.TypeParameter( e.name, e.bounds ) ).collect( Collectors.toList() ) ) ) );
-      }
-
-      // Fields
-      List<JCVariableDecl> methParams = targetMethod.getParameters();
-      List<JCTree> fields = List.nil();
-      for( JCVariableDecl methParam : methParams )
-      {
-        JCExpression type = (JCExpression)copier.copy( methParam.getType() );
-        JCVariableDecl field = make.VarDef( make.Modifiers( 0L ), methParam.name, type, copier.copy( methParam.init ) );
-        field.pos = make.pos;
-        fields = fields.append( field );
-      }
-
-      // constructor
-      JCMethodDecl ctor;
-      {
-        List<JCVariableDecl> ctorParams = List.nil();
-        if( !isStaticMethod && !isConstructor )
-        {
-          // add Foo<T> parameter for context to solve owning type's type vars, so we can new up $foo type with diamond syntax
-
-          JCIdent owningType = make.Ident( classDecl().getSimpleName() );
-          List<JCExpression> tparams = List.from( classDecl().getTypeParameters().stream().map( tp -> make.Ident( tp.name ) ).collect( Collectors.toList() ) );
-          JCExpression type = tparams.isEmpty() ? owningType : make.TypeApply( owningType, tparams );
-          Name paramName = getNames().fromString( "$" + ManStringUtil.uncapitalize( owningType.name.toString() ) );
-          JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), paramName, type, null );
-          param.pos = make.pos;
-          ctorParams = ctorParams.append( param );
-        }
-        List<JCStatement> ctorStmts = List.nil();
-        for( int i = 0; i < methParams.size(); i++ )
-        {
-          JCVariableDecl methParam = methParams.get( i );
-          JCStatement assignStmt;
-          if( methParam.init != null )
-          {
-            // default param "xxx" requires an "isXxx" param indicating whether the "xxx" should assume the default value
-            Name isXxx = getNames().fromString( "$is" + ManStringUtil.capitalize( methParam.name.toString() ) );
-            JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), isXxx, make.TypeIdent( TypeTag.BOOLEAN ), null );
-            param.pos = make.pos;
-            ctorParams = ctorParams.append( param );
-
-            JCVariableDecl field = (JCVariableDecl)fields.get( i );
-            JCExpression init = field.init;
-            field.init = null;
-
-            // this.p1 = isP1 ? p1 : this.p1;
-            assignStmt = make.Exec( make.Assign( make.Select( make.Ident( getNames()._this ), methParam.name ),
-              make.Conditional( make.Ident( isXxx ), make.Ident( methParam.name ), init ) ) );
-          }
-          else
-          {
-            // this.p1 = p1;
-            assignStmt = make.Exec( make.Assign( make.Select( make.Ident( getNames()._this ), methParam.name ),
-              make.Ident( methParam.name ) ) );
-          }
-          ctorStmts = ctorStmts.append( assignStmt );
-          JCExpression type = (JCExpression)copier.copy( methParam.getType() );
-          JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), methParam.name, type, null );
-          param.pos = make.pos;
-          ctorParams = ctorParams.append( param );
-        }
-        JCBlock body = make.Block( 0L, ctorStmts );
-        Name ctorName = getNames().init;
-        ctor = make.MethodDef( make.Modifiers( Flags.PUBLIC ), ctorName, make.TypeIdent( TypeTag.VOID ), List.nil(), ctorParams, List.nil(), body, null );
-      }
-      return make.ClassDef( modifiers, name, typeParams, null, List.nil(), fields.append( ctor ) );
-    }
-
-    // make an overload of the method with a single parameter that is the params class we generate here,
-    // and forward to the original method:
+    // Because default value expressions can reference symbols within the declaring class, we make a sibling method
+    // the evaluate teh expressions locally.
+    // Make the method with a boolean parameters for each optional parameter, indicating if the optional parameter value
+    // was supplied at the call site, or if the default value should be used, and forward to the original method:
     //   String foo(String name, int age = 100) {...}
-    //   String foo($foo args) {return foo(args.name, args.age);}
-    // where $foo is the params class generated above,
+    //   String $foo(String name,  boolean isAge,int age) {
+    //     return foo(name, isAge ? age : 100);
+    //   }
     // so we can call it using tuples for named args and optional params:
-    // foo((name:"Scott"));
-    private JCMethodDecl makeParamsMethod( JCMethodDecl targetMethod, JCClassDecl paramsClass, TreeMaker make, TreeCopier<?> copier )
+    // foo(name:"Scott");
+    private JCMethodDecl makeParamsMethod( JCMethodDecl targetMethod, TreeMaker make, TreeCopier<?> copier )
     {
       // Method name & modifiers
-      Name name = targetMethod.getName();
+      boolean isConstructor = targetMethod.name.equals( getNames().init );
+      Name name = getNames().fromString( (isConstructor ? "" : "$") + targetMethod.getName() );
       long mods = targetMethod.getModifiers().flags;
       if( (mods & Flags.STATIC) == 0 &&
         (classDecl().mods.flags & Flags.INTERFACE) != 0 )
@@ -662,6 +557,11 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       }
       JCModifiers modifiers = make.Modifiers( mods ); //todo: annotations? hard to know which ones should be reflected.
 
+      JCAnnotation paramsAnno = make.Annotation(
+        memberAccess( make, manifold_params.class.getTypeName() ),
+        List.of( paramsString( targetMethod.params.stream().map( e -> (e.init == null ? "" : "opt$") + e.name ) ) ) );
+      modifiers.annotations = modifiers.annotations.append( paramsAnno );
+
       // Throws
       List<JCExpression> thrown = copier.copy( targetMethod.thrown );
 
@@ -669,14 +569,34 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       List<JCTypeParameter> typeParams = copier.copy( targetMethod.getTypeParameters() );
 
       // Params
-      Name paramName = getNames().fromString( "args" );
-      JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), paramName,
-        paramsClass.getTypeParameters().isEmpty()
-          ? make.Ident( paramsClass.name )
-          : make.TypeApply( make.Ident( paramsClass.name ),
-             List.from( paramsClass.getTypeParameters().stream()
-               .map( tp -> make.Ident( tp.name ) )
-               .collect( Collectors.toList() ) ) ), null );
+      List<JCVariableDecl> params = List.nil();
+      List<JCVariableDecl> targetParams = targetMethod.params;
+      List<JCExpression> args = List.nil();
+      for( int i = 0; i < targetParams.size(); i++ )
+      {
+        JCVariableDecl methParam = targetParams.get( i );
+        JCStatement assignStmt;
+        if( methParam.init != null )
+        {
+          // default param "xxx" requires an "isXxx" param indicating whether the "xxx" should assume the default value
+          Name isXxx = getNames().fromString( "$is" + ManStringUtil.capitalize( methParam.name.toString() ) );
+          JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), isXxx, make.TypeIdent( TypeTag.BOOLEAN ), null );
+          param.pos = make.pos;
+          params = params.append( param );
+
+          // forward either the arg or its default value:  isP1 ? p1 : defaultValue
+          args = args.append( make.Conditional( make.Ident( isXxx ), make.Ident( methParam.name ), methParam.init ) );
+        }
+        else
+        {
+          // param is not optional, always forward it directly
+          args = args.append( make.Ident( methParam.name ) );
+        }
+        JCExpression type = (JCExpression)copier.copy( methParam.getType() );
+        JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), methParam.name, type, null );
+        param.pos = make.pos;
+        params = params.append( param );
+      }
 
       // Return type
       final JCExpression resType = (JCExpression)copier.copy( targetMethod.getReturnType() );
@@ -685,15 +605,13 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       JCMethodInvocation forwardCall;
       if( targetMethod.name.equals( getNames().init ) )
       {
-        forwardCall = make.Apply( List.nil(), make.Ident( getNames()._this ),
-          List.from( targetMethod.params.stream().map( e -> make.Select( make.Ident( paramName ), e.name ) )
-            .collect( Collectors.toList() ) ) );
+        // constructor
+        forwardCall = make.Apply( List.nil(), make.Ident( getNames()._this ), args );
       }
       else
       {
-        forwardCall = make.Apply( List.nil(), make.Ident( targetMethod.name ),
-          List.from( targetMethod.params.stream().map( e -> make.Select( make.Ident( paramName ), e.name ) )
-            .collect( Collectors.toList() ) ) );
+        // method
+        forwardCall = make.Apply( List.nil(), make.Ident( targetMethod.name ), args );
       }
 
       JCStatement stmt;
@@ -709,13 +627,13 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       }
       JCBlock body = make.Block( 0L, List.of( stmt ) );
 
-      return make.MethodDef( modifiers, name, resType, typeParams, List.of( param ), thrown, body, null );
+      return make.MethodDef( modifiers, name, resType, typeParams, params, thrown, body, null );
     }
   }
 
   private JCLiteral paramsString( Stream<String> paramNames )
   {
-    return getTreeMaker().Literal( paramNames.collect( Collectors.joining( ", ") ) );
+    return getTreeMaker().Literal( paramNames.collect( Collectors.joining( "," ) ) );
   }
 
   class Analyze_Finish extends TreeTranslator
@@ -880,6 +798,31 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     }
   }
 
+  // Add SYNTHETIC modifier to generated params methods
+  //
+  private class Enter_Generate extends TreeTranslator
+  {
+    @Override
+    public void visitMethodDef( JCMethodDecl methodDecl )
+    {
+      super.visitMethodDef( methodDecl );
+      addSyntheticModifierToParamsMethod( methodDecl );
+    }
+
+    private void addSyntheticModifierToParamsMethod( JCMethodDecl methodDecl )
+    {
+      methodDecl.mods.getAnnotations().stream()
+        .filter( anno -> anno.getAnnotationType().type.tsym.getQualifiedName().toString().equals( manifold_params.class.getTypeName() ) )
+        .findFirst().ifPresent( anno -> {
+          String paramNames = (String)anno.attribute.getElementValues().values().stream().findFirst().get().getValue();
+          if( paramNames.contains( "opt$" ) )
+          {
+            methodDecl.mods.flags |= Flags.SYNTHETIC;
+          }
+        } );
+    }
+  }
+
   private JCExpression memberAccess( TreeMaker make, String path )
   {
     return memberAccess( make, path.split( "\\." ) );
@@ -932,7 +875,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
   {
     return methods.stream()
       .filter( m ->
-        anno.value().equals( m.params.stream().map( p -> p.name.toString() ).collect( Collectors.joining( ", ") ) ) )
+        anno.value().replace( "opt$", "" ).equals( m.params.stream().map( p -> p.name.toString() ).collect( Collectors.joining( "," ) ) ) )
       .findFirst().orElse( null );
   }
 

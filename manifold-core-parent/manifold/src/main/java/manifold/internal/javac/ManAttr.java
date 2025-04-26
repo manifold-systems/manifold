@@ -1353,9 +1353,8 @@ public interface ManAttr
   //   new Foo((x:8, y:9, z:10))
   //   etc.
   //
-  //  validates the tuple call and replaces it with a `new <params-class>(...)` expression, which matches the corresponding
-  //  params-method having the params-class its single parameter, where the params class' fields and ctor params mirror
-  //  the method having at least one optional parameter.
+  //  validates the tuple call and replaces it with arguments to generated method, which matches the corresponding
+  //  params-method having extra boolean params indicating whether the arg is supplied or the default expr should be used.
   //
   default void handleTupleAsNamedArgs( JCExpression tree )
   {
@@ -1449,126 +1448,116 @@ public interface ManAttr
     {
       return;
     }
-    Iterable<Symbol.ClassSymbol> paramsClasses = getParamsClasses( receiverType, methodName );
-
-
+    Iterable<Symbol.MethodSymbol> paramsMethods = getParamsMethods( receiverType, methodName );
     boolean errant;
     String missingRequiredParam = null;
     nextParamsClass:
-    for( Iterator<Symbol.ClassSymbol> iterator = paramsClasses.iterator(); iterator.hasNext(); )
+    for( Iterator<Symbol.MethodSymbol> iterator = paramsMethods.iterator(); iterator.hasNext(); )
     {
       errant = false;
 
-      Symbol.ClassSymbol paramsClass = iterator.next();
+      Symbol.MethodSymbol paramsMethod = iterator.next();
 
       Map<String, JCExpression> namedArgsCopy = new LinkedHashMap<>( namedArgs );
       ArrayList<JCExpression> unnamedArgsCopy = new ArrayList<>( unnamedArgs );
 
-      Iterator<Symbol.MethodSymbol> ctors = (Iterator)IDynamicJdk.instance().getMembers( paramsClass, Symbol::isConstructor ).iterator();
-      if( ctors.hasNext() )
+      List<String> paramsInOrder = getParamNames( paramsMethod, true );
+      if( paramsInOrder.containsAll( namedArgsCopy.keySet() ) )
       {
-        Symbol.MethodSymbol ctor = ctors.next();
-        List<String> paramsInOrder = getParamNames( paramsClass, true );
-        if( paramsInOrder.containsAll( namedArgsCopy.keySet() ) )
+        ArrayList<JCExpression> args = new ArrayList<>();
+        boolean optional = false;
+        List<Symbol.VarSymbol> params = paramsMethod.params;
+        List<String> paramNames = getParamNames( paramsMethod, false );
+        int targetParamsOffset = 0;
+        for( int i = 0; i < params.size(); i++ )
         {
-          ArrayList<JCExpression> args = new ArrayList<>();
-          boolean optional = false;
-          List<Symbol.VarSymbol> params = ctor.params;
-          List<String> paramNames = getParamNames( paramsClass, false );
-          int targetParamsOffset = 0;
-          for( int i = 0; i < params.size(); i++ )
+          Symbol.VarSymbol param = params.get( i );
+
+          // .class files don't preserve param names, using encoded param names in paramsClass name,
+          // in the list optional params are tagged with an "opt$" prefix
+          String paramName = paramNames.get( i - targetParamsOffset );
+
+          if( paramName.startsWith( "opt$" ) )
           {
-            Symbol.VarSymbol param = params.get( i );
-            if( args.isEmpty() && tree instanceof JCTree.JCMethodInvocation )
+            if( !optional )
             {
-              JCExpression typeVarsExpr = makeTypeVarsExpr( make, (JCTree.JCMethodInvocation)tree, paramsClass.owner.type.tsym.name.toString(), param, receiverType );
-              if( typeVarsExpr != null )
-              {
-                // relays generic type info, needed bc it's not always there in the normal parameters
-                args.add( typeVarsExpr );
-                targetParamsOffset++;
-                continue;
-              }
-            }
-
-            // .class files don't preserve param names, using encoded param names in paramsClass name,
-            // in the list optional params are tagged with an "opt$" prefix
-            String paramName = paramNames.get( i - targetParamsOffset );
-
-            if( paramName.startsWith( "opt$" ) )
-            {
-              if( !optional )
-              {
-                // skip the constructor's $isXxx param
-                optional = true;
-                targetParamsOffset++;
-                continue;
-              }
-              else
-              {
-                paramName = paramName.substring( "opt$".length() );
-              }
-            }
-
-            JCExpression expr = unnamedArgsCopy.isEmpty()
-              ? namedArgsCopy.remove( paramName )
-              : unnamedArgsCopy.remove( 0 );
-
-            if( optional )
-            {
-              args.add( make.Literal( expr != null ) );
-              args.add( expr == null ? makeEmptyValue( param, make ) : expr );
-              optional = false;
-            }
-            else if( expr != null )
-            {
-              args.add( expr );
+              // skip the $isXxx param
+              optional = true;
+              targetParamsOffset++;
+              continue;
             }
             else
             {
-              // missing required arg, try next paramsClass
-              missingRequiredParam = paramName;
-              continue nextParamsClass;
+              paramName = paramName.substring( "opt$".length() );
             }
           }
 
-          missingRequiredParam = null;
+          JCExpression expr = unnamedArgsCopy.isEmpty()
+                              ? namedArgsCopy.remove( paramName )
+                              : unnamedArgsCopy.remove( 0 );
 
-          if( !unnamedArgsCopy.isEmpty() )
+          if( optional )
           {
-            // add remaining to trigger compile error
-            args.addAll( unnamedArgsCopy );
-            errant = true;
+            args.add( make.Literal( expr != null ) );
+            args.add( expr == null ? makeEmptyValue( param, make ) : expr );
+            optional = false;
           }
-          else if( !namedArgsCopy.isEmpty() )
+          else if( expr != null )
           {
-            // add remaining to trigger compile error
-            args.addAll( namedArgsCopy.values() );
-            errant = true;
+            args.add( expr );
           }
-
-          if( !errant || !iterator.hasNext() )
+          else
           {
-            //todo: for the errant condition, instead of settling with the the last one, store these and choose the best one
-            JCExpression paramsClassExpr = paramsClass.getTypeParameters().isEmpty()
-              ? make.Select( make.Ident( receiverType.tsym.name ), paramsClass.name )
-              : make.TypeApply( make.Select( make.Ident( receiverType.tsym.name ), paramsClass.name ), List.nil() );
-            List<JCExpression> newCarrier = List.of( make.NewClass( null, List.nil(), paramsClassExpr, List.from( args ), null ) );
-            if( tree instanceof JCTree.JCMethodInvocation )
-            {
-              ((JCTree.JCMethodInvocation)tree).args = newCarrier;
-            }
-            else
-            {
-              ((JCTree.JCNewClass)tree).args = newCarrier;
-            }
-            break;
+            // missing required arg, try next paramsClass
+            missingRequiredParam = paramName;
+            continue nextParamsClass;
           }
         }
-        else if( !iterator.hasNext() )
+
+        missingRequiredParam = null;
+
+        if( !unnamedArgsCopy.isEmpty() )
         {
-          putErrorOnBestMatchingMethod( tree.pos, namedArgsCopy, paramsClasses );
+          // add remaining to trigger compile error
+          args.addAll( unnamedArgsCopy );
+          errant = true;
         }
+        else if( !namedArgsCopy.isEmpty() )
+        {
+          // add remaining to trigger compile error
+          args.addAll( namedArgsCopy.values() );
+          errant = true;
+        }
+
+        if( !errant || !iterator.hasNext() )
+        {
+          //todo: for the errant condition, instead of settling with the the last one, store these and choose the best one
+          if( tree instanceof JCTree.JCMethodInvocation )
+          {
+            if( ((JCTree.JCMethodInvocation)tree).meth instanceof JCTree.JCIdent )
+            {
+              Name name = ((JCTree.JCIdent)((JCTree.JCMethodInvocation)tree).meth).name;
+              if( name != names()._this && name != names()._super )
+              {
+                ((JCTree.JCIdent)((JCTree.JCMethodInvocation)tree).meth).name = paramsMethod.name;
+              }
+            }
+            else if( ((JCTree.JCMethodInvocation)tree).meth instanceof JCTree.JCFieldAccess )
+            {
+              ((JCTree.JCFieldAccess)((JCTree.JCMethodInvocation)tree).meth).name = paramsMethod.name;
+            }
+            ((JCTree.JCMethodInvocation)tree).args = List.from( args );
+          }
+          else
+          {
+            ((JCTree.JCNewClass)tree).args = List.from( args );
+          }
+          break;
+        }
+      }
+      else if( !iterator.hasNext() )
+      {
+        putErrorOnBestMatchingMethod( tree.pos, namedArgsCopy, paramsMethods );
       }
     }
     if( missingRequiredParam != null )
@@ -1577,12 +1566,12 @@ public interface ManAttr
     }
   }
 
-  default void putErrorOnBestMatchingMethod( int pos, Map<String, JCExpression> namedArgsCopy, Iterable<Symbol.ClassSymbol> paramsClasses )
+  default void putErrorOnBestMatchingMethod( int pos, Map<String, JCExpression> namedArgsCopy, Iterable<Symbol.MethodSymbol> paramsMethods )
   {
     java.util.List<String> badNamedArgs = Collections.emptyList();
-    for( Symbol.ClassSymbol paramsClass: paramsClasses )
+    for( Symbol.MethodSymbol paramsMethod: paramsMethods )
     {
-      java.util.List<String> paramsInOrder = getParamNames( paramsClass, true );
+      java.util.List<String> paramsInOrder = getParamNames( paramsMethod, true );
       java.util.List<String> candidate = namedArgsCopy.keySet().stream()
         .filter( e -> !paramsInOrder.contains( e ) )
         .collect( Collectors.toList() );
@@ -1596,13 +1585,24 @@ public interface ManAttr
   }
 
 
-  default List<String> getParamNames( Symbol.ClassSymbol paramsClass, boolean removeOpt$ )
+  default List<String> getParamNames( Symbol.MethodSymbol paramsMethod, boolean removeOpt$ )
   {
     //noinspection unchecked
-    Annotation anno = paramsClass.getAnnotation( (Class<Annotation>)ReflectUtil.type( "manifold.ext.params.rt.manifold_params" ) );
+    Class<Annotation> manifold_paramsClass = (Class<Annotation>)ReflectUtil.type( "manifold.ext.params.rt.manifold_params" );
+    if( manifold_paramsClass == null )
+    {
+      return List.nil();
+    }
+
+    Annotation anno = paramsMethod.getAnnotation( manifold_paramsClass );
+    if( anno == null )
+    {
+      return List.nil();
+    }
+
     String params = (String)ReflectUtil.method( anno, "value" ).invoke();
     List<String> result = List.nil();
-    StringTokenizer tokenizer = new StringTokenizer( params, "_" );
+    StringTokenizer tokenizer = new StringTokenizer( params, "," );
     while( tokenizer.hasMoreTokens() )
     {
       String paramName = tokenizer.nextToken();
@@ -1616,19 +1616,6 @@ public interface ManAttr
       result = result.append( paramName );
     }
     return result;
-  }
-
-  default JCTree.JCExpression makeTypeVarsExpr( TreeMaker make, JCTree.JCMethodInvocation tree, String paramsClassOwner, Symbol.VarSymbol param, Type receiverType )
-  {
-    if( param.name.toString().equals( "$" + ManStringUtil.uncapitalize( paramsClassOwner ) ) )
-    {
-      if( !(tree.meth instanceof JCTree.JCFieldAccess) )
-      {
-        return make.This( getEnclosingClass( tree ).type );
-      }
-      return makeCast( make.Literal( TypeTag.BOT, null ), receiverType );
-    }
-    return null;
   }
 
   default Type findReceiverType( JCExpression call )
@@ -1724,7 +1711,8 @@ public interface ManAttr
   {
     if( call instanceof JCTree.JCNewClass ||
       call instanceof JCTree.JCMethodInvocation && ((JCTree.JCMethodInvocation)call).meth instanceof JCTree.JCIdent &&
-        ((JCTree.JCIdent)((JCTree.JCMethodInvocation)call).meth).getName().equals( names()._this ) )
+      (((JCTree.JCIdent)((JCTree.JCMethodInvocation)call).meth).getName().equals( names()._this ) ||
+        ((JCTree.JCIdent)((JCTree.JCMethodInvocation)call).meth).getName().equals( names()._super )) )
     {
       return "constructor";
     }
@@ -1750,14 +1738,16 @@ public interface ManAttr
     {
       return make.Literal( defaultPrimitiveValue( param.type ) );
     }
-    return make.Literal( TypeTag.BOT, null );
+    return types().isSameType( param.type, types().erasure( param.type ) )
+           ? make.TypeCast( param.type, make.Literal( TypeTag.BOT, null ) )
+           : make.Literal( TypeTag.BOT, null );
   }
 
-  default List<Symbol.ClassSymbol> getParamsClasses( Type receiverType, String methodName )
+  default List<Symbol.MethodSymbol> getParamsMethods( Type receiverType, String methodName )
   {
-    return getParamsClasses( receiverType, methodName, new HashSet<>() );
+    return getParamsMethods( receiverType, methodName, new HashSet<>() );
   }
-  default List<Symbol.ClassSymbol> getParamsClasses( Type receiverType, String methodName, Set<Type> seen )
+  default List<Symbol.MethodSymbol> getParamsMethods( Type receiverType, String methodName, Set<Type> seen )
   {
     if( seen.contains( receiverType ) || receiverType == null || receiverType.tsym == null || receiverType.hasTag( ERROR ) )
     {
@@ -1765,19 +1755,21 @@ public interface ManAttr
     }
     seen.add( receiverType );
 
-    Iterable<Symbol.ClassSymbol> paramsClasses = (Iterable)IDynamicJdk.instance().getMembers( (Symbol.ClassSymbol)receiverType.tsym,
-      m -> m instanceof Symbol.ClassSymbol && m.name.toString().startsWith( "$" + methodName + "_" ) );
-    List<Symbol.ClassSymbol> result = List.from( paramsClasses );
+    Iterable paramsMethods = (Iterable)IDynamicJdk.instance().getMembers( (Symbol.ClassSymbol)receiverType.tsym,
+      m -> m instanceof Symbol.MethodSymbol &&
+           (methodName.equals( "constructor" ) && m.name.toString().equals( "<init>" ) || m.name.toString().equals( "$" + methodName )) &&
+           getParamNames( (Symbol.MethodSymbol)m, false ).stream().anyMatch( n -> n.contains( "opt$" ) ) );
+    List<Symbol.MethodSymbol> result = List.from( paramsMethods );
 
     Type superclass = ((Symbol.ClassSymbol)receiverType.tsym).getSuperclass();
     if( superclass != null )
     {
-      result = result.appendList( getParamsClasses( superclass, methodName, seen ) );
+      result = result.appendList( getParamsMethods( superclass, methodName, seen ) );
     }
     List<Type> interfaces = ((Symbol.ClassSymbol)receiverType.tsym).getInterfaces();
     for( Type iface: interfaces )
     {
-      result = result.appendList( getParamsClasses( iface, methodName, seen ) );
+      result = result.appendList( getParamsMethods( iface, methodName, seen ) );
     }
     return result;
   }

@@ -153,7 +153,14 @@ public class ScratchTest extends TestCase
     result = valueOf( new char[] {'a', 'b', 'c'}, offset: 1, count: 1 );
     assertEquals( "b", result );
   }
-  
+
+  public void testInstanceMemberAccess()
+  {
+    InstanceMemberTest hi = new InstanceMemberTest( "hi" );
+    String result = hi.testInstanceMemberAccess();
+    assertEquals( "hi", result );
+  }
+
   public String valueOf(char[] data,
                         int offset = 0,
                         int count = data.length - offset) {
@@ -222,6 +229,21 @@ public class ScratchTest extends TestCase
     static <E extends Number> E foo( E e, String s ="8" )
     {
       return e;
+    }
+  }
+
+  static class InstanceMemberTest
+  {
+    private String _data;
+
+    InstanceMemberTest( String data )
+    {
+      _data = data;
+    }
+
+    String testInstanceMemberAccess( String foo = _data )
+    {
+      return foo;
     }
   }
 
