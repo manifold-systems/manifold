@@ -73,10 +73,17 @@ Chair(Kind kind, Wood wood = Walnut, boolean antique = false) {...}
 record Chair(Kind kind, Wood wood = Walnut, boolean antique = false) {...}
 ```
 
-Default values can reference preceding parameters and include complex expressions.
+Default values can reference preceding parameters, instance members, and include complex expressions.
 ```java
 public record Destination(Country country, 
                           String city = country.capital()) {}
+```
+```java
+public class Chat {
+  private Color colorPref;
+  . . .
+  public void message(String text, Color textColor = colorPref) {. . .}
+}
 ```
 
 You can still use positional arguments, even when optional parameters come first.
