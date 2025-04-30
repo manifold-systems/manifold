@@ -1,6 +1,6 @@
 # Manifold : JSON and JSON Schema
 
-![latest](https://img.shields.io/badge/latest-v2025.1.12-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2025.1.13-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -577,11 +577,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-json-rt:2025.1.12'
+    implementation 'systems.manifold:manifold-json-rt:2025.1.13'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-json:2025.1.12'
-    testAnnotationProcessor 'systems.manifold:manifold-json:2025.1.12'
+    annotationProcessor 'systems.manifold:manifold-json:2025.1.13'
+    testAnnotationProcessor 'systems.manifold:manifold-json:2025.1.13'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -617,7 +617,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2025.1.12</manifold.version>
+        <manifold.version>2025.1.13</manifold.version>
     </properties>
     
     <dependencies>
@@ -661,10 +661,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-json`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-json/2025.1.12/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-json/2025.1.12)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-json/2025.1.13/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-json/2025.1.13)
 
 `manifold-json-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-json-rt/2025.1.12/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-json-rt/2025.1.12)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-json-rt/2025.1.13/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-json-rt/2025.1.13)
 
 # License
 
