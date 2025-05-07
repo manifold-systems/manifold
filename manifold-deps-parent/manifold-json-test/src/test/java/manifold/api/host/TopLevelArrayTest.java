@@ -20,6 +20,12 @@ import junit.framework.TestCase;
 
 import abc.TopLevelArray;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 public class TopLevelArrayTest extends TestCase
 {
   public void testCreate()
@@ -58,6 +64,23 @@ public class TopLevelArrayTest extends TestCase
   {
     TopLevelArray array = TopLevelArray.load().fromJson( makeJsonArray() );
     assertEquals( makeYamlArray(), array.write().toYaml() );
+  }
+
+  public void testSerializable() throws IOException, ClassNotFoundException
+  {
+    TopLevelArray array = TopLevelArray.load().fromJson( makeJsonArray() );
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    try( ObjectOutputStream oos = new ObjectOutputStream( out ); )
+    {
+      oos.writeObject( array );
+    }
+    try( ObjectInputStream ois = new ObjectInputStream( new ByteArrayInputStream( out.toByteArray() ) ) )
+    {
+      array = (TopLevelArray)ois.readObject();
+    }
+    assertEquals( 2, array.size() );
+    assertEquals( "hi", array.get(0).getFoo() );
+    assertEquals( "bye", array.get(1).getFoo() );
   }
 
   private String makeJsonArray()

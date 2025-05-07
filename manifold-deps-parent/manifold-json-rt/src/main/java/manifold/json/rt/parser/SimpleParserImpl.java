@@ -21,6 +21,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+
+import manifold.json.rt.api.JsonList;
 import manifold.rt.api.Bindings;
 import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.util.Pair;
@@ -51,7 +53,7 @@ final class SimpleParserImpl
   private final Tokenizer _tokenizer;
   private Token _token;
   private final List<String> _errors;
-  private boolean _useBig;
+  private final boolean _useBig;
   private boolean _withTokens;
 
   SimpleParserImpl( Tokenizer tokenizer, boolean useBig )
@@ -90,7 +92,7 @@ final class SimpleParserImpl
   // array = "[" [ value { "," value } ] "]".
   private Object parseArray()
   {
-    ArrayList<Object> arr = new ArrayList<>();
+    List<Object> arr = new JsonList<>();
     advance();
     if( _token.isValueType() )
     {

@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import manifold.json.rt.api.JsonList;
 import manifold.rt.api.Bindings;
 
 import manifold.json.rt.Json;
@@ -356,7 +358,7 @@ public class ManBindingsExt
     {
       //noinspection unchecked
       Iterable<Object> list = (Iterable<Object>)value;
-      List<Object> copy = new ArrayList<>();
+      List<Object> copy = new JsonList<>();
       list.forEach( e -> copy.add( deepCopyValue( e, bindingsSupplier ) ) );
       return copy;
     }

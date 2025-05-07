@@ -1,5 +1,9 @@
 package manifold.api.host;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -217,6 +221,43 @@ public class JsonTest extends TestCase
     String xml = contact.write().toXml();
     contact = Contact.load().fromXml(xml);
     assertEquals( 2, contact.getNumDependents() );
+  }
+
+  public void testSerializable() throws Exception
+  {
+    Contact contact = Contact.builder()
+      .withName("Scott McKinney")
+      .withDateOfBirth(LocalDate.of(1986, 8, 9))
+      .withNumDependents(2)
+      .withPrimaryAddress(Contact.Address.create("111 Main St.", "Cupertino", "CA")).build();
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    try(ObjectOutputStream oos = new ObjectOutputStream( out ); )
+    {
+      oos.writeObject( contact );
+    }
+    try( ObjectInputStream ois = new ObjectInputStream( new ByteArrayInputStream( out.toByteArray() ) ) )
+    {
+      contact = (Contact)ois.readObject();
+    }
+
+    Contact.Address primaryAddress = contact.getPrimaryAddress();
+    assertEquals( "111 Main St.", primaryAddress.getStreet_address() );
+    assertEquals( "Cupertino", primaryAddress.getCity() );
+    assertEquals( "CA", primaryAddress.getState() );
+    assertEquals( "Scott McKinney", contact.getName() );
+    assertEquals( LocalDate.of(1986, 8, 9), contact.getDateOfBirth() );
+    assertEquals( 2, contact.getNumDependents() );
+    assertEquals( "{\n" +
+                  "  \"Name\": \"Scott McKinney\",\n" +
+                  "  \"DateOfBirth\": \"1986-08-09\",\n" +
+                  "  \"NumDependents\": 2,\n" +
+                  "  \"PrimaryAddress\": {\n" +
+                  "    \"street_address\": \"111 Main St.\",\n" +
+                  "    \"city\": \"Cupertino\",\n" +
+                  "    \"state\": \"CA\"\n" +
+                  "  }\n" +
+                  "}", contact.write().toJson() );
   }
 
   public void testThing()

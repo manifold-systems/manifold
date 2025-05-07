@@ -16,16 +16,28 @@
 
 package manifold.json.rt.api;
 
-import manifold.json.rt.api.IJsonList;
+import manifold.json.rt.Json;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class JsonList<T> implements IJsonList<T>
+public class JsonList<T> implements IJsonList<T>, Serializable
 {
-  private final List _list;
-  private final Class<T> _finalComponentType;
+  private List _list;
+  private Class<T> _finalComponentType;
+
+  public JsonList()
+  {
+    _list = new ArrayList<>();
+    _finalComponentType = (Class<T>)Object.class;
+  }
 
   public JsonList( Class<T> finalComponentType )
   {
@@ -51,9 +63,12 @@ public class JsonList<T> implements IJsonList<T>
     return _finalComponentType;
   }
 
+  @SuppressWarnings("EqualsDoesntCheckParameterClass")
   @Override
   public boolean equals( Object o )
   {
+    if( this == o ) return true;
+    if( o == null ) return false;
     return Objects.equals( _list, o );
   }
 
@@ -67,5 +82,47 @@ public class JsonList<T> implements IJsonList<T>
   public String toString()
   {
     return _list.toString();
+  }
+
+  private Object writeReplace()
+  {
+    return new Serializer<>( this );
+  }
+
+  public static class Serializer<T> implements Externalizable
+  {
+    private Class<T> _type;
+    private String _json;
+
+    public Serializer()
+    {
+    }
+
+    Serializer( JsonList<T> jsonList )
+    {
+      _json = Json.toJson( jsonList );
+      _type = jsonList._finalComponentType;
+    }
+
+    @Override
+    public void writeExternal( ObjectOutput out ) throws IOException
+    {
+      out.writeObject( _type );
+      out.writeObject( _json );
+    }
+
+    @Override
+    public void readExternal( ObjectInput in ) throws IOException, ClassNotFoundException
+    {
+      //noinspection unchecked
+      _type = (Class<T>)in.readObject();
+      _json = (String)in.readObject();
+    }
+
+    Object readResolve() throws ObjectStreamException
+    {
+      List<?> list = (List<?>)Json.fromJson( _json );
+      return new JsonList<>( list, _type );
+    }
   }
 }

@@ -18,11 +18,14 @@ package manifold.json.rt.api;
 
 import manifold.ext.rt.api.IBindingsBacked;
 
+import java.io.ObjectStreamException;
+import java.io.Serializable;
+
 /**
  * A base interface for all common structured data types with methods to transform bindings to/from JSON, YAML, XML,
  * CSV etc. and to conveniently use the Bindings for Web services e.g., a JSON web service can use YAML etc.
  */
-public interface IJsonBindingsBacked extends IBindingsBacked
+public interface IJsonBindingsBacked extends IBindingsBacked, Serializable
 {
   @Override
   DataBindings getBindings();
@@ -33,5 +36,10 @@ public interface IJsonBindingsBacked extends IBindingsBacked
   default Writer write()
   {
     return new Writer( getBindings() );
+  }
+
+  default Object writeReplace() throws ObjectStreamException
+  {
+    return new Serializer( this );
   }
 }
