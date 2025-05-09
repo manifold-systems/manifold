@@ -593,8 +593,11 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
           param.pos = make.pos;
           params = params.append( param );
 
-          // forward either the arg or its default value:  isP1 ? p1 : defaultValue
-          args = args.append( make.Conditional( make.Ident( isXxx ), make.Ident( methParam.name ), methParam.init ) );
+          // p1 = isP1 ? p1 : defaultValue  (assign is necessary to support refs to params in subsequent opt param default values)
+          JCAssign assign = make.Assign( make.Ident( methParam.name ),
+                                         make.Conditional( make.Ident( isXxx ), make.Ident( methParam.name ), copier.copy( methParam.init ) ) );
+          // opt param
+          args = args.append( assign );
         }
         else
         {
@@ -623,18 +626,18 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         forwardCall = make.Apply( List.nil(), make.Ident( targetMethod.name ), args );
       }
 
-      JCStatement stmt;
+      JCStatement forwardStmt;
       if( targetMethod.restype == null ||
         (targetMethod.restype instanceof JCPrimitiveTypeTree &&
         ((JCPrimitiveTypeTree)targetMethod.restype).typetag == TypeTag.VOID) )
       {
-        stmt = make.Exec( forwardCall );
+        forwardStmt = make.Exec( forwardCall );
       }
       else
       {
-        stmt = make.Return( forwardCall );
+        forwardStmt = make.Return( forwardCall );
       }
-      JCBlock body = make.Block( 0L, List.of( stmt ) );
+      JCBlock body = make.Block( 0L, List.of( forwardStmt ) );
 
       return make.MethodDef( modifiers, name, resType, typeParams, params, thrown, body, null );
     }
