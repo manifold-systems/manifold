@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( {ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.TYPE} )
-public @interface manifold_params
+public @interface params
 {
   //identifies the params method as a list of its parameters
   String value();

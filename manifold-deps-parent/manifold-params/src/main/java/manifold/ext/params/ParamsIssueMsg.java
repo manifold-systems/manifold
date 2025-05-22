@@ -20,8 +20,9 @@ import manifold.api.util.IssueMsg;
 
 public class ParamsIssueMsg
 {
-  public static final IssueMsg MSG_OVERRIDE_DEFAULT_VALUES_NOT_ALLOWED = new IssueMsg( "Default values are inherited here" );
   public static final IssueMsg MSG_OPT_PARAM_METHOD_CLASHES_WITH_SUBSIG = new IssueMsg( "'{0}' clashes with '{1}' on overload signature '({2})'" );
   public static final IssueMsg MSG_OPT_PARAM_METHOD_INDIRECTLY_CLASHES = new IssueMsg( "'{0}' indirectly clashes with '{1}'" );
   public static final IssueMsg MSG_OPT_PARAM_METHOD_INDIRECTLY_OVERRIDES = new IssueMsg( "'{0}' indirectly overrides method '{1}' in class '{2}'" );
+  public static final IssueMsg MSG_OPT_PARAM_OVERRIDABLE_METHOD_OVERLOAD_NOT_ALLOWED = new IssueMsg( "Two or more overridable overloads of method '{0}' have optional parameters. Try using different method names or refactor into one method." );
+  public static final IssueMsg MSG_OPT_PARAM_NAME_MISMATCH = new IssueMsg( "An overriding method having optional parameters must match parameter names its super method: {0} != {1}" );
 }

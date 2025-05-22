@@ -32,6 +32,9 @@ This plugin supports JDK versions 8 - 21 (and the latest) and integrates seamles
 * [Optional parameters](#optional-parameters)
 * [Named arguments](#named-arguments)
 * [Overloading and overriding](#overloading-and-overriding)
+    * [Overriding](#overriding)
+    * [Overloading](#overloading)
+    * [Default Value Inheritance](#default-value-inheritance)
 * [Binary compatible](#binary-compatible)
     * [Backward compatible](#backward-compatible-)
     * [Binary accessible](#binary-accessible)
@@ -118,55 +121,108 @@ new Pizza(Large, cheese:Fresco, sauce:Chili);
 
 # Overloading and overriding
 
-In method overriding, the default values for optional parameters are inherited from the superclass, and cannot be changed
-in the subclass.
-```java
-public interface Contacts {
-  Contact add(String name, String address = null, String phone = null);
-}
+To understand how optional parameters affect overloading and overriding, it’s important to first understand a method’s
+**signature set**--the set of overloads defined by the different ways it can be called with positional arguments.
 
-public class MyContacts implements Contacts {
-  @Override // no default parameter values allowed here, they are strictly inherited
-  public Contact add(String name, String address, String phone) {...}
-}
-```
+A method with optional parameters implicitly defines multiple overloads. For example, the following method:
 
-Methods with optional parameters can replace multiple overloaded methods. For example, this method:
 ```java
-void func(String a, int b = 0, int c = b )
-```
-Replaces these overloads:
+void func(String a, int b = 0, int c = b)
+````
+
+can be invoked with one, two, or three positional arguments, which corresponds to this set of overloads:
+
 ```java
-func(String) 
-func(String, int) 
+func(String)
+func(String, int)
 func(String, int, int)
 ```
-This forms the **signature set** of `func`.
 
-Thus, in a subclass `func` overrides a superclass method with matching signatures.
+Together, these overloads form the **signature set** of `func`. Signature sets guide method resolution and overriding,
+serving as a simple, consistent way to support optional parameters within Java’s overload-based method model.
+
+---
+
+### Overriding
+
+In a subclass, a method with optional parameters overrides any superclass method that falls within its signature set--even
+if the superclass method has fewer parameters.
+
 ```java
 class Base {
-  void func(String a, int b) {...}
+  void func(String a, int b) { ... }
 }
 
 class Sub extends Base {
   @Override
-  void func(String a, int b = 0, int c = b) {...}
+  void func(String a, int b = 0, int c = b) { ... }
 }
 
+Here, `Sub#func` overrides `Base#func` because the latter’s signature is part of `Sub#func`’s signature set:
+
+```java
+func(String)
+func(String, int)
+func(String, int, int)
+```
+
+```java
 Base base = new Sub();
 base.func("hi", 5); // calls Sub#func
 ```
-Here `Sub#func` indirectly overrides `Base#func`.
 
-Overloading is allowed with optional parameters, but if the signature sets overlap, a compile-time error will occur.
+This behavior allows a subclass to override a method *and* extend its parameter list by adding new optional parameters.
+It’s a powerful feature that lets you evolve or enhance behavior without breaking existing call sites--making overrides more
+expressive and future-friendly.
+
+---
+
+### Overloading
+
+Overloading is supported with optional parameters using signature sets (see earlier definition). If two methods' signature
+sets overlap in a way that causes ambiguity, a compile-time error is reported, ensuring clarity and preventing conflicts.
+
 ```java
 class Sample {
-  void func()
-  void func(int alpha = 0) //error: clashes with func()
-  void func(int beta, int gamma = 0) //error: clashes with func(int)
+  void func(int alpha);  
+  void func(int beta, int gamma = 0); // error: overlaps with func(int)
 }
 ```
+
+To prevent ambiguity, all method declarations in a given scope must have disjoint signature sets.
+
+### Default Value Inheritance
+
+When overriding a method with optional parameters, a subclass inherits the default values from the superclass unless it
+explicitly overrides them.
+
+```java
+class Base {
+  void sample(String a = "hello", int b = 5) {
+    out.println(a + b);
+  }
+}
+
+class Sub extends Base {
+  @Override
+  void sample(String a = "hi", int b) {
+    super.sample(a, b);
+  }
+}
+```
+
+In this example, `Sub#sample` overrides the default value for `a` but inherits the default for `b`. As a result:
+
+```java
+Base base = new Sub();
+base.sample();
+```
+Prints: `hi5`
+
+This selective override mechanism provides fine-grained control over defaults. You can tailor behavior in a subclass without
+redefining the entire parameter list--useful for customization, localization, or feature toggles, all while preserving compatibility
+with base method contracts.
+
 
 # Binary compatible
 

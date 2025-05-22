@@ -2264,7 +2264,7 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    if( tree.sym.owner.isAnonymous() )
+    if( tree.sym != null && tree.sym.owner.isAnonymous() )
     {
       // Keep track of anonymous classes so we can process any bridge methods added to them
       JCTree.JCClassDecl anonymousClassDef = (JCTree.JCClassDecl)_tp.getTreeUtil().getTree( tree.sym.owner );

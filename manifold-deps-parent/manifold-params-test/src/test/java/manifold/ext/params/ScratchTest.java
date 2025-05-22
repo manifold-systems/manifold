@@ -108,20 +108,36 @@ public class ScratchTest extends TestCase
     assertEquals( "bar", result.getFoo() );
 
     //    auto strr = new CtorTest<>(t:5, fooo:"foo");
-    CtorTest<String> str = new CtorTest<>(foo:"foo");
+    CtorTest<String> str = new CtorTest<>("foo");
     assertEquals( "foo", str.getFoo() );
-
-    str = new CtorTest<>("foo");
-    assertEquals( "foo", str.getFoo() );
-
-    str = new CtorTest<>(());
+    assertNull( str.getT() );
+    str = new CtorTest<>(t:"foo");
+    assertEquals( "hello", str.getFoo() );
+    assertEquals( "foo", str.getT() );
+    str = new CtorTest<>("foo", "hi");
     assertEquals( "hi", str.getFoo() );
-
-    str = new CtorTest<>();
+    assertEquals( "foo", str.getT() );
+    str = new CtorTest<>("foo", foo:"hi");
     assertEquals( "hi", str.getFoo() );
-                                /**/
-    str = new CtorTest<>(5);
-    assertEquals( "sb", str.getFoo() );
+    assertEquals( "foo", str.getT() );
+    str = new CtorTest<>(t:"foo", foo:"hi");
+    assertEquals( "hi", str.getFoo() );
+    assertEquals( "foo", str.getT() );
+
+    CtorTest<String> res = new CtorTest<>(foo:"foo");
+    assertEquals( "foo", res.getFoo() );
+
+    res = new CtorTest<>("foo");
+    assertEquals( "foo", res.getFoo() );
+
+    res = new CtorTest<>(());
+    assertEquals( "hi", res.getFoo() );
+
+    res = new CtorTest<>();
+    assertEquals( "hi", res.getFoo() );
+    /**/
+    res = new CtorTest<>(5);
+    assertEquals( "sb", res.getFoo() );
   }
 
   public void testTelescopingNoNames()

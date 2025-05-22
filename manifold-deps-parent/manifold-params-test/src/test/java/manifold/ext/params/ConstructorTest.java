@@ -31,6 +31,14 @@ public class ConstructorTest extends TestCase
     assertEquals( "scott", myRec._name );
     assertEquals( 999, myRec._age );
 
+    myRec = new MyRec( name:"scott" );
+    assertEquals( "scott", myRec._name );
+    assertEquals( 999, myRec._age );
+
+    myRec = new MyRec( age:10, name:"scott" );
+    assertEquals( "scott", myRec._name );
+    assertEquals( 10, myRec._age );
+
     myRec = new MyRecSub();
     assertEquals( "fred", myRec._name );
     assertEquals( 999, myRec._age );
@@ -63,7 +71,7 @@ public class ConstructorTest extends TestCase
 
     MyRec()
     {
-      this(name:"z", age:33);
+      this("z", age:33);
     }
 
     @Override
@@ -78,7 +86,7 @@ public class ConstructorTest extends TestCase
   {
     MyRecSub()
     {
-      super( "fred" );
+      super( name:"fred" );
     }
   }
 }

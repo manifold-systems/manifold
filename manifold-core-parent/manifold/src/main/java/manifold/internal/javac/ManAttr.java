@@ -1495,6 +1495,12 @@ public interface ManAttr
           JCExpression expr = unnamedArgsCopy.isEmpty()
                               ? namedArgsCopy.remove( paramName )
                               : unnamedArgsCopy.remove( 0 );
+          if( expr != null )
+          {
+            expr = types().isSameType( param.type, types().erasure( param.type ) )
+                   ? make.TypeCast( param.type, expr )
+                   : expr;
+          }
 
           if( optional )
           {
@@ -1588,13 +1594,13 @@ public interface ManAttr
   default List<String> getParamNames( Symbol.MethodSymbol paramsMethod, boolean removeOpt$ )
   {
     //noinspection unchecked
-    Class<Annotation> manifold_paramsClass = (Class<Annotation>)ReflectUtil.type( "manifold.ext.params.rt.manifold_params" );
-    if( manifold_paramsClass == null )
+    Class<Annotation> paramsAnno = (Class<Annotation>)ReflectUtil.type( "manifold.ext.params.rt.params" );
+    if( paramsAnno == null )
     {
       return List.nil();
     }
 
-    Annotation anno = paramsMethod.getAnnotation( manifold_paramsClass );
+    Annotation anno = paramsMethod.getAnnotation( paramsAnno );
     if( anno == null )
     {
       return List.nil();
