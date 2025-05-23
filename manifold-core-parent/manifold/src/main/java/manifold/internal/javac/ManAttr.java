@@ -1466,7 +1466,7 @@ public interface ManAttr
       {
         ArrayList<JCExpression> args = new ArrayList<>();
         boolean optional = false;
-        List<Symbol.VarSymbol> params = paramsMethod.params;
+        List<Symbol.VarSymbol> params = paramsMethod.params();
         List<String> paramNames = getParamNames( paramsMethod, false );
         int targetParamsOffset = 0;
         for( int i = 0; i < params.size(); i++ )

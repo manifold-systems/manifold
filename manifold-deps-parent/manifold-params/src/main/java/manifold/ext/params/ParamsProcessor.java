@@ -288,19 +288,28 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     @Override
     public void visitClassDef( JCClassDecl tree )
     {
-      handleRecord( tree );
+      ArrayList<JCTree> newDefs = new ArrayList<>();
+      handleRecord( tree, newDefs );
       super.visitClassDef( tree );
+      tree.defs = tree.defs.appendList( List.from( newDefs ) );
     }
 
     // We temporarily generate the record's ctor so we can later call `processParams( ctor )` during Enter_Finish
     // with the initializers on the ctor. Note, we do not add this ctor to the class' defs, instead we add it to
     // _recordCtors
-    private void handleRecord( JCClassDecl tree )
+    private void handleRecord( JCClassDecl tree, ArrayList<JCTree> newDefs )
     {
       if( !tree.getKind().name().equals( "RECORD" ) )
       {
         return;
       }
+
+      TreeMaker make = getTreeMaker();
+      make.at( tree.pos );
+      TreeCopier<?> copier = new TreeCopier<>( make );
+
+      //## todo: this works, but will probably implement this via extension method instead -- once optional params works w ext methods
+      addRecordCopyMethod( tree, copier, make, newDefs );
 
       if( tree.defs == null ||
           tree.defs.stream().noneMatch( def -> isRecordParam( def ) && ((JCVariableDecl)def).init != null ) )
@@ -308,10 +317,6 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         // not a record having one or more optional parameters
         return;
       }
-
-      TreeMaker make = getTreeMaker();
-      make.at( tree.pos );
-      TreeCopier<?> copier = new TreeCopier<>( make );
 
       List<JCVariableDecl> params = List.nil();
 
@@ -337,10 +342,34 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       }
     }
 
-    private boolean isRecordParam( JCTree def )
+    private void addRecordCopyMethod( JCClassDecl tree, TreeCopier<?> copier, TreeMaker make, ArrayList<JCTree> newDefs )
     {
-      return def instanceof JCVariableDecl && (((JCVariableDecl)def).getModifiers().flags & RECORD) != 0;
+      List<JCVariableDecl> params = List.nil();
+
+      for( JCTree def : tree.defs )
+      {
+        if( isRecordParam( def ) )
+        {
+          JCVariableDecl copy = (JCVariableDecl)copier.copy( def );
+          copy.mods.flags = Flags.PARAMETER;
+          copy.mods.annotations = List.nil();
+          copy.init = make.Select( make.Ident( getNames()._this ), copy.name );
+          params = params.append( copy );
+        }
+      }
+
+      // generate a copyWith() method with optional parameters for all the record's components
+      List<JCExpression> args = List.from( params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toList() ) );
+      JCMethodDecl copyMeth = make.MethodDef( make.Modifiers( Flags.PUBLIC ), getNames().fromString( "copyWith" ),
+                                              make.Ident( tree.name ), copier.copy( tree.typarams ), params, List.nil(),
+                                              make.Block( 0L, List.of( make.Return( make.NewClass( null, null, make.Ident( tree.name ), args, null ) ) ) ), null );
+      newDefs.add( copyMeth );
     }
+  }
+
+  private boolean isRecordParam( JCTree def )
+  {
+    return def instanceof JCVariableDecl && (((JCVariableDecl)def).getModifiers().flags & RECORD) != 0;
   }
 
   // Generate following methods corresponding with a method having optional parameters:
@@ -933,33 +962,6 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       return superOptParams;
     }
 
-    private String getParamAnnoValue( MethodSymbol superMethod )
-    {
-      Symbol superClass = superMethod.owner;
-      String value = null;
-      for( Symbol m: IDynamicJdk.instance().getMembersByName( (ClassSymbol)superClass, getNames().fromString( "$" + superMethod.name ) ) )
-      {
-        if( m instanceof MethodSymbol )
-        {
-          params paramsAnno = m.getAnnotation( params.class );
-          if( paramsAnno != null )
-          {
-            value = paramsAnno.value();
-          }
-          else
-          {
-            value = paramsByName.get( m.owner.name + "#" + m.name );
-          }
-
-          if( value != null && value.contains( "opt$" ) )
-          {
-            break;
-          }
-        }
-      }
-      return value;
-    }
-
     private MethodSymbol findSuperMethod( JCMethodDecl method )
     {
       MethodSymbol superMethod = findSuperMethod_NoParamCheck( method );
@@ -973,18 +975,46 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       return superMethod;
     }
 
+    // checks params names of super method using @params of generated method
     private void checkParamNames( JCMethodDecl method, MethodSymbol superMethod )
     {
-      List<Symbol.VarSymbol> superParams = superMethod.params;
+      List<String> superParams = getParamNamesFromSuperMethod( superMethod );
+      if( superParams == null )
+      {
+        return;
+      }
+
       for( int i = 0, paramsSize = superParams.size(); i < paramsSize; i++ )
       {
-        Symbol.VarSymbol superParam = superParams.get( i );
+        String superParam = superParams.get( i );
         JCVariableDecl param = method.params.get( i );
-        if( !superParam.name.equals( param.name ) )
+        if( !superParam.equals( param.name.toString() ) )
         {
-          reportError( param, MSG_OPT_PARAM_NAME_MISMATCH.get( param.name.toString(), superParam.name.toString() ) );
+          reportError( param, MSG_OPT_PARAM_NAME_MISMATCH.get( param.name.toString(), superParam ) );
         }
       }
+    }
+
+    private List<String> getParamNamesFromSuperMethod( MethodSymbol superMethod )
+    {
+      String value = getParamAnnoValue( superMethod );
+      if( value == null )
+      {
+        //todo: this should never be the case, throw here?
+        return null;
+      }
+      List<String> superParams = List.nil();
+      StringTokenizer tokenizer = new StringTokenizer( value, "," );
+      while( tokenizer.hasMoreTokens() )
+      {
+        String paramName = tokenizer.nextToken();
+        if( paramName.startsWith( "opt$" ) )
+        {
+          paramName = paramName.substring( "opt$".length() );
+        }
+        superParams = superParams.append( paramName );
+      }
+      return superParams;
     }
 
     private MethodSymbol findSuperMethod_NoParamCheck( JCMethodDecl method )
@@ -1067,6 +1097,33 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         }
       }
       return null;
+    }
+
+    private String getParamAnnoValue( MethodSymbol superMethod )
+    {
+      Symbol superClass = superMethod.owner;
+      String value = null;
+      for( Symbol m: IDynamicJdk.instance().getMembersByName( (ClassSymbol)superClass, getNames().fromString( "$" + superMethod.name ), true ) )
+      {
+        if( m instanceof MethodSymbol )
+        {
+          params paramsAnno = m.getAnnotation( params.class );
+          if( paramsAnno != null )
+          {
+            value = paramsAnno.value();
+          }
+          else
+          {
+            value = paramsByName.get( m.owner.name + "#" + m.name );
+          }
+
+          if( value != null && value.contains( "opt$" ) )
+          {
+            break;
+          }
+        }
+      }
+      return value;
     }
   }
 

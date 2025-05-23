@@ -7,14 +7,14 @@
     <version>2025.1.14-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-params-test</artifactId>
+  <artifactId>manifold-params-middle-test</artifactId>
 
-  <name>Manifold :: ParamsTest</name>
+  <name>Manifold :: ParamsMiddleTest</name>
   
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-params-middle-test</artifactId>
+      <artifactId>manifold-params-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
