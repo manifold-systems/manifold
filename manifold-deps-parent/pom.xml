@@ -124,7 +124,7 @@
               </additionalJOptions>
               <!-- The manifold.science module uses binding expressions which don't parse in the javadoc parser at the moment -->
 <!--              <excludePackageNames>manifold.science.measures;manifold.science.util;manifold.science.vector;manifold.ext.props.middle</excludePackageNames>-->
-              <excludePackageNames>manifold.ext.params.middle;manifold.ext.params.middle.*</excludePackageNames>
+
             </configuration>
             <executions>
               <execution>
