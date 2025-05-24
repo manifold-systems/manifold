@@ -299,6 +299,12 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     // _recordCtors
     private void handleRecord( JCClassDecl tree, ArrayList<JCTree> newDefs )
     {
+      if( _recordCtors.containsKey( tree ) )
+      {
+        // record already processed, this may be an annotation processor round
+        return;
+      }
+
       if( !tree.getKind().name().equals( "RECORD" ) )
       {
         return;
@@ -325,7 +331,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         if( isRecordParam( def ) )
         {
           JCVariableDecl copy = (JCVariableDecl)copier.copy( def );
-          copy.mods.flags = copy.mods.flags & ~Modifier.PRIVATE;
+          copy.mods.flags = Flags.PARAMETER;
           params = params.append( copy );
           ((JCVariableDecl)def).init = null; // records compile parameters directly as fields, gotta remove the init
         }
@@ -344,6 +350,13 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
     private void addRecordCopyMethod( JCClassDecl tree, TreeCopier<?> copier, TreeMaker make, ArrayList<JCTree> newDefs )
     {
+      boolean alreadyProcessed = tree.defs.stream().anyMatch(
+        def -> def instanceof JCMethodDecl && "copyWith".equals( ((JCMethodDecl)def).name.toString() ) );
+      if( alreadyProcessed )
+      {
+        return;
+      }
+
       List<JCVariableDecl> params = List.nil();
 
       for( JCTree def : tree.defs )
@@ -762,7 +775,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       {
         JCVariableDecl optParam = optParams.get( i );
         int index = targetParams.indexOf( optParam.name );
-        params.add( index, optParam );
+        params.add( index, make.VarDef( make.Modifiers( Flags.PARAMETER ), optParam.name, optParam.vartype, null ) );
         args.addAll( index * 2, makeTupleArg( make, optParam.name ) );
       }
       if( args.stream().anyMatch( Objects::isNull ) )
@@ -1127,15 +1140,18 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     }
   }
 
+  // answers: is method overridable by a subtype?
   private boolean isOverridable( JCMethodDecl method )
   {
     return !method.getName().equals( getNames().init ) && isOverridable( method.sym );
   }
   private boolean isOverridable( MethodSymbol msym )
   {
-    return msym != null && !msym.isStatic() && !msym.isPrivate() && !msym.type.isFinal() && !msym.isConstructor();
+    return msym != null && !msym.isStatic() && !msym.isPrivate() && !msym.type.isFinal() &&
+           !msym.isConstructor() && !msym.owner.type.isFinal() && (msym.owner.flags_field & RECORD) == 0;
   }
 
+  // answers: could targetMethod possibly override a method in a supertype?
   private boolean couldOverride( JCMethodDecl targetMethod )
   {
     if( targetMethod.name.equals( getNames().init ) )
@@ -1320,12 +1336,6 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     private boolean isNullType( Type t )
     {
       return t.tsym != null && Null.class.getTypeName().equals( t.tsym.getQualifiedName().toString() );
-    }
-
-    @Override
-    public void visitNewClass( JCNewClass tree )
-    {
-      super.visitNewClass( tree );
     }
   }
 
