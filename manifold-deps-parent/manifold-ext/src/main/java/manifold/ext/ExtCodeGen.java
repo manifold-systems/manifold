@@ -732,9 +732,9 @@ class ExtCodeGen
                           .rawText( call.toString() ) ) );
   }
 
-  private boolean warnIfDuplicate( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler )
+  private boolean warnIfDuplicate( AbstractSrcMethod<?> method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    AbstractSrcMethod duplicate = findMethod( method, extendedType );
+    AbstractSrcMethod<?> duplicate = findMethod( method, extendedType );
 
     if( duplicate == null )
     {
@@ -826,7 +826,7 @@ class ExtCodeGen
     return duplicate;
   }
 
-  private boolean isExtensionMethod( AbstractSrcMethod method, SrcClass extendedType )
+  private boolean isExtensionMethod( AbstractSrcMethod<?> method, SrcClass extendedType )
   {
     if( !Modifier.isStatic( (int)method.getModifiers() ) || Modifier.isPrivate( (int)method.getModifiers() ) )
     {
