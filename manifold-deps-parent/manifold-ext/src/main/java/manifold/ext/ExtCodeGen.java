@@ -629,24 +629,24 @@ class ExtCodeGen
 
       String name = method.getSimpleName();
       srcMethod.name( name );
-      List typeParams = method.getTypeVariables();
+      List<SrcType> typeParams = method.getTypeVariables();
 
       // extension method must reflect extended type's type vars before its own
       int extendedTypeVarCount = extendedType.getTypeVariables().size();
       for( int i = isInstanceExtensionMethod ? extendedTypeVarCount : 0; i < typeParams.size(); i++ )
       {
-        SrcType typeVar = (SrcType) typeParams.get( i );
+        SrcType typeVar = typeParams.get( i );
         srcMethod.addTypeVar( typeVar );
       }
 
-      List params = method.getParameters();
+      List<SrcParameter> params = method.getParameters();
 
       // exclude @This param
       int firstParam = isInstanceExtensionMethod || hasThisClassAnnotation( method ) ? 1 : 0;
 
       for( int i = firstParam; i < params.size(); i++ )
       {
-        SrcParameter param = (SrcParameter) params.get( i );
+        SrcParameter param = params.get( i );
         SrcParameter p = new SrcParameter( param.getSimpleName(), param.getType() );
         for( SrcAnnotationExpression anno : param.getAnnotations() )
         {
@@ -656,9 +656,9 @@ class ExtCodeGen
         srcMethod.addParam( p );
       }
 
-      for( Object throwType : method.getThrowTypes() )
+      for( SrcType throwType : method.getThrowTypes() )
       {
-        srcMethod.addThrowType( (SrcType) throwType );
+        srcMethod.addThrowType( throwType );
       }
 
       if( delegateCalls )
@@ -778,16 +778,16 @@ class ExtCodeGen
       paramsToSubtract = firstParam.hasAnnotation( This.class ) || firstParam.hasAnnotation( ThisClass.class ) ? 1 : 0;
     }
     outer:
-    for( AbstractSrcMethod m: extendedType.getMethods() )
+    for( AbstractSrcMethod<?> m: extendedType.getMethods() )
     {
       if( m.getSimpleName().equals( method.getSimpleName() ) && m.getParameters().size() == method.getParameters().size()-paramsToSubtract )
       {
-        List parameters = method.getParameters();
-        List params = m.getParameters();
+        List<SrcParameter> parameters = method.getParameters();
+        List<SrcParameter> params = m.getParameters();
         for( int i = paramsToSubtract; i < parameters.size(); i++ )
         {
-          SrcParameter param = (SrcParameter)parameters.get( i );
-          SrcParameter p = (SrcParameter)params.get( i-paramsToSubtract );
+          SrcParameter param = parameters.get( i );
+          SrcParameter p = params.get( i-paramsToSubtract );
           if( !param.getType().equals( p.getType() ) )
           {
             continue outer;
@@ -860,14 +860,14 @@ class ExtCodeGen
     return hasThisAnnotation( method, extendedType );
   }
 
-  private boolean hasThisAnnotation( AbstractSrcMethod method, SrcClass extendedType )
+  private boolean hasThisAnnotation( AbstractSrcMethod<?> method, SrcClass extendedType )
   {
-    List params = method.getParameters();
+    List<SrcParameter> params = method.getParameters();
     if( params.size() == 0 )
     {
       return false;
     }
-    SrcParameter param = (SrcParameter)params.get( 0 );
+    SrcParameter param = params.get( 0 );
     if( !param.hasAnnotation( This.class ) )
     {
       return false;
@@ -876,14 +876,14 @@ class ExtCodeGen
     return param.getType().getName().endsWith( extendedType.getSimpleName() ) ||
       isArrayExtension( param, extendedType );
   }
-  private boolean hasThisClassAnnotation( AbstractSrcMethod method )
+  private boolean hasThisClassAnnotation( AbstractSrcMethod<?> method )
   {
-    List params = method.getParameters();
+    List<SrcParameter> params = method.getParameters();
     if( params.size() == 0 )
     {
       return false;
     }
-    SrcParameter param = (SrcParameter)params.get( 0 );
+    SrcParameter param = params.get( 0 );
     if( !param.hasAnnotation( ThisClass.class ) )
     {
       return false;
