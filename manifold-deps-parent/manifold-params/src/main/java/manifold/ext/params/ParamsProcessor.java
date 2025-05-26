@@ -51,6 +51,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -68,13 +69,13 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 {
   private static final long RECORD = 1L << 61; // from Flags in newer JDKs
 
-  private static final Map<String, String> paramsByName = new HashMap<>();
-
   private BasicJavacTask _javacTask;
   private Context _context;
   private TaskEvent _taskEvent;
   private ParentMap _parents;
   private Map<JCClassDecl, ArrayList<JCMethodDecl>> _recordCtors;
+  private Map<String, String> _paramsByName;
+  private Set<String> _processed;
 
   @Override
   public void init( BasicJavacTask javacTask, TypeProcessor typeProcessor )
@@ -83,6 +84,8 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     _context = _javacTask.getContext();
     _parents = new ParentMap( () -> getCompilationUnit() );
     _recordCtors = new HashMap<>();
+    _paramsByName = new HashMap<>();
+    _processed = new HashSet<>();
 
     if( JavacPlugin.instance() == null )
     {
@@ -178,6 +181,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
     if( cls.isInstance( tree ) )
     {
+      //noinspection unchecked
       return (C)tree;
     }
 
@@ -198,6 +202,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     Set<Symbol> overloads = StreamSupport.stream( methodOverloads.spliterator(), false ).collect( Collectors.toSet() );
     for( Symbol potentialTelescopingMethod : methodOverloads )
     {
+      //noinspection unchecked,rawtypes
       MethodSymbol targetMethod = findTargetMethod( (MethodSymbol)potentialTelescopingMethod, (Set)overloads );
       if( targetMethod == optParamsMethod.sym  )
       {
@@ -374,7 +379,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       // generate a copyWith() method with optional parameters for all the record's components
       List<JCExpression> args = List.from( params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toList() ) );
       JCMethodDecl copyMeth = make.MethodDef( make.Modifiers( Flags.PUBLIC ), getNames().fromString( "copyWith" ),
-                                              make.Ident( tree.name ), copier.copy( tree.typarams ), params, List.nil(),
+                                              make.Ident( tree.name ), List.nil(), params, List.nil(),
                                               make.Block( 0L, List.of( make.Return( make.NewClass( null, null, make.Ident( tree.name ), args, null ) ) ) ), null );
       newDefs.add( copyMeth );
     }
@@ -438,8 +443,33 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       }
       finally
       {
+        markProcessed( tree );
         _newDefs.pop();
       }
+    }
+
+    private void markProcessed( JCClassDecl tree )
+    {
+      if( tree.sym == null || tree.sym.getQualifiedName() == null || tree.sym.getQualifiedName().isEmpty() )
+      {
+        // anonymous class, use the processed state of the enclosing class for these (see alreadyProcessed() below)
+        return;
+      }
+      _processed.add( tree.sym.getQualifiedName().toString() );
+    }
+    private boolean alreadyProcessed( JCClassDecl classDecl )
+    {
+      while( classDecl.sym == null )  // null sym -> anonymous class -- use enclosing class to indicate processed
+      {
+        classDecl = getEnclosingClass( classDecl );
+        if( classDecl == null )
+        {
+          // throw here? should never happen?
+          return false;
+        }
+      }
+
+      return _processed.contains( classDecl.sym.getQualifiedName().toString() );
     }
 
     private void processRecords( JCClassDecl tree )
@@ -572,23 +602,6 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         return memberClassSym.packge().equals( siteClassSym.packge() );
       }
 
-      return false;
-    }
-
-    private boolean alreadyProcessed( JCClassDecl tree )
-    {
-      for( JCTree def : tree.defs )
-      {
-        if( def instanceof JCMethodDecl )
-        {
-          JCMethodDecl methodDecl = (JCMethodDecl)def;
-          if( methodDecl.mods.getAnnotations().stream().anyMatch(
-            anno -> anno.getAnnotationType().toString().endsWith( params.class.getSimpleName() ) ) )
-          {
-            return true;
-          }
-        }
-      }
       return false;
     }
 
@@ -853,8 +866,8 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       if( isOverridable( targetMethod ) )
       {
         // need this because annotations are not processed before we need to check for them
-        paramsByName.put( targetMethod.sym.owner.name + "#$" + targetMethod.name,
-                          paramNamesStream( targetMethod, superOptParams ).collect( Collectors.joining( "," ) ) );
+        _paramsByName.put( targetMethod.sym.owner.name + "#$" + targetMethod.name,
+                           paramNamesStream( targetMethod, superOptParams ).collect( Collectors.joining( "," ) ) );
       }
 
       // Throws
@@ -1127,7 +1140,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
           }
           else
           {
-            value = paramsByName.get( m.owner.name + "#" + m.name );
+            value = _paramsByName.get( m.owner.name + "#" + m.name );
           }
 
           if( value != null && value.contains( "opt$" ) )
@@ -1413,4 +1426,17 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       .findFirst().orElse( null );
   }
 
+  private JCTree.JCClassDecl getEnclosingClass( Tree tree )
+  {
+    Tree parent = getParent( tree );
+    if( parent == null )
+    {
+      return null;
+    }
+    if( parent instanceof JCClassDecl )
+    {
+      return (JCClassDecl)parent;
+    }
+    return getEnclosingClass( parent );
+  }
 }
