@@ -1,6 +1,6 @@
 # The GraphQL Manifold
 
-![latest](https://img.shields.io/badge/latest-v2025.1.16-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2025.1.17-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -212,8 +212,8 @@ for (var movie : actionMovies) {
 >```
 > Configure dependencies like this:
 > ```groovy
-> implementation 'systems.manifold:manifold-props-rt:2025.1.16'
-> annotationProcessor 'systems.manifold:manifold-props:2025.1.16'
+> implementation 'systems.manifold:manifold-props-rt:2025.1.17'
+> annotationProcessor 'systems.manifold:manifold-props:2025.1.17'
 >``` 
 > See complete [setup docs](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props#maven) for details.
 
@@ -672,11 +672,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-graphql-rt:2025.1.16'
+     implementation 'systems.manifold:manifold-graphql-rt:2025.1.17'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-graphql:2025.1.16'
-     testAnnotationProcessor 'systems.manifold:manifold-graphql:2025.1.16'
+     annotationProcessor 'systems.manifold:manifold-graphql:2025.1.17'
+     testAnnotationProcessor 'systems.manifold:manifold-graphql:2025.1.17'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -712,7 +712,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2025.1.16</manifold.version>
+        <manifold.version>2025.1.17</manifold.version>
     </properties>
     
     <dependencies>
@@ -756,10 +756,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-graphql`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2025.1.16/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2025.1.16)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2025.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2025.1.17)
 
 `manifold-graphql-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2025.1.16/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2025.1.16)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2025.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2025.1.17)
 
 # License
 

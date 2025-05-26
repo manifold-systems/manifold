@@ -1,6 +1,6 @@
 # Manifold : Exceptions
 
-![latest](https://img.shields.io/badge/latest-v2025.1.16-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2025.1.17-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -128,11 +128,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-rt:2025.1.16'
+    compileOnly 'systems.manifold:manifold-rt:2025.1.17'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2025.1.16'
-    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2025.1.16'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2025.1.17'
+    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2025.1.17'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -168,7 +168,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2025.1.16</manifold.version>
+        <manifold.version>2025.1.17</manifold.version>
     </properties>
 
     <dependencies>
@@ -214,7 +214,7 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-exceptions`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-exceptions/2025.1.16/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-exceptions/2025.1.16)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-exceptions/2025.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-exceptions/2025.1.17)
 
 # License
 
