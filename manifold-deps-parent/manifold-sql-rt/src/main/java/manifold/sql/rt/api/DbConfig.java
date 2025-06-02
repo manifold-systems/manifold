@@ -130,7 +130,10 @@ public interface DbConfig
   /** (Optional) The qualified name of the base class to be used for generated schema table classes */
   String getCustomBaseClass();
 
-  /** (Optional) true if using the database and driver in-process (in-memory) e.g., jdbc:h2:mem or jdbc:sqlite::memory:. */
+  /** (Required if true) true if using a file-based URL for an embedded database such as jdbc:h2:path_to_file, jdbc:duckdb:path_to_file, jdbc:sqlite:path_to_file */
+  boolean isFileBased();
+
+  /** (Optional) true if using the database and driver embedded, in-memory with no persistence, such as with jdbc:h2:mem, jdbc:duckdb:, jdbc:sqlite::memory:. */
   boolean isInMemory();
 
   /** Returns the build URL if provided, otherwise the runtime URL */

@@ -45,11 +45,11 @@ public class HikariConnectionProvider implements ConnectionProvider
     ServiceUtil.loadRegisteredServices( drivers, Driver.class, ConnectionProvider.class.getClassLoader() );
   }
 
+  /** This method is exclusive to <b>runtime</b> use, as opposed to compile-time. */
   @Override
   public Connection getConnection( String configName, Class<?> classContext )
   {
     DbConfig[] dbConfig = {null};
-    //noinspection resource
     HikariDataSource ds = _dataSources.computeIfAbsent( configName, __ -> {
       dbConfig[0] = Dependencies.instance().getDbConfigProvider().loadDbConfig( configName, classContext );
       if( dbConfig[0] == null )
@@ -58,15 +58,22 @@ public class HikariConnectionProvider implements ConnectionProvider
           new SQLException( "Could not find DbConfig for \"" + configName + "\", " +
             "class context: " + classContext.getTypeName() ) );
       }
-
       return makeDataSource( dbConfig[0], dbConfig[0].getUrl() );
     } );
     try
     {
       Connection connection = ds.getConnection();
-      if( dbConfig[0] != null )
+      try
       {
-        dbConfig[0].init( connection, Runtime );
+        if( dbConfig[0] != null )
+        {
+          dbConfig[0].init( connection, Runtime );
+        }
+      }
+      catch( Throwable t )
+      {
+        connection.close();
+        throw t;
       }
       return connection;
     }
@@ -76,12 +83,33 @@ public class HikariConnectionProvider implements ConnectionProvider
     }
   }
 
+  /** This method is exclusive to <b>Compile/IDE-time</b> use. It is used exclusively to read metadata from the DB.*/
   @Override
   public Connection getConnection( DbConfig dbConfig ) throws SQLException
   {
-    HikariDataSource ds = _dataSources.computeIfAbsent( dbConfig.getName(), __ ->
-      makeDataSource( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() ) );
-    Connection connection = ds.getConnection();
+    Connection connection;
+    if( dbConfig.isFileBased() )
+    {
+      // File-based DBs maintain connections with a file lock, even when idle, so pooling must be avoided.
+      // Basically, the lock prevents another process from opening a connection e.g., trying to build in IJ:
+      // IDE process has idle connection pooled with file open/locked, and build process will fail to open connection.
+      // To address this we avoid pooling the connection while in IDE/build-time with NonPooledConnection.
+      //
+      // Note, *some* file-based DBs will avoid locking the file if the connection is in read-only mode. Thus,
+      // given this connection is used exclusively for reading metadata from the DB, we *could* set it to read-only
+      // mode. However, Hikari won't/can't create a new pool based on a different read-only state for a URL having already
+      // established a pool -- PoolInitializationException results otherwise. This behavior is observable with SQLite
+      // file-based URLs.
+      HikariDataSource ds = makeDataSource( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() );
+      connection = new NonPooledConnection( ds, ds.getConnection() );
+    }
+    else
+    {
+      HikariDataSource ds = _dataSources.computeIfAbsent( dbConfig.getName(), __ ->
+        makeDataSource( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() ) );
+      connection = ds.getConnection();
+    }
+
     try
     {
       dbConfig.init( connection, Compiler );

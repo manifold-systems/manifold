@@ -22,13 +22,16 @@
       <artifactId>manifold-json-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- todo: Ugh! Move the classes we are using from manifold to manifold-util  -->
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-strings</artifactId>
+      <artifactId>manifold</artifactId>
       <version>${project.version}</version>
-      <!-- not inherited -->
-      <scope>provided</scope>
-      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-delegation-rt</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <!-- HikariCP is default db connection pool -->
     <dependency>
@@ -68,6 +71,34 @@
               <Automatic-Module-Name>manifold.sql.rt</Automatic-Module-Name>
             </manifestEntries>
           </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
+        <configuration>
+          <source>8</source>
+          <target>8</target>
+          <encoding>UTF-8</encoding>
+          <compilerArgs>
+            <!-- Configure manifold plugin -->
+            <arg>-Xplugin:Manifold --no-bootstrap</arg>
+          </compilerArgs>
+          <!-- Add the processor path for the plugin -->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>systems.manifold</groupId>
+              <artifactId>manifold-delegation</artifactId>
+              <version>${project.version}</version>
+            </path>
+            <path>
+              <groupId>systems.manifold</groupId>
+              <artifactId>manifold-strings</artifactId>
+              <version>${project.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
     </plugins>

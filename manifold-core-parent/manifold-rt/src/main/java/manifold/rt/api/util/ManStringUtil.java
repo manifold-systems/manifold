@@ -6981,13 +6981,13 @@ public class ManStringUtil
         if( isUpper )
         {
           char C = Character.toUpperCase( c );
-          isUpper = c == C; // turn off upper if case changes
           if( !lowerFirst ) // leading char not upper
           {
             c = C;
           }
-          if( !isUpper )
+          if( c != '_' )
           {
+            isUpper = false;
             lowerFirst = false;
           }
         }

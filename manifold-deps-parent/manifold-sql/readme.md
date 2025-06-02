@@ -435,6 +435,11 @@ DbConfig dbConfig = MyDatabase.getDbConfig();
 and whether it is optional, required, or provided. A provided setting is assigned when the .dbconfig file is processed;
 a provided setting cannot be overridden.
 
+**⚠️ Important:**
+Please check your configuration against the *required* and *optional* settings. For example, if you're using an embedded
+database such as SQLite or DuckDB and are using a file for persistence (as opposed it in-memory mode) you must set the
+`fileBased` setting to `true` if using the configuration while developing in an IDE.
+
 ---
 | `name` | `String` | _(provided)_ |
 |--------|----------|--------------|
@@ -592,12 +597,23 @@ expose entity _interfaces_. Public methods on a custom base class will not be ex
 a custom base interface. See `customBaseInterface` above. 
 
 ---
+| `fileBased` | `boolean` | _(required if true)_ |
+|-------------|-----------|----------------------|
+
+If using a file-based URL for an embedded database, such as jdbc:h2:path_to_file, jdbc:duckdb:path_to_file, jdc:sqlite:path_to_file.
+This setting is required due to the nature of most embedded databases when using a file to persist changes. Generally, the 
+file is open (and locked) by the data source connection, which prevents other processes from obtaining a connection. Normally
+this is okay, however when using an IDE like IntelliJ there are two processes needing access: the IDE's process and the 
+build process. This setting instructs manifold to avoid pooling connections, enabling the build process to connect to the
+db for metadata while the IDE is not using it.  
+
+---
 | `inMemory` | `boolean` | _(optional)_ |
 |------------|-----------|--------------|
 
 (for internal use)
-If using the database in-process (in-memory) e.g., jdbc:h2:mem or jdbc:sqlite::memory:, this setting must be
-set to `true`, otherwise it is ignored. This setting applies exclusively to manifold-sql-inproc-test.
+If using an embedded database in-memory e.g., jdbc:h2:mem or jdbc:sqlite::memory:, this setting must be
+set to `true`, otherwise it is ignored. This setting applies exclusively to module `manifold-sql-inproc-test`.
 
 
 # Step 3. Begin writing incredible code! 

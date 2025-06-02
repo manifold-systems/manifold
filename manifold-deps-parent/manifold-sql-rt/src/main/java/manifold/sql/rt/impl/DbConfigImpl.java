@@ -326,6 +326,13 @@ public class DbConfigImpl implements DbConfig
   }
 
   @Override
+  public boolean isFileBased()
+  {
+    Boolean fileBased = (Boolean)_bindings.get( "fileBased" );
+    return fileBased != null && fileBased;
+  }
+
+  @Override
   public boolean isInMemory()
   {
     Boolean inMemory = (Boolean)_bindings.get( "inMemory" );
