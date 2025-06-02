@@ -85,8 +85,8 @@ group 'systems.manifold'
 version '1.0-SNAPSHOT'
 
 // manifold-sql works with any JDK LTS release 8 - 21, plus latest non-LTS release
-targetCompatibility = 11
-sourceCompatibility = 11
+targetCompatibility = 21
+sourceCompatibility = 21
 
 repositories {
     jcenter()
@@ -101,8 +101,8 @@ dependencies {
      testAnnotationProcessor 'systems.manifold:manifold-sql:2025.1.18'
 
      // DuckDB dependencies
-     implementation 'org.duckdb:duckdb_jdbc:1.0.0'
-     annotationProcessor 'org.duckdb:duckdb_jdbc:1.0.0'
+     implementation 'org.duckdb:duckdb_jdbc:1.3.0.0'
+     annotationProcessor 'org.duckdb:duckdb_jdbc:1.3.0.0'
      testAnnotationProcessor 'org.duckdb:duckdb_jdbc:1.0.0'
 }
 
@@ -142,8 +142,8 @@ rootProject.name = 'MyProject'
         <manifold.version>2025.1.18</manifold.version>
       
         <!-- use maven.compiler settings for JDK LST release 11 - 21, or latest non-LTS release -->
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
     
     <dependencies>
@@ -158,7 +158,7 @@ rootProject.name = 'MyProject'
         <dependency>
             <groupId>org.duckdb</groupId>
             <artifactId>duckdb_jdbc</artifactId>
-            <version>1.0.0</version>
+            <version>1.3.0.0</version>
         </dependency>
 
     </dependencies>
@@ -194,7 +194,7 @@ rootProject.name = 'MyProject'
                         <path>
                             <groupId>org.duckdb</groupId>
                             <artifactId>duckdb_jdbc</artifactId>
-                            <version>1.0.0</version>
+                            <version>1.3.0.0</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
