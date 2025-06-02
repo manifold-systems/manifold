@@ -4,7 +4,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2025.1.17-SNAPSHOT</version>
+    <version>2025.1.18-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-tuple-rt</artifactId>

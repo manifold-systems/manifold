@@ -1,6 +1,6 @@
 # Java Preprocessor
 
-![latest](https://img.shields.io/badge/latest-v2025.1.17-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2025.1.18-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -445,8 +445,8 @@ repositories {
 dependencies {
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.17'
-    testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.17'
+    annotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.18'
+    testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.18'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -482,7 +482,7 @@ rootProject.name = 'MyPreprocessorProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2025.1.17</manifold.version>
+        <manifold.version>2025.1.18</manifold.version>
     </properties>
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->
@@ -524,7 +524,7 @@ with javadoc.
 # Javadoc
 
 `manifold-preprocessor`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-preprocessor/2025.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-preprocessor/2025.1.17)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-preprocessor/2025.1.18/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-preprocessor/2025.1.18)
 
 
 # License
