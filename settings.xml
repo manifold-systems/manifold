@@ -2,7 +2,7 @@
   <servers>
     <server>
       <id>central</id>
-      <username>1xLFPIdh</username>
+      <username>g1jXaW+/</username>
       <password>${env.MAN_PASSWORD}</password>
     </server>
   </servers>
