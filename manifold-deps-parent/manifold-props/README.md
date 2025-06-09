@@ -462,8 +462,8 @@ targetCompatibility = 11
 sourceCompatibility = 11
 
 repositories {
-    jcenter()
-    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
