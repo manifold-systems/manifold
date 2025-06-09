@@ -34,6 +34,11 @@ public class TypeNameParser
   @SuppressWarnings("WeakerAccess")
   public TypeNameParser( String typeName )
   {
+    if( typeName.contains( "@" ) )
+    {
+      throw new IllegalArgumentException( "Annotations are not supported in type name parsing: '" + typeName + "'" );
+    }
+
     _tokenizer = new StringTokenizer( typeName, TOKENS, true );
   }
 

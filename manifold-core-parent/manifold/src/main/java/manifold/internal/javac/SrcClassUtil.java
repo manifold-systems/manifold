@@ -613,6 +613,10 @@ public class SrcClassUtil
         sb.append( typeNoAnnotations( wildcardType.type ) );
       }
     }
+    else if( type instanceof Type.TypeVar )
+    {
+      sb.append( type.tsym.toString() );
+    }
     else
     {
       sb.append( type.toString() );
@@ -1003,7 +1007,7 @@ public class SrcClassUtil
    */
   private void addArguments( SrcAnnotationExpression annoExpr, Symbol symbol, Attribute attribute )
   {
-    SrcType srcType = makeSrcType( attribute.type );
+    SrcType srcType = makeSrcType( attribute.type, symbol );
     String name = symbol.name.toString();
     if( attribute instanceof Attribute.Array )
     {
@@ -1050,9 +1054,9 @@ public class SrcClassUtil
     }
   }
 
-  private static SrcType makeSrcType( Type t )
+  private SrcType makeSrcType( Type t )
   {
-    SrcType type = new SrcType( t.toString() );
+    SrcType type = new SrcType( typeNoAnnotations( t ) );
     if( t.tsym != null )
     {
       // If component type is an Enum, ensure it is set as such.
@@ -1090,23 +1094,52 @@ public class SrcClassUtil
     return false;
   }
 
+  private SrcType makeSrcType( Symbol symbol )
+  {
+    return makeSrcType( symbol.type, symbol );
+  }
+  private SrcType makeSrcType( Type type, Symbol symbol )
+  {
+    SrcType t = makeSrcType( type );
+    List<Attribute.TypeCompound> annotationMirrors = type.getAnnotationMirrors();
+    if( !annotationMirrors.isEmpty() )
+    {
+      annotateType( t, annotationMirrors );
+    }
+    else if( symbol != null )
+    {
+      SymbolMetadata metadata = symbol.getMetadata();
+      if( metadata != null && !metadata.isTypesEmpty() )
+      {
+        List<Attribute.TypeCompound> typeAttributes = metadata.getTypeAttributes();
+        if( !typeAttributes.isEmpty() )
+        {
+          annotateType( t, typeAttributes );
+        }
+      }
+    }
+    return t;
+  }
+  
   private SrcType makeTypeVarType( Symbol.TypeVariableSymbol typeVar )
   {
-    StringBuilder sb = new StringBuilder( typeVar.type.toString() );
+    SrcType t = makeSrcType( typeVar );
     Type lowerBound = typeVar.type.getLowerBound();
     if( lowerBound != null && !(lowerBound instanceof NullType) )
     {
-      sb.append( " super " ).append( lowerBound.toString() );
+      t.setSuperOrExtends( "super" );
+      t.addBound( makeSrcType( lowerBound, null ) );
     }
     else
     {
       Type upperBound = typeVar.type.getUpperBound();
       if( upperBound != null && !(upperBound instanceof NoType) && !upperBound.toString().equals( Object.class.getName() ) )
       {
-        sb.append( " extends " ).append( upperBound.toString() );
+        t.setSuperOrExtends( "extends" );
+        t.addBound( makeSrcType( upperBound, null ) );
       }
     }
-    return new SrcType( sb.toString() );
+    return t;
   }
 
   // These values substitute NON-compile-time constant initializers, thus they are never used at runtime (because
