@@ -1201,6 +1201,12 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     @Override
     public void visitClassDef( JCClassDecl tree )
     {
+      if( tree.type == null )
+      {
+        // classDecl not attributed yet
+        return;
+      }
+
       _classDecls.push( tree );
       try
       {
@@ -1348,7 +1354,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
     private boolean isNullType( Type t )
     {
-      return t.tsym != null && Null.class.getTypeName().equals( t.tsym.getQualifiedName().toString() );
+      return t != null && t.tsym != null && Null.class.getTypeName().equals( t.tsym.getQualifiedName().toString() );
     }
   }
 
