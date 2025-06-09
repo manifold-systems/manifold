@@ -478,7 +478,12 @@ public class ManAttr_17 extends Attr implements ManAttr
 
   private void assignMethodReturnType( Type returnExprType, JCTree.JCMethodDecl meth )
   {
-    ((Type.MethodType)meth.sym.type).restype = returnExprType;
+    Type methType = meth.sym.type;
+    while( methType instanceof Type.DelegatedType )
+    {
+      methType = ((Type.DelegatedType)methType).qtype;
+    }
+    ((Type.MethodType)methType).restype = returnExprType;
     if( meth.restype instanceof JCTree.JCIdent )
     {
       ((JCTree.JCIdent)meth.restype).sym = returnExprType.tsym;
