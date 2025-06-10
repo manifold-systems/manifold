@@ -72,6 +72,40 @@ public class ManEscapeUtil
     return escape;
   }
 
+  public static String escapeForJavaCharLiteral( char c )
+  {
+    switch( c )
+    {
+      case '\b':
+        return "\\b";
+      case '\t':
+        return "\\t";
+      case '\n':
+        return "\\n";
+      case '\f':
+        return "\\f";
+      case '\r':
+        return "\\r";
+      case '\"':
+        return "\"";
+      case '\'':
+        return "\\'";
+      case '\\':
+        return "\\\\";
+      default:
+        if( c >= 32 && c <= 126 )
+        {
+          // Printable ASCII character
+          return String.valueOf( c );
+        }
+        else
+        {
+          // Unicode escape for non-printable or non-ASCII character
+          return String.format( "\\u%04x", (int)c );
+        }
+    }
+  }
+
   public static String escapeForJavaStringLiteral( String strText )
   {
     return escapeForJavaStringLiteral( strText, 0, strText.length() );
