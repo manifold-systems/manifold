@@ -340,7 +340,7 @@ public class SrcClassUtil
     }
     else if( constValue instanceof Character )
     {
-      value = "'" + ManEscapeUtil.escapeForJava( (char)constValue ) + "'";
+      value = "'" + ManEscapeUtil.escapeForJavaCharLiteral( (char)constValue ) + "'";
     }
     return value;
   }

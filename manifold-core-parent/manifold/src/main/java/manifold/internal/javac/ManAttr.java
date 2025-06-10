@@ -55,6 +55,8 @@ import javax.tools.StandardLocation;
 import static com.sun.tools.javac.code.Flags.INTERFACE;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static com.sun.tools.javac.code.TypeTag.ERROR;
+import static manifold.api.util.JCTreeUtil.makeEmptyValue;
+import static manifold.api.util.JCTreeUtil.memberAccess;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
 import static manifold.util.JreUtil.isJava8;
@@ -1504,8 +1506,8 @@ public interface ManAttr
 
           if( optional )
           {
-            args.add( make.Literal( expr != null ) );
-            args.add( expr == null ? makeEmptyValue( param, make ) : expr );
+            args.add( memberAccess( make, names(), "manifold.ext.params.rt.bool." + (expr != null ? "True" : "False") ) );
+            args.add( expr == null ? makeEmptyValue( param.type, make, types(), syms() ) : expr );
             optional = false;
           }
           else if( expr != null )
@@ -1738,17 +1740,6 @@ public interface ManAttr
     return null;
   }
 
-  default JCExpression makeEmptyValue( Symbol.VarSymbol param, TreeMaker make )
-  {
-    if( param.type.isPrimitive() )
-    {
-      return make.Literal( defaultPrimitiveValue( param.type ) );
-    }
-    return types().isSameType( param.type, types().erasure( param.type ) )
-           ? make.TypeCast( param.type, make.Literal( TypeTag.BOT, null ) )
-           : make.Literal( TypeTag.BOT, null );
-  }
-
   default List<Symbol.MethodSymbol> getParamsMethods( Type receiverType, String methodName )
   {
     return getParamsMethods( receiverType, methodName, new HashSet<>() );
@@ -1779,45 +1770,6 @@ public interface ManAttr
     }
     return result;
   }
-
-  default Object defaultPrimitiveValue( Type type )
-  {
-    if( type == syms().intType ||
-      type == syms().shortType )
-    {
-      return 0;
-    }
-    if( type == syms().byteType )
-    {
-      return (byte)0;
-    }
-    if( type == syms().longType )
-    {
-      return 0L;
-    }
-    if( type == syms().floatType )
-    {
-      return 0f;
-    }
-    if( type == syms().doubleType )
-    {
-      return 0d;
-    }
-    if( type == syms().booleanType )
-    {
-      return false;
-    }
-    if( type == syms().charType )
-    {
-      return (char)0;
-    }
-    if( type == syms().botType )
-    {
-      return null;
-    }
-    throw new IllegalArgumentException( "Unsupported primitive type: " + type.tsym.getSimpleName() );
-  }
-
 
   default void addEnclosingClassOnTupleType( String fqn )
   {

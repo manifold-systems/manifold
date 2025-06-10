@@ -37,6 +37,8 @@ import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.*;
 import manifold.api.type.ICompilerComponent;
 import manifold.api.util.JavacDiagnostic;
+import manifold.ext.params.rt.bool;
+import manifold.ext.params.rt.param_overload;
 import manifold.ext.params.rt.params;
 import manifold.ext.params.rt.param_default;
 import manifold.internal.javac.*;
@@ -63,6 +65,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.sun.source.util.TaskEvent.Kind.*;
+import static manifold.api.util.JCTreeUtil.makeEmptyValue;
+import static manifold.api.util.JCTreeUtil.memberAccess;
 import static manifold.ext.params.ParamsIssueMsg.*;
 
 public class ParamsProcessor implements ICompilerComponent, TaskListener
@@ -649,8 +653,12 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       }
 
       // Generate a method to handle defaults and delegate to the original method
-      JCMethodDecl paramsMethod = makeParamsMethod( optParamsMeth, superMethod, make, copier );
+      Map<String, JCMethodInvocation> superOptParams = makeSuperDefaultValueMap( superMethod, make );
+      JCMethodDecl paramsMethod = makeParamsMethod( optParamsMeth, superOptParams, make, copier );
       defs.add( paramsMethod );
+
+      ArrayList<JCMethodDecl> telescopeOptParamMethods = makeTelescopeOptParamMethods( optParamsMeth, superOptParams, make, copier );
+      defs.addAll( telescopeOptParamMethods );
 
       // Generate telescoping method overloads because:
       // - binary compatibility
@@ -701,7 +709,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       copy.mods.flags = flags;
 
       // mark with @param_default for IJ use
-      JCAnnotation paramsAnno = make.Annotation( memberAccess( make, param_default.class.getTypeName() ), List.nil() );
+      JCAnnotation paramsAnno = make.Annotation( memberAccess( make, getNames(), param_default.class.getTypeName() ), List.nil() );
       copy.mods.annotations = copy.mods.annotations.append( paramsAnno );
 
       // Params
@@ -712,6 +720,137 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       copy.restype = copier.copy( param.vartype );
 
       copy.body = make.Block( 0L, List.of( make.Return( copier.copy( param.init ) ) ) );
+      return copy;
+    }
+
+    private ArrayList<JCMethodDecl> makeTelescopeOptParamMethods( JCMethodDecl optParamsMeth, Map<String, JCMethodInvocation> superOptParams, TreeMaker make, TreeCopier<?> copier )
+    {
+      int firstTrailingOptParam = firstTrailingOptParamIndex( optParamsMeth, superOptParams );
+      if( firstTrailingOptParam < 0 || optParamsMeth.params.size()-1 == firstTrailingOptParam )
+      {
+        return new ArrayList<>();
+      }
+
+      // start with a method having only one trailing opt param and forwarding remaining default param values,
+      // end with having all the all trailing opt params but the last one
+      ArrayList<JCMethodDecl> result = new ArrayList<>();
+      for( int i = firstTrailingOptParam; i < optParamsMeth.params.size() - 1; i++ )
+      {
+        JCMethodDecl paramsMethod = makeTelescopeOptParamMethod( optParamsMeth, superOptParams, make, copier, i );
+        result.add( paramsMethod );
+      }
+      return result;
+    }
+
+    private int firstTrailingOptParamIndex( JCMethodDecl optParamsMeth, Map<String, JCMethodInvocation> superOptParams )
+    {
+      int firstTrailingOptParam = -1;
+      for( int i = 0; i < optParamsMeth.params.size(); i++ )
+      {
+        JCVariableDecl param = optParamsMeth.params.get( i );
+        JCMethodInvocation superDefaultValue = superOptParams.get( param.name.toString() );
+        if( param.init != null || superDefaultValue != null )
+        {
+          if( firstTrailingOptParam < 0 )
+          {
+            firstTrailingOptParam = i;
+          }
+        }
+        else
+        {
+          firstTrailingOptParam = -1;
+        }
+      }
+      return firstTrailingOptParam;
+    }
+
+    private JCMethodDecl makeTelescopeOptParamMethod( JCMethodDecl targetMethod, Map<String, JCMethodInvocation> superOptParams, TreeMaker make, TreeCopier<?> copier, int lastOptParamToKeep )
+    {
+      JCMethodDecl copy = copier.copy( targetMethod );
+
+      // name
+      boolean isConstructor = targetMethod.getName().equals( getNames().init );
+      copy.name = getNames().fromString( (isConstructor ? "" : "$") + targetMethod.getName() );
+
+      // mods & annotations
+      long flags = targetMethod.getModifiers().flags;
+      if( (flags & Flags.STATIC) == 0 &&
+          (classDecl().mods.flags & Flags.INTERFACE) != 0 )
+      {
+        flags |= Flags.DEFAULT;
+      }
+      else if( (flags & Flags.ABSTRACT) != 0 )
+      {
+        flags &= ~Flags.ABSTRACT;
+      }
+      copy.mods.flags = flags;
+      // mark with @param_overload for binary/backward compatibility
+      JCAnnotation paramsAnno = make.Annotation(
+        memberAccess( make, getNames(), param_overload.class.getTypeName() ), List.nil() );
+      copy.mods.annotations = copy.mods.annotations.append( paramsAnno );
+
+      // params + forwarding args
+      List<JCVariableDecl> params = List.nil();
+      List<JCExpression> args = List.nil();
+      for( int i = 0; i < targetMethod.params.size(); i++ )
+      {
+        JCVariableDecl methParam = targetMethod.params.get( i );
+        JCMethodInvocation superDefaultValue = superOptParams.get( methParam.name.toString() );
+        if( methParam.init != null || superDefaultValue != null )
+        {
+          if( i <= lastOptParamToKeep )
+          {
+            // default param "xxx" requires an "isXxx" param indicating whether the "xxx" should assume the default value
+            Name isXxx = getNames().fromString( "$is" + ManStringUtil.capitalize( methParam.name.toString() ) );
+            JCVariableDecl isParam = make.VarDef( make.Modifiers( Flags.PARAMETER ), isXxx, memberAccess( make, getNames(), bool.class.getTypeName() ), null );
+            params = params.append( isParam );
+
+            args = args.append( make.Ident( isXxx ) );
+            args = args.append( make.Ident( methParam.name ) );
+          }
+          else
+          {
+            args = args.append( memberAccess( make, getNames(), bool.class.getTypeName() + "." + bool.False  ) );
+            args = args.append( makeEmptyValue( methParam.sym.type, make, getTypes(), getSymtab() ) );
+          }
+        }
+        else
+        {
+          args = args.append( make.Ident( methParam.name ) );
+        }
+
+        if( i <= lastOptParamToKeep )
+        {
+          JCExpression type = (JCExpression)copier.copy( methParam.getType() );
+          JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), methParam.name, type, null );
+          param.pos = make.pos;
+          params = params.append( param );
+        }
+      }
+      copy.params = params;
+
+      // body (forwarding call)
+      JCMethodInvocation forwardCall;
+      if( targetMethod.name.equals( getNames().init ) )
+      {
+        forwardCall = make.Apply( List.nil(), make.Ident( getNames()._this ), args );
+      }
+      else
+      {
+        forwardCall = make.Apply( List.nil(), make.Ident( getNames().fromString( "$" + targetMethod.name ) ), args );
+      }
+      JCStatement stmt;
+      if( targetMethod.restype == null ||
+          (targetMethod.restype instanceof JCPrimitiveTypeTree &&
+           ((JCPrimitiveTypeTree)targetMethod.restype).typetag == TypeTag.VOID) )
+      {
+        stmt = make.Exec( forwardCall );
+      }
+      else
+      {
+        stmt = make.Return( forwardCall );
+      }
+      copy.body = make.Block( 0L, List.of( stmt ) );
       return copy;
     }
 
@@ -772,7 +911,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       copy.mods.flags = flags;
       // mark with @params for IJ use
       JCAnnotation paramsAnno = make.Annotation(
-        memberAccess( make, params.class.getTypeName() ),
+        memberAccess( make, getNames(), params.class.getTypeName() ),
         List.of( paramsString( targetMethod.params.stream().map( p -> p.name.toString() ) ) ) );
       copy.mods.annotations = copy.mods.annotations.append( paramsAnno );
 
@@ -841,10 +980,8 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     //   }
     // so we can call it using tuples for named args and optional params:
     // foo(name:"Scott");
-    private JCMethodDecl makeParamsMethod( JCMethodDecl targetMethod, MethodSymbol superMethod, TreeMaker make, TreeCopier<?> copier )
+    private JCMethodDecl makeParamsMethod( JCMethodDecl targetMethod, Map<String, JCMethodInvocation> superOptParams, TreeMaker make, TreeCopier<?> copier )
     {
-      Map<String, JCMethodInvocation> superOptParams = makeSuperDefaultValueMap( superMethod, make );
-
       // Method name & modifiers
       boolean isConstructor = targetMethod.getName().equals( getNames().init );
       Name name = getNames().fromString( (isConstructor ? "" : "$") + targetMethod.getName() );
@@ -861,7 +998,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       JCModifiers modifiers = make.Modifiers( mods );
 
       JCAnnotation paramsAnno = make.Annotation(
-        memberAccess( make, params.class.getTypeName() ), List.of( paramsString( paramNamesStream( targetMethod, superOptParams ) ) ) );
+        memberAccess( make, getNames(), params.class.getTypeName() ), List.of( paramsString( paramNamesStream( targetMethod, superOptParams ) ) ) );
       modifiers.annotations = modifiers.annotations.append( paramsAnno );
       if( isOverridable( targetMethod ) )
       {
@@ -888,7 +1025,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         {
           // default param "xxx" requires an "isXxx" param indicating whether the "xxx" should assume the default value
           Name isXxx = getNames().fromString( "$is" + ManStringUtil.capitalize( methParam.name.toString() ) );
-          JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), isXxx, make.TypeIdent( TypeTag.BOOLEAN ), null );
+          JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), isXxx, memberAccess( make, getNames(), bool.class.getTypeName() ), null );
           param.pos = make.pos;
           params = params.append( param );
 
@@ -898,7 +1035,8 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
           // pN = isPN ? pN : $foo_param(p1, p2, pN-1)  (assign is necessary to support refs to params in subsequent opt param default values)
           JCAssign assign = make.Assign( make.Ident( methParam.name ),
-                                         make.Conditional( make.Ident( isXxx ), make.Ident( methParam.name ),
+                                         make.Conditional( make.Binary( Tag.EQ, make.Ident( isXxx ), memberAccess( make, getNames(), bool.class.getTypeName() + "." + bool.True ) ),
+                                                           make.Ident( methParam.name ),
                                                            copier.copy( methParam.init == null
                                                                         ? (methParam.init = defaultValueCall)
                                                                         : !isOverridable( targetMethod ) ? methParam.init : (methParam.init = defaultValueCall) ) ) );
@@ -1256,7 +1394,8 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
             String paramNames = (String)anno.attribute.getElementValues().values().stream().findFirst().get().getValue();
             return paramNames.contains( "opt$" );
           }
-          return annoTypeName.equals( param_default.class.getTypeName() );
+          return annoTypeName.equals( param_default.class.getTypeName() ) ||
+                 annoTypeName.equals( param_overload.class.getTypeName() );
         } )
         .findFirst().ifPresent( anno -> {
             methodDecl.sym.flags_field |= Flags.BRIDGE;
@@ -1361,7 +1500,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
   private JCAnnotation makeAnnotation( Class<?> anno )
   {
     TreeMaker make = TreeMaker.instance( getContext() );
-    JCExpression staticAnno = memberAccess( make, anno.getName() );
+    JCExpression staticAnno = memberAccess( make, getNames(), anno.getName() );
     return make.Annotation( staticAnno, List.nil() );
   }
 
@@ -1374,22 +1513,6 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     {
       javacPlugin.initialize( e );
     }
-  }
-
-  private JCExpression memberAccess( TreeMaker make, String path )
-  {
-    return memberAccess( make, path.split( "\\." ) );
-  }
-
-  private JCExpression memberAccess( TreeMaker make, String... components )
-  {
-    Names names = Names.instance( getContext() );
-    JCExpression expr = make.Ident( names.fromString( (components[0]) ) );
-    for( int i = 1; i < components.length; i++ )
-    {
-      expr = make.Select( expr, names.fromString( components[i] ) );
-    }
-    return expr;
   }
 
   private void reportWarning( JCTree location, String message )

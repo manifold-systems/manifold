@@ -9,13 +9,13 @@ import java.lang.annotation.Target;
 /**
  * For internal use only!
  * <p/>
- * Identifies methods generated to support overriding of optional parameter default values.
+ * Identifies methods generated exclusively to support binary/backward compatible optional parameter methods.
  * <p/>
  * <i>These methods are synthetic and are purely implementation detail, they should never be
  * called directly by user code.</i>
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( {ElementType.CONSTRUCTOR, ElementType.METHOD} )
-public @interface param_default
+public @interface param_overload
 {
 }
