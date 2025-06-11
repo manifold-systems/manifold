@@ -6,9 +6,9 @@
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
-The `manifold-params` compiler plugin enhances Java with **optional parameters** and **named arguments** for methods, constructors,
-and records. It offers a cleaner, more flexible alternative to method overloading or builder patterns.
-                                                                         
+The `manifold-params` compiler plugin adds support for **optional parameters** and **named arguments** in Java methods,
+constructors, and records -- offering a simpler, more expressive alternative to method overloading and builder patterns.
+
 ```java
 public String valueOf(char[] data, 
                       int offset = 0, 
@@ -19,12 +19,16 @@ valueOf(array, 2) // use default for count
 valueOf(array, count:20) // use default for offset by naming count
 ```
 
-This plugin supports JDK versions 8 - 21 (and the latest) and integrates seamlessly with **IntelliJ IDEA** and **Android Studio**.
+This plugin **supports JDK versions 8 - 21+** and integrates seamlessly with **IntelliJ IDEA** and **Android Studio**.
 
-### Key Features
-- **Optional Parameters**: Define default values for method parameters
-- **Named Arguments**: Pass arguments by name, not just by position
-- **Binary Compatible**: Works seamlessly with legacy code
+### Key features
+* **Optional parameters** -- Define default values directly in methods, constructors, and records
+* **Named arguments** -- Call methods using parameter names for clarity and flexibility
+* **Flexible defaults** -- Use expressions, reference earlier parameters, or access instance fields
+* **Customizable behavior** -- Override default values in subclasses or other contexts
+* **Safe API evolution** -- Add parameters or change defaults without breaking binary or source compatibility
+* **Eliminates overloads and builders** -- Collapse boilerplate into a single, expressive method or constructor
+* **IDE-friendly** -- Fully supported in IntelliJ IDEA and Android Studio
 
 # Contents
 
@@ -34,11 +38,13 @@ This plugin supports JDK versions 8 - 21 (and the latest) and integrates seamles
 * [Overloading and overriding](#overloading-and-overriding)
     * [Overriding](#overriding)
     * [Overloading](#overloading)
-    * [Default Value Inheritance](#default-value-inheritance)
+    * [Default value inheritance](#default-value-inheritance)
 * [Binary compatible](#binary-compatible)
-    * [Backward compatible](#backward-compatible-)
+    * [Binary backward compatible](#binary-backward-compatible)
     * [Binary accessible](#binary-accessible)
     * [Java standard compatible](#java-standard-compatible)
+* [Practical Applications](#practical-applications)
+    * [Replacing `copyWith()` in records](#replacing-copywith-in-records)
 * [IDE Support](#ide-support)
   * [Install](#install)
 * [Setup](#setup)
@@ -64,7 +70,7 @@ println("Hello, world!");
 println(text:"Hello, named argument!");
 ```
 
-You can use optional parameters in methods, constructors, and records.
+You can use optional parameters in **methods**, **constructors**, and **records**.
 ```java
 // method
 void chair(Kind kind, Wood wood = Walnut, boolean antique = false) {...}
@@ -76,7 +82,7 @@ Chair(Kind kind, Wood wood = Walnut, boolean antique = false) {...}
 record Chair(Kind kind, Wood wood = Walnut, boolean antique = false) {...}
 ```
 
-Default values can reference preceding parameters, instance members, and include complex expressions.
+**Default values** can reference preceding parameters, instance members, and include complex expressions.
 ```java
 public record Destination(Country country, 
                           String city = country.capital()) {}
@@ -89,32 +95,35 @@ public class Chat {
 }
 ```
 
-You can still use positional arguments, even when optional parameters come first.
+Optional parameters can appear before required ones -- unlike most languages -- and still support natural positional calls:
 ```java
-public Item(int id = -1, String name) {...}
+public Item(int id = -1, String name) { ... }
 
-new Item(123, "Table");  
-new Item("Chair"); // default value id = -1 is used
+new Item(123, "Table");  // id = 123, name = "Table"
+new Item("Chair");       // id = -1 (default), name = "Chair"
 ```
+This means you don’t need to reorder parameters awkwardly just to put optional ones last. It keeps method signatures clean
+while preserving intuitive calling syntax.
 
 # Named arguments
 
-You can use named arguments when calling methods, constructors, or records that have optional parameters. This feature allows
+You can use **named arguments** when calling methods, constructors, or records having optional parameters. This feature allows
 you to focus on the specific arguments you need, making call sites more readable and easier to understand.
 ```java
-new Pizza(size:Medium, kind:Detroit, pepperoni:true);
+new Pizza(size:Medium, kind:Detroit, Set.of(Pepperoni));
 . . .
 record Pizza(Size size,
              Kind kind = Thin,
              Sauce sauce = Red,
              Cheese cheese = Mozzarella, 
-             boolean pepperoni = false,
-             boolean prosciutto = false) {}
+             Set<Meat> meat = Set.of(),
+             Set<Veg> veg = Set.of()) {}
 ```
 In this case, named arguments make it clear which values are being assigned to which parameters, improving the overall
 readability of the code.
 
-You can also reorder named arguments and mix positional and named arguments, but named arguments must come after positional arguments.
+You can also **reorder** named arguments and **mix positional and named arguments**, but named arguments must come after
+positional arguments.
 ```java
 new Pizza(Large, cheese:Fresco, sauce:Chili);
 ```
@@ -145,7 +154,7 @@ serving as a simple, consistent way to support optional parameters within Java�
 
 ### Overriding
 
-In a subclass, a method with optional parameters overrides any superclass method that falls within its signature set--even
+In a subclass, a method with optional parameters **overrides** any superclass method that falls within its *signature set*--even
 if the superclass method has fewer parameters.
 
 ```java
@@ -157,7 +166,7 @@ class Sub extends Base {
   @Override
   void func(String a, int b = 0, int c = b) { ... }
 }
-
+```
 Here, `Sub#func` overrides `Base#func` because the latter’s signature is part of `Sub#func`’s signature set:
 
 ```java
@@ -172,14 +181,14 @@ base.func("hi", 5); // calls Sub#func
 ```
 
 This behavior allows a subclass to override a method *and* extend its parameter list by adding new optional parameters.
-It’s a powerful feature that lets you evolve or enhance behavior without breaking existing call sites--making overrides more
-expressive and future-friendly.
+It’s a powerful feature that lets you **evolve or enhance behavior without breaking existing call sites**, making overrides
+more expressive and future-friendly.
 
 ---
 
 ### Overloading
 
-Overloading is supported with optional parameters using signature sets (see earlier definition). If two methods' signature
+**Overloading** is supported with optional parameters using signature sets (see earlier definition). If two methods' signature
 sets overlap in a way that causes ambiguity, a compile-time error is reported, ensuring clarity and preventing conflicts.
 
 ```java
@@ -191,10 +200,10 @@ class Sample {
 
 To prevent ambiguity, all method declarations in a given scope must have disjoint signature sets.
 
-### Default Value Inheritance
+### Default value inheritance
 
-When overriding a method with optional parameters, a subclass inherits the default values from the superclass unless it
-explicitly overrides them.
+When overriding a method with optional parameters, a subclass **inherits** the default values from the superclass unless it
+explicitly **overrides** them.
 
 ```java
 class Base {
@@ -210,66 +219,76 @@ class Sub extends Base {
   }
 }
 ```
-
 In this example, `Sub#sample` overrides the default value for `a` but inherits the default for `b`. As a result:
-
 ```java
 Base base = new Sub();
 base.sample();
 ```
 Prints: `hi5`
 
-This selective override mechanism provides fine-grained control over defaults. You can tailor behavior in a subclass without
-redefining the entire parameter list--useful for customization, localization, or feature toggles, all while preserving compatibility
-with base method contracts.
-
+This selective override mechanism offers fine-grained control, allowing subclasses to adjust default values as needed while
+preserving compatibility with the base method signature.
 
 # Binary compatible
 
 Optional parameters and named arguments preserve three essential aspects of binary compatibility:
-- **Backward compatible**
+- **Binary backward compatible**
 - **Binary accessible**
 - **Java standard compatible**
+  
+### Binary backward compatible
+A **binary backward compatible** library lets newer versions be used seamlessly with applications or libraries compiled against
+older versions, so you can **upgrade without recompiling**.
 
-### Backward compatible  
+Support for optional parameters helps preserve both **source** and **binary** compatibility by allowing safe modifications
+to method signatures and default values.
 
-You can add new optional parameters to existing methods without breaking compatibility with code compiled before those
-parameters were introduced.  
+You can add new optional parameters to existing methods without breaking code compiled or written before those changes --
+a safe and powerful way to **extend and evolve APIs** over time.
 
-**For example:**  
-Suppose you have the following method:  
+**For example:**<br>
+Suppose you have the following method:
 ```java
 public void size(int width) { ... }
-```  
+```
 You can update it to include an optional `height` parameter:
 ```java
-public void size(int width, int height = 0) { ... }
-```  
-Code compiled with the earlier version of the method will continue to work without requiring recompilation.
+public void size(int width, int height = width) { ... }
+```
+Code compiled with the earlier version will continue to work without requiring recompilation.
 
-**Changing Default Values:**  
+This also applies to methods with pre-existing optional parameters:
+```java
+public void size(int width = 0) { ... }
+```
+Adding more optional parameters preserves binary backward compatibility:
+```java
+public void size(int width = 0, int height = width) { ... }
+```
+
+**Changing Default Values:**<br>
 If the default value of an optional parameter changes, the updated value will apply even when older code calls the method.
 ```java
-public void size(int width, int height = width) { ... }
+public void size(int width, int height = width * 2) { ... }
 ```  
-In this case, older code that doesn’t specify a `height` argument will use the new default (`width`) at runtime without
+In this case, older code that doesn’t specify a `height` argument will use the new default (`width * 2`) at runtime without
 needing to recompile.
 
 **⚠️ Caution:**  
-Changing default values, while binary-compatible, can still impact the behavior of existing code. Make these changes
+Changing default values, while binary compatible, can still impact the behavior of existing code. Make these changes
 cautiously to prevent unintended side effects.
 
 ### Binary accessible
 Optional parameters and named arguments are fully accessible from compiled .class files, just like source code.
 ```java
-// .class file
+// .class file (compiled)
 
 public class MyClass {
   public void size(int width, int height = width) {...}
 }
 ```
 ```java
-// .java file
+// .java file (source)
 
 MyClass myClass = new MyClass();
 myClass.size(width:100);
@@ -282,6 +301,50 @@ default values when calling method overloads.
 size(myWidth);
 size(myWidth, myHeight);
 ``` 
+
+# Showcase
+
+### Adding `copyWith()` to records
+
+Optional parameters make it easy to implement a `copyWith()` method for immutable data types like records — without boilerplate.
+By using default values that reference the current instance, you can update only the fields you care about.
+                                                                                                           
+Building on the prior `Pizza` example:
+```java
+record Pizza(Size size,
+             Kind kind = Thin,
+             Sauce sauce = Red,
+             Cheese cheese = Mozzarella,
+             Set<Meat> meat = Set.of(),
+             Set<Veg> veg = Set.of()) {
+
+  public Pizza copyWith(Size size = this.size,
+                        Kind kind = this.kind,
+                        Cheese cheese = this.cheese,
+                        Sauce sauce = this.sauce,
+                        Set<Meat> meat = this.meat,
+                        Set<Veg> veg = this.veg) {
+    return new Pizza(size, kind, cheese, sauce, meat, veg);
+  }
+  
+  public Pizza copy() {
+    return copyWith();
+  }
+}
+```
+
+You can construct a `Pizza` using defaults or with specific values:
+```java
+var pizza = new Pizza(Large, veg:Set.of(Kimchi));
+```
+Then update it as needed using `copyWith()`:
+```java
+var updated = pizza.copyWith(kind:Deep, meat:Set.of(PorkBelly));
+```
+Here, the constructor acts as a flexible, type-safe builder. `copyWith()` simply forwards to it, defaulting unchanged fields.
+
+> ℹ️ This pattern is a candidate for automatic generation in records for a future version of `manifold-params`.
+                                               
 
 # IDE Support
 
