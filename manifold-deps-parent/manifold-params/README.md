@@ -24,7 +24,7 @@ This plugin **supports JDK versions 8 - 21+** and integrates seamlessly with **I
 ### Key features
 * **Optional parameters** -- Define default values directly in methods, constructors, and records
 * **Named arguments** -- Call methods using parameter names for clarity and flexibility
-* **Flexible defaults** -- Use expressions, reference earlier parameters, or access instance fields
+* **Flexible defaults** -- Use expressions, reference earlier parameters, and access local methods and fields
 * **Customizable behavior** -- Override default values in subclasses or other contexts
 * **Safe API evolution** -- Add parameters or change defaults without breaking binary or source compatibility
 * **Eliminates overloads and builders** -- Collapse boilerplate into a single, expressive method or constructor
@@ -43,8 +43,8 @@ This plugin **supports JDK versions 8 - 21+** and integrates seamlessly with **I
     * [Binary backward compatible](#binary-backward-compatible)
     * [Binary accessible](#binary-accessible)
     * [Java standard compatible](#java-standard-compatible)
-* [Practical Applications](#practical-applications)
-    * [Replacing `copyWith()` in records](#replacing-copywith-in-records)
+* [Showcase](#showcase)
+    * [Adding `copyWith()` to records](#adding-copywith-to-records)
 * [IDE Support](#ide-support)
   * [Install](#install)
 * [Setup](#setup)
@@ -110,7 +110,7 @@ while preserving intuitive calling syntax.
 You can use **named arguments** when calling methods, constructors, or records having optional parameters. This feature allows
 you to focus on the specific arguments you need, making call sites more readable and easier to understand.
 ```java
-new Pizza(size:Medium, kind:Detroit, Set.of(Pepperoni));
+new Pizza(size:Medium, kind:Detroit, meat:Set.of(Pepperoni));
 . . .
 record Pizza(Size size,
              Kind kind = Thin,
