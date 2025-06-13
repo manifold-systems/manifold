@@ -45,7 +45,24 @@ public class TypeNameParser
   public Type parse()
   {
     nextToken();
-    return parseType();
+    List<Type> types = parseCompoundType();
+    if( types.size() == 1 )
+    {
+      return types.get( 0 );
+    }
+    else if( !types.isEmpty() )
+    {
+      if( types.size() > 2 &&
+          types.get( 0 )._fqn.equals( Object.class.getTypeName() ) )
+      {
+        // unnecessary Object inserted at head of list
+        types.remove( 0 );
+      }
+      // special-ish case where sometimes the bounding type is parsed separate from the whole type
+      Type bound = new Type( types );
+      return bound;
+    }
+    return null;
   }
 
   public List<Type> parseCommaSeparated()
@@ -244,6 +261,14 @@ public class TypeNameParser
       _params = Collections.emptyList();
     }
 
+    // special case where we parse a bounding type separately
+    public Type( List<Type> bound )
+    {
+      _fqn = "";
+      _bound = bound;
+      _params = Collections.emptyList();
+    }
+
     public String getPlainName()
     {
       return _fqn;
@@ -302,6 +327,17 @@ public class TypeNameParser
           sb.append( param.getFullName() );
         }
         sb.append( '>' );
+      }
+      else if( _bound != null && !_bound.isEmpty() )
+      {
+        for( int i = 0; i < _bound.size(); i++ )
+        {
+          if( i > 0 )
+          {
+            sb.append( " & " );
+          }
+          sb.append( _bound.get( i ).getFullName() );
+        }
       }
       for( int i = 0; i < _arrayDim; i++ )
       {

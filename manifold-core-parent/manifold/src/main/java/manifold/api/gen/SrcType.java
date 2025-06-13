@@ -200,7 +200,15 @@ public class SrcType extends SrcAnnotated<SrcType>
     {
       _bound = new ArrayList<>( 2 );
     }
-    _bound.add( bound );
+
+    if( bound.getName().isEmpty() && !bound.getBounds().isEmpty() )
+    {
+      bound.getBounds().forEach( t -> _bound.add( t ) );
+    }
+    else
+    {
+      _bound.add( bound );
+    }
   }
 
   public String getSuperOrExtends()
