@@ -131,7 +131,7 @@ new Pizza(Large, cheese:Fresco, sauce:Chili);
 # Overloading and overriding
 
 To understand how optional parameters affect overloading and overriding, it’s important to first understand a method’s
-**signature set**--the set of overloads defined by the different ways it can be called with positional arguments.
+**signature set**--the set of overloads defined by the different ways it can be called with **positional** arguments.
 
 A method with optional parameters implicitly defines multiple overloads. For example, the following method:
 
@@ -189,10 +189,8 @@ more expressive and future-friendly.
 ### Overloading
 
 To avoid ambiguity, overloading behaves slightly differently when optional parameters are used:
-
 * Only one method in an overload set may declare optional parameters (this restriction may change in the future).
 * You can't declare overloads where the parameter types match the required parameters plus any subset of the optional parameter types.
-
 ```java
 class Sample {
   void func(int beta, int gamma = 0);
@@ -201,8 +199,10 @@ class Sample {
   void func(Foo foo = null);   // error: introduces optional parameter in overload
 }
 ```
-
 These rules prevent overloads that could overlap with default argument expansion at call sites, ensuring overload resolution remains unambiguous.
+
+**Note:** Like standard Java overloading, these restrictions apply across inherited methods, including superclasses and subclasses.
+                                                                                                                                      
 
 ### Default value inheritance
 
