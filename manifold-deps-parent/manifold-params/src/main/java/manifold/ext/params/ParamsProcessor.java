@@ -811,7 +811,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
           else
           {
             args = args.append( memberAccess( make, getNames(), bool.class.getTypeName() + "." + bool.False  ) );
-            args = args.append( makeEmptyValue( methParam.sym.type, make, getTypes(), getSymtab() ) );
+            args = args.append( makeEmptyValue( getParamType( methParam ), make, getTypes(), getSymtab() ) );
           }
         }
         else
@@ -852,6 +852,26 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       }
       copy.body = make.Block( 0L, List.of( stmt ) );
       return copy;
+    }
+
+    private Type getParamType( JCVariableDecl methParam )
+    {
+      if( methParam.sym != null )
+      {
+        return methParam.sym.type;
+      }
+      if( (classDecl().sym.flags_field & RECORD) != 0 )
+      {
+        // throw-away record constructors are created during ENTER:start so we can do our thing, so we need to get the type from record components
+        for( JCTree def : classDecl().defs )
+        {
+          if( def instanceof JCVariableDecl && ((JCVariableDecl)def).name == methParam.name )
+          {
+            return ((JCVariableDecl)def).sym.type;
+          }
+        }
+      }
+      throw new IllegalStateException( "Expecting a symbol for parameter: " + methParam.name );
     }
 
     private ArrayList<JCMethodDecl> makeTelescopeMethods( JCMethodDecl optParamsMeth, TreeMaker make, TreeCopier<?> copier )
