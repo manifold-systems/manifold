@@ -128,6 +128,10 @@ positional arguments.
 new Pizza(Large, cheese:Fresco, sauce:Chili);
 ```
 
+**Note:** A future version of `manifold-params` will support named arguments on methods without optional parameters, via
+an opt-in annotation.
+
+
 # Overloading and overriding
 
 To understand how optional parameters affect overloading and overriding, it’s important to first understand a method’s
@@ -343,7 +347,7 @@ var updated = pizza.copyWith(kind:Deep, meat:Set.of(PorkBelly));
 ```
 Here, the constructor acts as a flexible, type-safe builder. `copyWith()` simply forwards to it, defaulting unchanged fields.
 
-> ℹ️ This pattern is a candidate for automatic generation in records for a future version of `manifold-params`.
+>**Note:** This pattern is a candidate for automatic generation in records for a future version of `manifold-params`.
                                                
 
 # IDE Support
