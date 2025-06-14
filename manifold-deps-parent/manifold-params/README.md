@@ -188,21 +188,17 @@ more expressive and future-friendly.
 
 ### Overloading
 
-To avoid ambiguity, overloading behaves slightly differently when optional parameters are used:
-* Only one method in an overload set may declare optional parameters (this restriction may change in the future).
-* You can't declare overloads where the parameter types match the required parameters plus any subset of the optional parameter types.
+**Overloading** is supported with optional parameters using signature sets (see earlier definition). If two methods' signature
+sets overlap in a way that causes ambiguity, a compile-time error is reported, ensuring clarity and preventing conflicts.
+
 ```java
 class Sample {
-  void func(int beta, int gamma = 0);
-  void func(int alpha);        // error: conflicts with optional parameter form
-  void func(String name);      // ok: distinct parameter type, no conflict
-  void func(Foo foo = null);   // error: introduces optional parameter in overload
+  void func(int alpha);  
+  void func(int beta, int gamma = 0); // error: overlaps with func(int)
 }
 ```
-These rules prevent overloads that could overlap with default argument expansion at call sites, ensuring overload resolution remains unambiguous.
 
-**Note:** Like standard Java overloading, these restrictions apply across inherited methods, including superclasses and subclasses.
-                                                                                                                                      
+To prevent ambiguity, all method declarations in a given scope must have disjoint signature sets.
 
 ### Default value inheritance
 
