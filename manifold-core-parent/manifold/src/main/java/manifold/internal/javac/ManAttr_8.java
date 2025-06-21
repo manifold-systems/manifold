@@ -162,12 +162,16 @@ public class ManAttr_8 extends Attr implements ManAttr
   {
     Env env = getEnv();
     Env localEnv = env.dup( tree, ReflectUtil.method( env.info, "dup" ).invoke() );
-    for( JCTree.JCVariableDecl def: tree.defs )
+    for( JCTree.JCStatement def: tree.defs )
     {
       attribStat( def, localEnv );
-      def.type = def.init.type;
-      def.vartype.type = def.type;
-      def.sym.type = def.type;
+      if( def instanceof JCTree.JCVariableDecl )
+      {
+        JCTree.JCVariableDecl d = (JCTree.JCVariableDecl)def;
+        d.type = d.init.type;
+        d.vartype.type = d.type;
+        d.sym.type = d.type;
+      }
     }
     ReflectUtil.field( this, "result" ).set( attribExpr( tree.expr, localEnv ) );
     tree.type = tree.expr.type;
@@ -525,6 +529,14 @@ public class ManAttr_8 extends Attr implements ManAttr
   {
     if( !(tree.meth instanceof JCTree.JCFieldAccess) )
     {
+      if( !(tree.meth instanceof JCTree.JCIdent) ||
+          !((JCTree.JCIdent)tree.meth).name.toString().equals( "$manifold_tuple" ) )
+      {
+        if( handleTupleAsNamedArgs( tree ) )
+        {
+          return;
+        }
+      }
       if( !handleTupleType( tree ) )
       {
         super.visitApply( tree );
@@ -534,7 +546,10 @@ public class ManAttr_8 extends Attr implements ManAttr
     }
     else
     {
-      handleTupleAsNamedArgs( tree );
+      if( handleTupleAsNamedArgs( tree ) )
+      {
+        return;
+      }
     }
 
     if( JAILBREAK_PRIVATE_FROM_SUPERS )

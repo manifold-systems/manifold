@@ -26,7 +26,7 @@ public class BinaryCompatibleTest extends TestCase
   // the older version of the method.
   public void testBinaryCompatible()
   {
-    auto result = $hi( "Aidan", bool.True, 99 );
+    auto result = hi( "Aidan", 99 );
     assertEquals( "Aidan", result.name );
     assertEquals( 99, result.age );
     assertEquals( "Aidan", result.givenName );

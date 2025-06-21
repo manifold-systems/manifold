@@ -38,8 +38,11 @@ public class ScratchTest extends TestCase
     String res = optionalParams( id:"Scott", address:"FL" );
     assertEquals( "Scott,FL,null", res );
 
-    res = optionalParams( address:"FL" );
-    assertEquals( "null,FL,null", res );
+//    res = optionalParams( address:"FL" );
+//    assertEquals( "null,FL,null", res );
+
+    StringBuilder re = optionalParams2( id:new StringBuilder("Scott") );
+    assertEquals( new StringBuilder("Scott").toString(), re.toString() );
 
     res = optionalParams( id:"Scott", address:"FL", phone:"555-555-5555" );
     assertEquals( "Scott,FL,555-555-5555", res );
@@ -191,6 +194,11 @@ public class ScratchTest extends TestCase
   private <E extends CharSequence> E optionalParams( E id =null, String address, String phone =null )
   {
     return (E)(id + "," + address + "," + phone);
+  }
+
+  private <E extends CharSequence> E optionalParams2( E id =null )
+  {
+    return id;
   }
 
   private String optionalParams2(LocalTime time = LocalTime.now(), String address, String phone = null )

@@ -335,4 +335,69 @@ public class InheritanceTest extends TestCase
       }
     }
   }
+
+  public void testSuperCall()
+  {
+    Hm.Foo foo = new Hm.Impl();
+    assertEquals( 100, foo.getAge() );
+
+    foo = new Hm.Impl2();
+    assertEquals( 99, foo.getAge() );
+  }
+  public void testSuperCall2()
+  {
+    Hm.Super sup = new Hm.SuperImpl();
+    assertEquals( 100, sup.getAge() );
+
+    sup = new Hm.SuperImpl2();
+    assertEquals( 99, sup.getAge() );
+  }
+  static class Hm
+  {
+    interface Foo
+    {
+      default int getAge(int def = 0)
+      {
+        return def;
+      }
+    }
+
+    static class Impl implements Foo
+    {
+      public int getAge( int def = 99)
+      {
+        return Foo.super.getAge(def: def+1);
+      }
+    }
+    static class Impl2 implements Foo
+    {
+      public int getAge( int def = 99)
+      {
+        return Foo.super.getAge( def );
+      }
+    }
+
+    static class Super
+    {
+      int getAge(int def = 0)
+      {
+        return def;
+      }
+    }
+
+    static class SuperImpl extends Super
+    {
+      public int getAge( int def = 99)
+      {
+        return super.getAge(def: def+1);
+      }
+    }
+    static class SuperImpl2 extends Super
+    {
+      public int getAge( int def = 99 )
+      {
+        return super.getAge( def );
+      }
+    }
+  }
 }

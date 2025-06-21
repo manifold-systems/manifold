@@ -8,13 +8,12 @@ import java.lang.annotation.Target;
 /**
  * For internal use only!
  * <p/>
- * The default values assigned to optional parameters are maintained in a generated inner class that is the single parameter
- * to a generated method logically mirroring and delegating to the original parameters method. This annotation
- * identifies the generated method as such and stores the parameter names of the original method.
+ * The default values assigned to optional parameters are handled in a separate generated method. This annotation marks
+ * this method as such, preserves parameter names, and identifies which are optional.
  * <p/>
- * Additionally, this annotation marks generated "telescoping" method overloads, which delegate to the original optional
- * parameters method. The method overloads provide binary compatibility and also allow code not using manifold-params to
- * use optional parameters albeit in a more limited way.
+ * Additionally, this annotation marks generated "telescoping" method overloads, which delegate to the source method. The
+ * method overloads provide binary compatibility and also allow code not using manifold-params to use optional parameters
+ * conventionally without naming arguments.
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( {ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.TYPE} )

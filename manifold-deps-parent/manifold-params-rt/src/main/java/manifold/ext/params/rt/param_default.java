@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 /**
  * For internal use only!
  * <p/>
- * Identifies methods generated to support overriding of optional parameter default values.
+ * Identifies methods generated to support polymorphic, binary-compatible overriding of optional parameter default values.
  * <p/>
  * <i>These methods are synthetic and are purely implementation detail, they should never be
  * called directly by user code.</i>

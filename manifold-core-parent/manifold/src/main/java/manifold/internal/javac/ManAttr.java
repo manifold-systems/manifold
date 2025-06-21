@@ -33,6 +33,7 @@ import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.*;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -52,7 +53,7 @@ import javax.lang.model.element.ElementKind;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 
-import static com.sun.tools.javac.code.Flags.INTERFACE;
+import static com.sun.tools.javac.code.Flags.*;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static com.sun.tools.javac.code.TypeTag.ERROR;
 import static manifold.api.util.JCTreeUtil.makeEmptyValue;
@@ -63,6 +64,8 @@ import static manifold.util.JreUtil.isJava8;
 
 public interface ManAttr
 {
+  long RECORD = 1L << 61; // from Flags in newer JDKs
+
   String AUTO_TYPE = "manifold.ext.rt.api.auto";
 
   Object Kind_TYP = JreUtil.isJava8()
@@ -1307,7 +1310,6 @@ public interface ManAttr
     if( !(tree.meth instanceof JCTree.JCIdent) ||
       !((JCTree.JCIdent)tree.meth).name.toString().equals( "$manifold_tuple" ) )
     {
-      handleTupleAsNamedArgs( tree );
       return false;
     }
 
@@ -1347,6 +1349,28 @@ public interface ManAttr
     return true;
   }
 
+  default boolean handleTupleAsNamedArgs( JCTree.JCExpression tree )
+  {
+    if( tree instanceof JCTree.JCNewClass )
+    {
+      return handleTupleAsNamedArgs_constructor( tree );
+    }
+    if( tree instanceof JCTree.JCMethodInvocation )
+    {
+      if( ((JCTree.JCMethodInvocation)tree).meth instanceof JCTree.JCIdent )
+      {
+        Name name = ((JCTree.JCIdent)((JCTree.JCMethodInvocation)tree).meth).name;
+        if( name == names()._this || name == names()._super )
+        {
+          return handleTupleAsNamedArgs_constructor( tree );
+        }
+      }
+
+      return handleTupleAsNamedArgs_method( (JCTree.JCMethodInvocation)tree );
+    }
+    return false;
+  }
+
   //
   // expecting a single tuple expression arg for a method/constructor call eg.
   //   doit((x:8, y:9, z:10))  or
@@ -1358,7 +1382,7 @@ public interface ManAttr
   //  validates the tuple call and replaces it with arguments to generated method, which matches the corresponding
   //  params-method having extra boolean params indicating whether the arg is supplied or the default expr should be used.
   //
-  default void handleTupleAsNamedArgs( JCExpression tree )
+  default boolean handleTupleAsNamedArgs_constructor( JCExpression tree )
   {
     List<JCExpression> treeArgs;
     if( tree instanceof JCTree.JCMethodInvocation )
@@ -1377,13 +1401,13 @@ public interface ManAttr
     if( treeArgs.size() != 1 )
     {
       // expecting a single tuple expression arg eg.
-      return;
+      return false;
     }
 
     JCExpression singleArg = treeArgs.get( 0 );
     if( !(singleArg instanceof JCTree.JCParens) )
     {
-      return;
+      return false;
     }
     while( singleArg instanceof JCTree.JCParens )
     {
@@ -1394,7 +1418,7 @@ public interface ManAttr
       !((JCTree.JCIdent)((JCTree.JCMethodInvocation)singleArg).meth).name.toString().equals( "$manifold_tuple" ) )
     {
       // not a tuple expr
-      return;
+      return false;
     }
     JCTree.JCMethodInvocation tupleExpr = (JCTree.JCMethodInvocation)singleArg;
 
@@ -1403,7 +1427,7 @@ public interface ManAttr
     Type receiverType = findReceiverType( tree );
     if( receiverType.hasTag( ERROR ) )
     {
-      return;
+      return false;
     }
 
     Map<String, JCExpression> namedArgs = new LinkedHashMap<>();
@@ -1439,7 +1463,7 @@ public interface ManAttr
         if( !namedArgs.isEmpty() )
         {
           getLogger().error( arg.pos, "proc.messager", IssueMsg.MSG_OPT_PARAMS_POSITIONAL_BEFORE_NAMED.get() );
-          return;
+          return false;
         }
         unnamedArgs.add( arg );
       }
@@ -1448,7 +1472,7 @@ public interface ManAttr
     String methodName = findMethodName( tree );
     if( methodName == null )
     {
-      return;
+      return false;
     }
     Iterable<Symbol.MethodSymbol> paramsMethods = getParamsMethods( receiverType, methodName );
     boolean errant;
@@ -1559,6 +1583,7 @@ public interface ManAttr
           else
           {
             ((JCTree.JCNewClass)tree).args = List.from( args );
+            return true;
           }
           break;
         }
@@ -1572,6 +1597,397 @@ public interface ManAttr
     {
       getLogger().error( tree.pos, "proc.messager", IssueMsg.MSG_OPT_PARAMS_MISSING_REQ_ARG.get( missingRequiredParam ) );
     }
+    return false;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////
+
+  default boolean handleTupleAsNamedArgs_method( JCTree.JCMethodInvocation tree )
+  {
+    List<JCExpression> treeArgs = ((JCTree.JCMethodInvocation)tree).args;
+    if( treeArgs.size() != 1 )
+    {
+      // expecting a single tuple expression arg eg.
+      return false;
+    }
+
+    JCExpression singleArg = treeArgs.get( 0 );
+    if( !(singleArg instanceof JCTree.JCParens) )
+    {
+      return false;
+    }
+    while( singleArg instanceof JCTree.JCParens )
+    {
+      singleArg = ((JCTree.JCParens)singleArg).expr;
+    }
+    if( !(singleArg instanceof JCTree.JCMethodInvocation) ||
+        !(((JCTree.JCMethodInvocation)singleArg).meth instanceof JCTree.JCIdent) ||
+        !((JCTree.JCIdent)((JCTree.JCMethodInvocation)singleArg).meth).name.toString().equals( "$manifold_tuple" ) )
+    {
+      // not a tuple expr
+      return false;
+    }
+    JCTree.JCMethodInvocation tupleExpr = (JCTree.JCMethodInvocation)singleArg;
+
+    TreeMaker make = TreeMaker.instance( JavacPlugin.instance().getContext() );
+
+    Type receiverType = findReceiverType( tree );
+    if( receiverType.hasTag( ERROR ) )
+    {
+      return false;
+    }
+
+    Map<String, JCExpression> namedArgs = new LinkedHashMap<>();
+    ArrayList<JCExpression> unnamedArgs = new ArrayList<>();
+    for( int i = 0, argsSize = tupleExpr.args.size(); i < argsSize; i++ )
+    {
+      JCTree.JCExpression arg = tupleExpr.args.get( i );
+
+      boolean namedArg = false;
+      if( arg instanceof JCTree.JCMethodInvocation &&
+          ((JCTree.JCMethodInvocation)arg).meth instanceof JCTree.JCIdent )
+      {
+        JCTree.JCIdent ident = (JCTree.JCIdent)((JCTree.JCMethodInvocation)arg).meth;
+        if( "$manifold_label".equals( ident.name.toString() ) )
+        {
+          JCTree.JCIdent labelArg = (JCTree.JCIdent)((JCTree.JCMethodInvocation)arg).args.get( 0 );
+          String name = labelArg.name.toString();
+          if( ++i < tupleExpr.args.size() )
+          {
+            arg = tupleExpr.args.get( i );
+            namedArgs.put( name, arg );
+            namedArg = true;
+          }
+          else
+          {
+            break;
+          }
+        }
+      }
+
+      if( !namedArg )
+      {
+        if( !namedArgs.isEmpty() )
+        {
+          getLogger().error( arg.pos, "proc.messager", IssueMsg.MSG_OPT_PARAMS_POSITIONAL_BEFORE_NAMED.get() );
+          return false;
+        }
+        unnamedArgs.add( arg );
+      }
+    }
+
+    String methodName = findMethodName( tree );
+    if( methodName == null )
+    {
+      return false;
+    }
+    Iterable<Symbol.MethodSymbol> paramsMethods = getParamsMethods( receiverType, methodName );
+    boolean errant;
+    String missingRequiredParam = null;
+    nextParamsClass:
+    for( Iterator<Symbol.MethodSymbol> iterator = paramsMethods.iterator(); iterator.hasNext(); )
+    {
+      errant = false;
+
+      Symbol.MethodSymbol paramsMethod = iterator.next();
+
+      Map<String, JCExpression> namedArgsCopy = new LinkedHashMap<>( namedArgs );
+      ArrayList<JCExpression> unnamedArgsCopy = new ArrayList<>( unnamedArgs );
+
+      List<String> paramsInOrder = getParamNames( paramsMethod, true );
+      if( paramsInOrder.containsAll( namedArgsCopy.keySet() ) )
+      {
+        LinkedHashMap<String, JCExpression> args = new LinkedHashMap<>();
+        boolean optional = false;
+        List<Symbol.VarSymbol> params = paramsMethod.params();
+        List<String> paramNames = getParamNames( paramsMethod, false );
+        for( int i = 0; i < params.size(); i++ )
+        {
+          Symbol.VarSymbol param = params.get( i );
+
+          // .class files don't preserve param names, using encoded param names in paramsClass name,
+          // in the list optional params are tagged with an "opt$" prefix
+          String paramName = paramNames.get( i );
+
+          if( paramName.startsWith( "opt$" ) )
+          {
+            optional = true;
+            paramName = paramName.substring( "opt$".length() );
+          }
+
+          JCExpression expr = unnamedArgsCopy.isEmpty()
+                              ? namedArgsCopy.remove( paramName )
+                              : unnamedArgsCopy.remove( 0 );
+          if( expr != null )
+          {
+            expr = types().isSameType( param.type, types().erasure( param.type ) )
+                   ? make.TypeCast( param.type, expr )
+                   : expr;
+          }
+
+          if( optional )
+          {
+            // null expression here implies default value
+            // null param key implies error: missing required arg
+            args.put( paramName, expr );
+            optional = false;
+          }
+          else if( expr != null )
+          {
+            args.put( paramName, expr );
+          }
+          else
+          {
+            // missing required arg, try next paramsClass
+            missingRequiredParam = paramName;
+            continue nextParamsClass;
+          }
+        }
+
+        missingRequiredParam = null;
+
+        if( !unnamedArgsCopy.isEmpty() )
+        {
+          // add remaining to trigger compile error
+          for( int i = 0; i < unnamedArgsCopy.size(); i++ )
+          {
+            args.put( "$missing" + i, unnamedArgsCopy.get( i ) );
+          }
+          errant = true;
+        }
+        else if( !namedArgsCopy.isEmpty() )
+        {
+          // add remaining to trigger compile error
+          args.putAll( namedArgsCopy );
+          errant = true;
+        }
+
+        if( !errant || !iterator.hasNext() )
+        {
+          //todo: for the errant condition, instead of settling with the the last one, store these and choose the best one
+
+          // rewrite the expr as a Let expr, since we know the parent is always a Parens expr, we can simply set its expr as the Let expr.
+          return makeLetExprForOptionalParamsCall( paramsMethod, tree, args, make );
+        }
+      }
+      else if( !iterator.hasNext() )
+      {
+        putErrorOnBestMatchingMethod( tree.pos, namedArgsCopy, paramsMethods );
+      }
+    }
+    if( missingRequiredParam != null )
+    {
+      getLogger().error( tree.pos, "proc.messager", IssueMsg.MSG_OPT_PARAMS_MISSING_REQ_ARG.get( missingRequiredParam ) );
+    }
+    return false;
+  }
+
+  default boolean isOverridable( Symbol.MethodSymbol msym )
+  {
+    return msym != null && !msym.isStatic() && !msym.isPrivate() && !msym.type.isFinal() &&
+           !msym.isConstructor() && !msym.owner.type.isFinal() && (msym.owner.flags_field & RECORD) == 0;
+  }
+
+  default boolean isSuperDotCall( JCExpression tree )
+  {
+    return tree instanceof JCTree.JCMethodInvocation &&
+           ((JCTree.JCMethodInvocation)tree).meth instanceof JCTree.JCFieldAccess &&
+           ((JCTree.JCFieldAccess)((JCTree.JCMethodInvocation)tree).meth).selected instanceof JCTree.JCIdent &&
+           ((JCTree.JCIdent)((JCTree.JCFieldAccess)((JCTree.JCMethodInvocation)tree).meth).selected).name == names()._super;
+  }
+
+  int[] tempVarIndex = {0};
+  default boolean makeLetExprForOptionalParamsCall(
+    Symbol.MethodSymbol paramsMethod, JCTree.JCMethodInvocation tree, LinkedHashMap<String, JCExpression> args, TreeMaker make )
+  {
+    ArrayList<JCTree.JCVariableDecl> tempVars = new ArrayList<>();
+    JCExpression receiverExpr;
+    Symbol enclosingSymbol;
+    JCExpression meth = tree.meth;
+    enclosingSymbol = getEnclosingSymbol( tree );
+
+    if( meth instanceof JCTree.JCFieldAccess )
+    {
+      receiverExpr = ((JCTree.JCFieldAccess)meth).selected;
+      JCTree[] receiverTemp = tempify( tree, make, receiverExpr, enclosingSymbol, "$receiverExprTemp", receiverExpr.type, tempVarIndex[0] );
+      if( receiverTemp != null )
+      {
+        tempVars.add( (JCTree.JCVariableDecl)receiverTemp[0] );
+        receiverExpr = (JCExpression)receiverTemp[1];
+      }
+      ((JCTree.JCFieldAccess)meth).selected = receiverExpr;
+    }
+    else if( meth instanceof JCTree.JCIdent )
+    {
+      receiverExpr = null;
+    }
+    else
+    {
+      return false;
+    }
+
+    JCExpression expr = tree;
+    tree.args = addArgVars( tree, paramsMethod, enclosingSymbol, tempVars, receiverExpr, args, make, tempVarIndex[0] );
+    List<JCTree.JCStatement> defs = List.from( tempVars );
+    if( paramsMethod.getReturnType() == syms().voidType )
+    {
+      defs = defs.append( make.Exec( expr ) );
+      expr = make.Literal( TypeTag.BOT, null );
+    }
+    JCTree.LetExpr letExpr = ILetExpr.makeLetExpr( make, defs, expr, tree.type, tree.pos );
+
+    Tree parent = JavacPlugin.instance().getTypeProcessor().getParent( tree, getEnv().toplevel );
+
+    // Note, we nest all call sites having named params in Parens to make replacing the expr easier, however
+    // generated code here, such as telescoping methods, aren't part of this, hence the Return and Exec handling.
+    if( parent instanceof JCTree.JCParens )
+    {
+      ((JCTree.JCParens)parent).expr = letExpr;
+    }
+    else if( parent instanceof JCTree.JCReturn )
+    {
+      ((JCTree.JCReturn)parent).expr = letExpr;
+    }
+    else if( parent instanceof JCTree.JCExpressionStatement )
+    {
+      ((JCTree.JCExpressionStatement)parent).expr = letExpr;
+    }
+    else
+    {
+      throw new IllegalStateException( "parent type not handled: " + parent.getClass().getSimpleName() );
+    }
+
+    tempVarIndex[0]++;
+    ((Attr)this).visitLetExpr( letExpr );
+    return true;
+  }
+
+  default List<JCExpression> addArgVars(
+    JCTree.JCExpression optMethCall, Symbol.MethodSymbol paramsMethod, Symbol enclosingSymbol,
+    ArrayList<JCTree.JCVariableDecl> tempVars, JCExpression receiverExpr, LinkedHashMap<String, JCExpression> args, TreeMaker make, int tempVarIndex )
+  {
+    List<JCExpression> defValueMethArgs = List.nil();
+    int i = -1;
+    for( String paramName : args.keySet() )
+    {
+      i++;
+      JCExpression expr = args.get( paramName );
+      Type paramType = paramsMethod.params.get( i ).type;
+      if( expr == null )
+      {
+        // set expr to a default value method call
+        Symbol.MethodSymbol defValueMethSym = getDefValueMethod( paramsMethod, paramName );
+        JCTree.JCMethodInvocation defValueMethCall = make.Apply( optMethCall instanceof JCTree.JCMethodInvocation ? ((JCTree.JCMethodInvocation)optMethCall).typeargs : ((JCTree.JCNewClass)optMethCall).typeargs,
+                                                                 receiverExpr != null ? IDynamicJdk.instance().Select( make, receiverExpr, defValueMethSym ) : make.Ident( defValueMethSym ), defValueMethArgs );
+        paramType = paramType.isPrimitive() ? paramType : types().erasure( paramType );
+        defValueMethCall.type = paramType;
+        JCTree[] argTemp = tempify( optMethCall, make, defValueMethCall, enclosingSymbol, "$" + paramName + "_", memberAccess( make, names(), "manifold.ext.rt.api.auto" ), tempVarIndex );
+        if( argTemp != null )
+        {
+          tempVars.add( (JCTree.JCVariableDecl)argTemp[0] );
+          expr = (JCExpression)argTemp[1];
+        }
+        else
+        {
+          throw new IllegalStateException( "Expecting let expr here" );
+        }
+      }
+      else
+      {
+        // use the expr
+
+        JCTree[] argTemp = tempify( optMethCall, make, expr, enclosingSymbol, "$" + paramName + "_", memberAccess( make, names(), "manifold.ext.rt.api.auto" ), tempVarIndex );
+        if( argTemp != null )
+        {
+          tempVars.add( (JCTree.JCVariableDecl)argTemp[0] );
+          expr = (JCExpression)argTemp[1];
+        }
+      }
+      defValueMethArgs = defValueMethArgs.append( expr );
+    }
+    return defValueMethArgs;
+  }
+
+  default Symbol.MethodSymbol getDefValueMethod( Symbol.MethodSymbol paramsMethod, String paramName )
+  {
+    String defaultValueMethodName = defaultValueMethodName( paramsMethod, paramName );
+    for( Type t : types().closure( paramsMethod.owner.type ) )
+    {
+      Iterable<Symbol> membersByName = IDynamicJdk.instance().getMembersByName( (Symbol.ClassSymbol)t.tsym, names().fromString( defaultValueMethodName ) );
+      for( Symbol m : membersByName )
+      {
+        return (Symbol.MethodSymbol)m;
+      }
+    }
+    return null;
+  }
+
+  default String defaultValueMethodName( Symbol.MethodSymbol targetMethod, String param  )
+  {
+    Name methName = targetMethod.isConstructor() ? targetMethod.owner.getSimpleName() : targetMethod.name;
+    return "$" + methName + "_" + param;
+  }
+
+  default JCTree[] tempify( JCExpression tree, TreeMaker make, JCExpression expr, Symbol owner, String varName, Type type, int tempVarIndex )
+  {
+    return tempify( tree, make, expr, owner, varName, make.Type( type ), tempVarIndex );
+  }
+  default JCTree[] tempify( JCExpression tree, TreeMaker make, JCExpression expr, Symbol owner, String varName, JCExpression type, int tempVarIndex )
+  {
+    switch( expr.getTag() )
+    {
+      case LITERAL:
+      case IDENT:
+        return null;
+      case SELECT:
+        if( expr instanceof JCTree.JCFieldAccess && ((JCTree.JCFieldAccess)expr).name == names()._super )
+        {
+          return null;
+        }
+      case LAMBDA:
+        // handling lambda here for this case:  foo( () -> "hi" )  for  <E> E foo(Supplier<E> supplier = null) {...}
+        // since E is inferred from the lambda, but the lambda's type can't be used as the tempified var def type.
+        //
+        // also we type the tempified var def as `auto` to use the expression's type, but Java sucks and doesn't have function types -- type can't be inferred from a lambdas bc lambdas don't have types
+        // note, there is no state side effect possible from potentially duplicating a lambda, it "just" incurs a static cost of increased code size
+        return null;
+
+      default:
+        JCTree.JCVariableDecl tempVar =
+          make.VarDef( make.Modifiers( 0 ), names().fromString( varName + tempVarIndex ), type, expr );
+        JCExpression ident = make.Ident( tempVar.name );
+        return new JCTree[]{tempVar, ident};
+    }
+  }
+
+
+  default Symbol getEnclosingSymbol( Tree tree )
+  {
+    Function<Tree,Tree> parentOf = t -> JavacPlugin.instance().getTypeProcessor().getParent( t, getEnv().toplevel );
+    if( tree == null )
+    {
+      return null;
+    }
+    if( tree instanceof JCTree.JCClassDecl )
+    {
+      // should not really get here, but should be static block scope if possible
+      return new Symbol.MethodSymbol( STATIC | BLOCK, names().empty, null, ((JCTree.JCClassDecl)tree).sym );
+    }
+    if( tree instanceof JCTree.JCMethodDecl )
+    {
+      return ((JCTree.JCMethodDecl)tree).sym;
+    }
+    if( tree instanceof JCTree.JCVariableDecl )
+    {
+      Tree parent = parentOf.apply( tree );
+      if( parent instanceof JCTree.JCClassDecl )
+      {
+        // field initializers have a block scope
+        return new Symbol.MethodSymbol( (((JCTree.JCVariableDecl)tree).mods.flags & STATIC) | BLOCK,
+                                        names().empty, null, ((JCTree.JCClassDecl)parent).sym );
+      }
+    }
+    return getEnclosingSymbol( parentOf.apply( tree ) );
   }
 
   default void putErrorOnBestMatchingMethod( int pos, Map<String, JCExpression> namedArgsCopy, Iterable<Symbol.MethodSymbol> paramsMethods )
@@ -1729,13 +2145,13 @@ public interface ManAttr
     JCExpression meth = tree.meth;
     if( meth instanceof JCTree.JCFieldAccess )
     {
-      JCTree.JCFieldAccess receiverExpr = (JCTree.JCFieldAccess)meth;
-      return receiverExpr.name.toString();
+      JCTree.JCFieldAccess fieldAccess = (JCTree.JCFieldAccess)meth;
+      return fieldAccess.name.toString();
     }
     else if( meth instanceof JCTree.JCIdent )
     {
-      JCTree.JCIdent receiverExpr = (JCTree.JCIdent)meth;
-      return receiverExpr.name.toString();
+      JCTree.JCIdent ident = (JCTree.JCIdent)meth;
+      return ident.name.toString();
     }
     return null;
   }
@@ -1754,7 +2170,7 @@ public interface ManAttr
 
     Iterable paramsMethods = (Iterable)IDynamicJdk.instance().getMembers( (Symbol.ClassSymbol)receiverType.tsym,
       m -> m instanceof Symbol.MethodSymbol &&
-           (methodName.equals( "constructor" ) && m.name.toString().equals( "<init>" ) || m.name.toString().equals( "$" + methodName )) &&
+           (methodName.equals( "constructor" ) && m.name.toString().equals( "<init>" ) || m.name.toString().equals( methodName )) &&
            getParamNames( (Symbol.MethodSymbol)m, false ).stream().anyMatch( n -> n.contains( "opt$" ) ) );
     List<Symbol.MethodSymbol> result = List.from( paramsMethods );
 

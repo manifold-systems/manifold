@@ -24,7 +24,9 @@ import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.comp.Attr;
+import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.comp.Env;
@@ -45,8 +47,10 @@ import manifold.internal.javac.*;
 import manifold.rt.api.Null;
 import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Stack;
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
+import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.lang.reflect.Modifier;
@@ -239,9 +243,11 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         if( tree instanceof JCClassDecl )
         {
           JCClassDecl classDecl = (JCClassDecl)tree;
-          if( e.getKind() == ENTER )
+          switch( e.getKind() )
           {
-            classDecl.accept( new Enter_Start() );
+            case ENTER:
+              classDecl.accept( new Enter_Start() );
+              break;
           }
         }
       }
@@ -292,6 +298,54 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
   {
     public Enter_Start()
     {
+    }
+
+    @Override
+    public void visitApply( JCMethodInvocation tree )
+    {
+      super.visitApply( tree );
+      reparentOptParamsCall( tree );
+    }
+
+    private void reparentOptParamsCall( JCMethodInvocation tree )
+    {
+      List<JCExpression> treeArgs = tree.args;
+      if( treeArgs.size() != 1 )
+      {
+        // expecting a single tuple expression arg eg.
+        return;
+      }
+
+      JCExpression singleArg = treeArgs.get( 0 );
+      if( !(singleArg instanceof JCTree.JCParens) )
+      {
+        return;
+      }
+      while( singleArg instanceof JCTree.JCParens )
+      {
+        singleArg = ((JCTree.JCParens)singleArg).expr;
+      }
+      if( !(singleArg instanceof JCTree.JCMethodInvocation) ||
+          !(((JCTree.JCMethodInvocation)singleArg).meth instanceof JCTree.JCIdent) ||
+          !((JCTree.JCIdent)((JCTree.JCMethodInvocation)singleArg).meth).name.toString().equals( "$manifold_tuple" ) )
+      {
+        // not a tuple expr
+        return;
+      }
+
+      if( tree.meth instanceof JCTree.JCIdent )
+      {
+        Name name = ((JCTree.JCIdent)tree.meth).name;
+        if( name == getNames()._this || name == getNames()._super )
+        {
+          // super()/this() ctor call
+          return;
+        }
+      }
+
+      // put the call into a Paren expression to help make it easier to rewrite the calls as Let expressions in ManAttr
+      TreeMaker make = getTreeMaker();
+      result = make.Parens( tree );
     }
 
     @Override
@@ -643,28 +697,35 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       ArrayList<JCTree> defs = _newDefs.peek().snd;
 
       MethodSymbol superMethod = findSuperMethod( optParamsMeth );
+      Map<String, JCMethodInvocation> superOptParams = makeSuperDefaultValueMap( superMethod, make );
 
-      if( isOverridable( optParamsMeth ) )
+      boolean isConstructor = optParamsMeth.name == getNames().init;
+      if( isConstructor )
       {
-        // Generate default value methods
-        // (must gen these *before* makeParamsMethod() call below bc there we assign param.init where defaults are inherited)
+        // Generate a method/constructor to handle defaults and delegate to the original method.
+        // Note this technique is necessary for constructors to support super()/this() calls, otherwise the LetExpr technique
+        // used with method call sites create var decls that violate the "super()/this() must be the first statement in the ctor" rule.
+        JCMethodDecl paramsMethod = makeParamsMethod( optParamsMeth, superOptParams, make, copier );
+        defs.add( paramsMethod );
+
+        ArrayList<JCMethodDecl> telescopeOptParamMethods = makeTelescopeOptParamMethods( optParamsMeth, superOptParams, make, copier );
+        defs.addAll( telescopeOptParamMethods );
+      }
+      else
+      {
+        // Generate default value methods (necessary for: polymorphism wrt default values, LetExpr technique, referencing preceding params, binary compatibility)
         List<JCMethodDecl> defaultValueMethods = makeDefaultValueMethods( optParamsMeth, make, copier );
         defs.addAll( defaultValueMethods );
+
+        // annotate the method to preserve the param names and to identify which params are optional
+        tagParamsMethod( optParamsMeth, superMethod, make );
       }
 
-      // Generate a method to handle defaults and delegate to the original method
-      Map<String, JCMethodInvocation> superOptParams = makeSuperDefaultValueMap( superMethod, make );
-      JCMethodDecl paramsMethod = makeParamsMethod( optParamsMeth, superOptParams, make, copier );
-      defs.add( paramsMethod );
-
-      ArrayList<JCMethodDecl> telescopeOptParamMethods = makeTelescopeOptParamMethods( optParamsMeth, superOptParams, make, copier );
-      defs.addAll( telescopeOptParamMethods );
-
-      // Generate telescoping method overloads because:
+      // Generate (positional) telescoping method overloads because:
       // - binary compatibility
       // - handles call sites having all positional arguments
       // - enables inheritance and indirect overriding of methods having opt params (the only viable way in the JVM)
-      ArrayList<JCMethodDecl> telescopeMethods = makeTelescopeMethods( optParamsMeth, make, copier );
+      ArrayList<JCMethodDecl> telescopeMethods = makeTelescopeMethods( optParamsMeth, superOptParams, make, copier );
       defs.addAll( telescopeMethods );
     }
 
@@ -874,12 +935,13 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       throw new IllegalStateException( "Expecting a symbol for parameter: " + methParam.name );
     }
 
-    private ArrayList<JCMethodDecl> makeTelescopeMethods( JCMethodDecl optParamsMeth, TreeMaker make, TreeCopier<?> copier )
+    private ArrayList<JCMethodDecl> makeTelescopeMethods( JCMethodDecl optParamsMeth, Map<String, JCMethodInvocation> superOptParams, TreeMaker make, TreeCopier<?> copier )
     {
       int optParamsCount = 0;
       for( JCVariableDecl p : optParamsMeth.params )
       {
-        if( p.init != null )
+        JCMethodInvocation superDefaultValue = superOptParams.get( p.name.toString() );
+        if( p.init != null || superDefaultValue != null )
         {
           optParamsCount++;
         }
@@ -890,13 +952,13 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       ArrayList<JCMethodDecl> result = new ArrayList<>();
       for( int i = 0; i < optParamsCount; i++ )
       {
-        JCMethodDecl telescopeMethod = makeTelescopeMethod( optParamsMeth, make, copier, i );
+        JCMethodDecl telescopeMethod = makeTelescopeMethod( optParamsMeth, superOptParams, make, copier, i );
         result.add( telescopeMethod );
       }
       return result;
     }
 
-    private JCMethodDecl makeTelescopeMethod( JCMethodDecl targetMethod, TreeMaker make, TreeCopier<?> copier, int optParamsInSig )
+    private JCMethodDecl makeTelescopeMethod( JCMethodDecl targetMethod, Map<String, JCMethodInvocation> superOptParams, TreeMaker make, TreeCopier<?> copier, int optParamsInSig )
     {
       JCMethodDecl copy = copier.copy( targetMethod );
 
@@ -904,7 +966,8 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       ArrayList<JCVariableDecl> optParams = new ArrayList<>();
       for( JCVariableDecl p : copy.params )
       {
-        if( p.init == null )
+        JCMethodInvocation superDefaultValue = superOptParams.get( p.name.toString() );
+        if( p.init == null && superDefaultValue == null )
         {
           reqParams.add( p );
         }
@@ -933,6 +996,12 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       JCAnnotation paramsAnno = make.Annotation(
         memberAccess( make, getNames(), params.class.getTypeName() ),
         List.of( paramsString( targetMethod.params.stream().map( p -> p.name.toString() ) ) ) );
+      copy.mods.annotations = List.from( copy.mods.annotations.stream()
+                                           .filter( anno -> !anno.getAnnotationType().toString().equals( params.class.getTypeName() ) &&
+                                                            !anno.getAnnotationType().toString().endsWith( Override.class.getSimpleName() ) )
+                                           .collect( Collectors.toList() ) );
+      // annotations consist of all target method's minus @Override and
+      // also minus @params because that @params has "opt$" encoded which we don't want here
       copy.mods.annotations = copy.mods.annotations.append( paramsAnno );
 
       // Params
@@ -990,6 +1059,36 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
                       make.Ident( name ) );
     }
 
+    private void tagParamsMethod( JCMethodDecl targetMethod, MethodSymbol superMethod, TreeMaker make )
+    {
+//      Log.instance( getContext() ).printRawLines( "tagParamsMethod: " + targetMethod.name );
+      Map<String, JCMethodInvocation> superOptParams = makeSuperDefaultValueMap( superMethod, make );
+      JCAnnotation paramsAnno = make.Annotation(
+        memberAccess( make, getNames(), params.class.getTypeName() ), List.of( paramsString( paramNamesStream( targetMethod, superOptParams ) ) ) );
+      targetMethod.mods.annotations = targetMethod.mods.annotations.append( paramsAnno );
+      if( isOverridable( targetMethod ) )
+      {
+        // need this because annotations are not processed before we need to check for them
+        _paramsByName.put( targetMethod.sym.owner.getQualifiedName() + "#$" + targetMethod.name,
+                           paramNamesStream( targetMethod, superOptParams ).collect( Collectors.joining( "," ) ) );
+      }
+
+      // Must manually post task to process annotations, since we are in ENTER:finished
+      Env<AttrContext> env = Enter.instance( getContext() ).getTopLevelEnv( (JCCompilationUnit)getCompilationUnit() );
+      Env<?> localEnv = (Env<?>)ReflectUtil.method( MemberEnter.instance( getContext() ), "methodEnv", JCMethodDecl.class, Env.class )
+                       .invoke( targetMethod, env );
+      if( !JreUtil.isJava9orLater() )
+      {
+        ReflectUtil.method( MemberEnter.instance( getContext() ), "annotateLater", List.class, Env.class, Symbol.class, JCDiagnostic.DiagnosticPosition.class )
+          .invoke( targetMethod.mods.annotations, localEnv, targetMethod.sym, targetMethod.pos() );
+      }
+      else
+      {
+        ReflectUtil.method( Annotate.instance( getContext() ), "annotateLater", List.class, Env.class, Symbol.class, JCDiagnostic.DiagnosticPosition.class )
+          .invoke( targetMethod.mods.annotations, localEnv, targetMethod.sym, targetMethod.pos() );
+      }
+    }
+
     // Because default value expressions can reference symbols within the declaring class, we make a sibling method
     // the evaluate teh expressions locally.
     // Make the method with a boolean parameters for each optional parameter, indicating if the optional parameter value
@@ -1023,7 +1122,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       if( isOverridable( targetMethod ) )
       {
         // need this because annotations are not processed before we need to check for them
-        _paramsByName.put( targetMethod.sym.owner.name + "#$" + targetMethod.name,
+        _paramsByName.put( targetMethod.sym.owner.getQualifiedName() + "#$" + targetMethod.name,
                            paramNamesStream( targetMethod, superOptParams ).collect( Collectors.joining( "," ) ) );
       }
 
@@ -1114,38 +1213,6 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         e -> (e.init == null && superOptParams.get( e.name.toString() ) == null ? "" : "opt$") + e.name );
     }
 
-    private Map<String, JCMethodInvocation> makeSuperDefaultValueMap( MethodSymbol superMethod, TreeMaker make )
-    {
-      if( superMethod == null )
-      {
-        return Collections.emptyMap();
-      }
-
-      String value = getParamAnnoValue( superMethod );
-      if( value == null )
-      {
-        // superMethod is not an opt params method, nor does it override one
-        return Collections.emptyMap();
-      }
-
-      TreeCopier<?> copier = new TreeCopier<>( make );
-
-      Map<String, JCMethodInvocation> superOptParams = new HashMap<>();
-      List<JCExpression> superOptArgs = List.nil();
-      for( StringTokenizer tokenizer = new StringTokenizer( value, "," ); tokenizer.hasMoreTokens(); )
-      {
-        String paramName = tokenizer.nextToken();
-        if( paramName.startsWith( "opt$" ) )
-        {
-          paramName = paramName.substring( "opt$".length() );
-          superOptParams.put( paramName, make.Apply( List.nil(),
-                                                     make.Ident( getNames().fromString( "$" + superMethod.name + "_" + paramName ) ), copier.copy( superOptArgs ) ) );
-        }
-        superOptArgs = superOptArgs.append( make.Ident( getNames().fromString( paramName ) ) );
-      }
-      return superOptParams;
-    }
-
     private MethodSymbol findSuperMethod( JCMethodDecl method )
     {
       MethodSymbol superMethod = findSuperMethod_NoParamCheck( method );
@@ -1208,7 +1275,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         return null;
       }
 
-      Symbol superMethod = findSuperMethod( classDecl().sym, method.name, method.sym.type );
+      Symbol superMethod = findSuperMethod( classDecl().sym, method.name );
       if( superMethod != null )
       {
         // directly overrides super method
@@ -1242,8 +1309,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       {
         java.util.List<Type> l = params.stream().map( e -> e.sym.type ).collect( Collectors.toList() ).subList( 0, i );
         List<Type> superSig = List.from( l );
-        Type methodTypeWithParameters = getTypes().createMethodTypeWithParameters( method.sym.type, superSig );
-        superMethod = findSuperMethod( classDecl().sym, method.name, methodTypeWithParameters );
+        superMethod = findSuperMethod( classDecl().sym, method.name );
         if( superMethod != null )
         {
           return (MethodSymbol)superMethod;
@@ -1254,7 +1320,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
     // search the ancestry for the super method, if the direct super method does not have optional parameters, search for
     // its direct super method, and so on until a super method with optional parameters is found, otherwise return null.
-    private Symbol findSuperMethod( Symbol.TypeSymbol owner, Name name, Type candidate )
+    private Symbol findSuperMethod( Symbol.TypeSymbol owner, Name name )
     {
       for( Type sup : getTypes().closure( owner.type ) )
       {
@@ -1265,49 +1331,23 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         }
         Iterable<Symbol> members = IDynamicJdk.instance().getMembers( (ClassSymbol)sup.tsym,
           e -> e instanceof MethodSymbol && isOverridable( (MethodSymbol)e ) && e.name.equals( name ) );
+        Symbol result = null;
+        int max = -1;
         for( Symbol e : members )
         {
-          if( getTypes().isSubSignature( candidate, e.type ) )
+          String value = getParamAnnoValue( (MethodSymbol)e );
+          if( value != null )
           {
-            String value = getParamAnnoValue( (MethodSymbol)e );
-            if( value == null )
+            if( result == null || ((MethodSymbol)e).params().size() > max )
             {
-              // the direct superMethod does not define or override any optional parameters, but it could override a
-              // method that does, and if so use that as the superMethod here.
-              e = findSuperMethod( (Symbol.TypeSymbol)e.owner, name, e.type );
+              result = e;
+              max = ((MethodSymbol)e).params().size();
             }
-            return e;
           }
         }
+        return result;
       }
       return null;
-    }
-
-    private String getParamAnnoValue( MethodSymbol superMethod )
-    {
-      Symbol superClass = superMethod.owner;
-      String value = null;
-      for( Symbol m: IDynamicJdk.instance().getMembersByName( (ClassSymbol)superClass, getNames().fromString( "$" + superMethod.name ), true ) )
-      {
-        if( m instanceof MethodSymbol )
-        {
-          params paramsAnno = m.getAnnotation( params.class );
-          if( paramsAnno != null )
-          {
-            value = paramsAnno.value();
-          }
-          else
-          {
-            value = _paramsByName.get( m.owner.name + "#" + m.name );
-          }
-
-          if( value != null && value.contains( "opt$" ) )
-          {
-            break;
-          }
-        }
-      }
-      return value;
     }
   }
 
@@ -1332,14 +1372,6 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
     MethodSymbol msym = targetMethod.sym;
     return msym != null && !msym.isStatic() && !msym.isPrivate() && !msym.isConstructor();
-  }
-
-  private MethodSymbol findParamsMethod( MethodSymbol msym )
-  {
-    Iterable<Symbol> members = IDynamicJdk.instance().getMembers( (ClassSymbol)msym.owner,
-      e -> e instanceof MethodSymbol && !e.isStatic() && msym.name.toString().equals( "$" + e.name ) );
-    return findTargetMethod( msym,
-      StreamSupport.stream( members.spliterator(), false ).map( e -> (MethodSymbol)e ).collect( Collectors.toSet() ) );
   }
 
   private JCLiteral paramsString( Stream<String> paramNames )
@@ -1399,9 +1431,9 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
     private void addSyntheticModifier( JCMethodDecl methodDecl )
     {
-      if( methodDecl.sym == null || methodDecl.sym.isConstructor() )
+      if( methodDecl.sym == null )
       {
-        // adding BRIDGE to constructors makes compiler angry,
+        // adding BRIDGE to enum constructors makes compiler angry,
         // will have to use the IDE plugin to hide these :/
         return;
       }
@@ -1409,7 +1441,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       methodDecl.mods.getAnnotations().stream()
         .filter( anno -> {
           String annoTypeName = anno.getAnnotationType().type.tsym.getQualifiedName().toString();
-          if( annoTypeName.equals( params.class.getTypeName() ) )
+          if( methodDecl.sym.isConstructor() && annoTypeName.equals( params.class.getTypeName() ) )
           {
             String paramNames = (String)anno.attribute.getElementValues().values().stream().findFirst().get().getValue();
             return paramNames.contains( "opt$" );
@@ -1418,16 +1450,33 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
                  annoTypeName.equals( param_overload.class.getTypeName() );
         } )
         .findFirst().ifPresent( anno -> {
-            methodDecl.sym.flags_field |= Flags.BRIDGE;
+            if( methodDecl.sym.isConstructor() )
+            {
+              if( methodDecl.sym.isEnum() )
+              {
+                methodDecl.sym.flags_field |= Flags.SYNTHETIC;
+              }
+            }
+            else
+            {
+              methodDecl.sym.flags_field |= Flags.BRIDGE;
+            }
         } );
+    }
+
+    private MethodSymbol getTargetMethod( MethodSymbol telescopeMethod, Set<MethodSymbol> methods )
+    {
+      if( methods.isEmpty() )
+      {
+        ManTypes.getAllMethods( classDecl().type, m -> m != null && m.name.equals( telescopeMethod.name ), methods );
+      }
+      return findTargetMethod( telescopeMethod, methods );
     }
 
     private void checkDuplication( JCMethodDecl telescopeMethod )
     {
       Set<MethodSymbol> methods = new LinkedHashSet<>();
-      ManTypes.getAllMethods( classDecl().type, m -> m != null && m.name.equals( telescopeMethod.name ), methods );
-
-      MethodSymbol targetMethod = findTargetMethod( telescopeMethod.sym, methods );
+      MethodSymbol targetMethod = getTargetMethod( telescopeMethod.sym, methods );
       if( targetMethod == null )
       {
         // probably a $foo_<param> overload variant
@@ -1517,11 +1566,41 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     }
   }
 
-  private JCAnnotation makeAnnotation( Class<?> anno )
+  private Map<String, JCMethodInvocation> makeSuperDefaultValueMap( MethodSymbol superMethod, TreeMaker make )
   {
-    TreeMaker make = TreeMaker.instance( getContext() );
-    JCExpression staticAnno = memberAccess( make, getNames(), anno.getName() );
-    return make.Annotation( staticAnno, List.nil() );
+    if( superMethod == null )
+    {
+      return Collections.emptyMap();
+    }
+
+    String value = getParamAnnoValue( superMethod );
+    if( value == null )
+    {
+      // superMethod is not an opt params method, nor does it override one
+      return Collections.emptyMap();
+    }
+
+    return makeDefaultValueMap( superMethod, make, value );
+  }
+
+  private Map<String, JCMethodInvocation> makeDefaultValueMap( MethodSymbol targetMethod, TreeMaker make, String paramsValue )
+  {
+    TreeCopier<?> copier = new TreeCopier<>( make );
+
+    Map<String, JCMethodInvocation> superOptParams = new HashMap<>();
+    List<JCExpression> superOptArgs = List.nil();
+    for( StringTokenizer tokenizer = new StringTokenizer( paramsValue, "," ); tokenizer.hasMoreTokens(); )
+    {
+      String paramName = tokenizer.nextToken();
+      if( paramName.startsWith( "opt$" ) )
+      {
+        paramName = paramName.substring( "opt$".length() );
+        superOptParams.put( paramName, make.Apply( List.nil(),
+                                                   make.Ident( getNames().fromString( "$" + targetMethod.name + "_" + paramName ) ), copier.copy( superOptArgs ) ) );
+      }
+      superOptArgs = superOptArgs.append( make.Ident( getNames().fromString( paramName ) ) );
+    }
+    return superOptParams;
   }
 
   private void ensureInitialized( TaskEvent e )
@@ -1533,6 +1612,35 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     {
       javacPlugin.initialize( e );
     }
+  }
+
+  private String getParamAnnoValue( MethodSymbol superMethod )
+  {
+    Symbol superClass = superMethod.owner;
+    String value = null;
+    for( Symbol m: IDynamicJdk.instance().getMembersByName( (ClassSymbol)superClass, superMethod.name, true ) )
+    {
+      if( m instanceof MethodSymbol )
+      {
+        params paramsAnno = m.getAnnotation( params.class );
+        String result;
+        if( paramsAnno != null )
+        {
+          result = paramsAnno.value();
+        }
+        else
+        {
+          result = _paramsByName.get( m.owner.getQualifiedName() + "#$" + m.name );
+        }
+
+        if( result != null && result.contains( "opt$" ) )
+        {
+          value = result;
+          break;
+        }
+      }
+    }
+    return value;
   }
 
   private void reportWarning( JCTree location, String message )
