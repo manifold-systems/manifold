@@ -313,19 +313,30 @@ public class ExtensionTransformer extends TreeTranslator
         {
           return null;
         }
-        // fall through...
-
-      default:
-        JCTree.JCVariableDecl tempVar = make.VarDef( make.Modifiers( FINAL | SYNTHETIC ),
-          Names.instance( ctx ).fromString( varName + tempVarIndex ), make.Type( expr.type ), expr );
-        tempVar.sym = new Symbol.VarSymbol( FINAL | SYNTHETIC, tempVar.name, expr.type, owner );
-        tempVar.type = tempVar.sym.type;
-        tempVar.pos = tree.pos;
-        JCExpression ident = make.Ident( tempVar );
-        ident.type = expr.type;
-        ident.pos = tree.pos;
-        return new JCTree[]{tempVar, ident};
+        break;
+      case SELECT:
+        if( expr instanceof JCTree.JCFieldAccess && ((JCTree.JCFieldAccess)expr).name.toString().equals( "super" ) )
+        {
+          return null;
+        }
+        break;
+      case LAMBDA:
+        // handling lambda here for this case:  foo( () -> "hi" )  for  <E> E foo(Supplier<E> supplier = null) {...}
+        // since E is inferred from the lambda, but the lambda's type can't be used as the tempified var def type.
+        //
+        // also we type the tempified var def as `auto` to use the expression's type, but Java sucks and doesn't have function types -- type can't be inferred from a lambdas bc lambdas don't have types
+        // note, there is no state side effect possible from potentially duplicating a lambda, it "just" incurs a static cost of increased code size
+        return null;
     }
+    JCTree.JCVariableDecl tempVar = make.VarDef( make.Modifiers( FINAL | SYNTHETIC ),
+                                                 Names.instance( ctx ).fromString( varName + tempVarIndex ), make.Type( expr.type ), expr );
+    tempVar.sym = new Symbol.VarSymbol( FINAL | SYNTHETIC, tempVar.name, expr.type, owner );
+    tempVar.type = tempVar.sym.type;
+    tempVar.pos = tree.pos;
+    JCExpression ident = make.Ident( tempVar );
+    ident.type = expr.type;
+    ident.pos = tree.pos;
+    return new JCTree[]{tempVar, ident};
   }
 
   private JCTree.JCMethodInvocation configMethod( JCTree.JCExpression tree, Symbol.MethodSymbol operatorMethod, JCTree.JCMethodInvocation methodCall )

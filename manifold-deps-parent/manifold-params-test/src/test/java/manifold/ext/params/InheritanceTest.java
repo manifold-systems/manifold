@@ -343,6 +343,9 @@ public class InheritanceTest extends TestCase
 
     foo = new Hm.Impl2();
     assertEquals( 99, foo.getAge() );
+
+    foo = new Hm.Impl3();
+    assertEquals( 1, foo.getAge() );
   }
   public void testSuperCall2()
   {
@@ -351,12 +354,26 @@ public class InheritanceTest extends TestCase
 
     sup = new Hm.SuperImpl2();
     assertEquals( 99, sup.getAge() );
+
+    sup = new Hm.SuperImpl3();
+    assertEquals( 1, sup.getAge() );
+  }
+  public void testSuperCall3()
+  {
+    Hm.SuperGen<String> sup = new Hm.SuperGenImpl<>();
+    Integer hi = sup.foo( "hi", 5 );
+    assertEquals( Integer.valueOf( 5 ), hi );
+  }
+  public void testSuperCall4()
+  {
+    Hm.SuperVoid sup = new Hm.SuperVoidImpl();
+    sup.foo();
   }
   static class Hm
   {
     interface Foo
     {
-      default int getAge(int def = 0)
+      default int getAge( int def = 1 )
       {
         return def;
       }
@@ -371,15 +388,24 @@ public class InheritanceTest extends TestCase
     }
     static class Impl2 implements Foo
     {
-      public int getAge( int def = 99)
+      public int getAge( int def = 99 )
       {
         return Foo.super.getAge( def );
+      }
+    }
+    static class Impl3 implements Foo
+    {
+      public int getAge( int def = 99 )
+      {
+        // in this case, since def is not passed, uses super's def -- a call
+        // to `Foo.super.$getAge_def()` is used to pass super's default O_o
+        return Foo.super.getAge();
       }
     }
 
     static class Super
     {
-      int getAge(int def = 0)
+      int getAge(int def = 1)
       {
         return def;
       }
@@ -397,6 +423,50 @@ public class InheritanceTest extends TestCase
       public int getAge( int def = 99 )
       {
         return super.getAge( def );
+      }
+    }
+    static class SuperImpl3 extends Super
+    {
+      public int getAge( int def = 99 )
+      {
+        // in this case, since def is not passed, uses super's def -- a call
+        // to `super.$getAge_def()` is used to pass super's default O_o
+        return super.getAge();
+      }
+    }
+
+
+    static class SuperGen<T>
+    {
+      <E> E foo(T t, E e, int def = 1 )
+      {
+        assertEquals(1, def);
+        return e;
+      }
+    }
+
+    static class SuperGenImpl<S> extends SuperGen<S>
+    {
+      public <E> E foo(S t, E e, int def = 99)
+      {
+        return super.foo(t, e);
+      }
+    }
+
+    static class SuperVoid
+    {
+      void foo(int def = 1)
+      {
+        assertEquals(1, def);
+      }
+    }
+
+    static class SuperVoidImpl extends SuperVoid
+    {
+      public void foo(int def = 99)
+      {
+        assertEquals(99, def);
+        super.foo();
       }
     }
   }

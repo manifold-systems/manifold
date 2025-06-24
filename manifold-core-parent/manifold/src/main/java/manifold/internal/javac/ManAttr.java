@@ -936,7 +936,7 @@ public interface ManAttr
 
   default JCTree.JCTypeCast makeCast( JCTree.JCExpression expression, Type type )
   {
-    TreeMaker make = JavacPlugin.instance().getTreeMaker();
+    TreeMaker make = JavacPlugin.instance().getTreeMaker().at( expression );
 
     JCTree.JCTypeCast castCall = make.TypeCast( type, expression );
 
@@ -1422,7 +1422,7 @@ public interface ManAttr
     }
     JCTree.JCMethodInvocation tupleExpr = (JCTree.JCMethodInvocation)singleArg;
 
-    TreeMaker make = TreeMaker.instance( JavacPlugin.instance().getContext() );
+    TreeMaker make = TreeMaker.instance( JavacPlugin.instance().getContext() ).at( tree );
 
     Type receiverType = findReceiverType( tree );
     if( receiverType.hasTag( ERROR ) )
@@ -1629,7 +1629,7 @@ public interface ManAttr
     }
     JCTree.JCMethodInvocation tupleExpr = (JCTree.JCMethodInvocation)singleArg;
 
-    TreeMaker make = TreeMaker.instance( JavacPlugin.instance().getContext() );
+    TreeMaker make = TreeMaker.instance( JavacPlugin.instance().getContext() ).at( tree );
 
     Type receiverType = findReceiverType( tree );
     if( receiverType.hasTag( ERROR ) )
@@ -1788,14 +1788,6 @@ public interface ManAttr
            !msym.isConstructor() && !msym.owner.type.isFinal() && (msym.owner.flags_field & RECORD) == 0;
   }
 
-  default boolean isSuperDotCall( JCExpression tree )
-  {
-    return tree instanceof JCTree.JCMethodInvocation &&
-           ((JCTree.JCMethodInvocation)tree).meth instanceof JCTree.JCFieldAccess &&
-           ((JCTree.JCFieldAccess)((JCTree.JCMethodInvocation)tree).meth).selected instanceof JCTree.JCIdent &&
-           ((JCTree.JCIdent)((JCTree.JCFieldAccess)((JCTree.JCMethodInvocation)tree).meth).selected).name == names()._super;
-  }
-
   int[] tempVarIndex = {0};
   default boolean makeLetExprForOptionalParamsCall(
     Symbol.MethodSymbol paramsMethod, JCTree.JCMethodInvocation tree, LinkedHashMap<String, JCExpression> args, TreeMaker make )
@@ -1804,12 +1796,12 @@ public interface ManAttr
     JCExpression receiverExpr;
     Symbol enclosingSymbol;
     JCExpression meth = tree.meth;
-    enclosingSymbol = getEnclosingSymbol( tree );
+    enclosingSymbol = getEnclosingSymbol( tree, names(), t -> JavacPlugin.instance().getTypeProcessor().getParent( t, getEnv().toplevel ) );
 
     if( meth instanceof JCTree.JCFieldAccess )
     {
       receiverExpr = ((JCTree.JCFieldAccess)meth).selected;
-      JCTree[] receiverTemp = tempify( tree, make, receiverExpr, enclosingSymbol, "$receiverExprTemp", receiverExpr.type, tempVarIndex[0] );
+      JCTree[] receiverTemp = tempify( make, receiverExpr, "$receiverExprTemp", receiverExpr.type, tempVarIndex[0] );
       if( receiverTemp != null )
       {
         tempVars.add( (JCTree.JCVariableDecl)receiverTemp[0] );
@@ -1881,7 +1873,7 @@ public interface ManAttr
                                                                  receiverExpr != null ? IDynamicJdk.instance().Select( make, receiverExpr, defValueMethSym ) : make.Ident( defValueMethSym ), defValueMethArgs );
         paramType = paramType.isPrimitive() ? paramType : types().erasure( paramType );
         defValueMethCall.type = paramType;
-        JCTree[] argTemp = tempify( optMethCall, make, defValueMethCall, enclosingSymbol, "$" + paramName + "_", memberAccess( make, names(), "manifold.ext.rt.api.auto" ), tempVarIndex );
+        JCTree[] argTemp = tempify( make, defValueMethCall, "$" + paramName + "_", memberAccess( make, names(), "manifold.ext.rt.api.auto" ), tempVarIndex );
         if( argTemp != null )
         {
           tempVars.add( (JCTree.JCVariableDecl)argTemp[0] );
@@ -1896,7 +1888,7 @@ public interface ManAttr
       {
         // use the expr
 
-        JCTree[] argTemp = tempify( optMethCall, make, expr, enclosingSymbol, "$" + paramName + "_", memberAccess( make, names(), "manifold.ext.rt.api.auto" ), tempVarIndex );
+        JCTree[] argTemp = tempify( make, expr, "$" + paramName + "_", memberAccess( make, names(), "manifold.ext.rt.api.auto" ), tempVarIndex );
         if( argTemp != null )
         {
           tempVars.add( (JCTree.JCVariableDecl)argTemp[0] );
@@ -1928,11 +1920,11 @@ public interface ManAttr
     return "$" + methName + "_" + param;
   }
 
-  default JCTree[] tempify( JCExpression tree, TreeMaker make, JCExpression expr, Symbol owner, String varName, Type type, int tempVarIndex )
+  default JCTree[] tempify( TreeMaker make, JCExpression expr, String varName, Type type, int tempVarIndex )
   {
-    return tempify( tree, make, expr, owner, varName, make.Type( type ), tempVarIndex );
+    return tempify( make, expr, varName, make.Type( type ), tempVarIndex );
   }
-  default JCTree[] tempify( JCExpression tree, TreeMaker make, JCExpression expr, Symbol owner, String varName, JCExpression type, int tempVarIndex )
+  default JCTree[] tempify( TreeMaker make, JCExpression expr, String varName, JCExpression type, int tempVarIndex )
   {
     switch( expr.getTag() )
     {
@@ -1961,9 +1953,8 @@ public interface ManAttr
   }
 
 
-  default Symbol getEnclosingSymbol( Tree tree )
+  static Symbol getEnclosingSymbol( Tree tree, Names names, Function<Tree,Tree> parentOf )
   {
-    Function<Tree,Tree> parentOf = t -> JavacPlugin.instance().getTypeProcessor().getParent( t, getEnv().toplevel );
     if( tree == null )
     {
       return null;
@@ -1971,7 +1962,7 @@ public interface ManAttr
     if( tree instanceof JCTree.JCClassDecl )
     {
       // should not really get here, but should be static block scope if possible
-      return new Symbol.MethodSymbol( STATIC | BLOCK, names().empty, null, ((JCTree.JCClassDecl)tree).sym );
+      return new Symbol.MethodSymbol( STATIC | BLOCK, names.empty, null, ((JCTree.JCClassDecl)tree).sym );
     }
     if( tree instanceof JCTree.JCMethodDecl )
     {
@@ -1984,10 +1975,10 @@ public interface ManAttr
       {
         // field initializers have a block scope
         return new Symbol.MethodSymbol( (((JCTree.JCVariableDecl)tree).mods.flags & STATIC) | BLOCK,
-                                        names().empty, null, ((JCTree.JCClassDecl)parent).sym );
+                                        names.empty, null, ((JCTree.JCClassDecl)parent).sym );
       }
     }
-    return getEnclosingSymbol( parentOf.apply( tree ) );
+    return getEnclosingSymbol( parentOf.apply( tree ), names, parentOf );
   }
 
   default void putErrorOnBestMatchingMethod( int pos, Map<String, JCExpression> namedArgsCopy, Iterable<Symbol.MethodSymbol> paramsMethods )
@@ -2025,8 +2016,13 @@ public interface ManAttr
     }
 
     String params = (String)ReflectUtil.method( anno, "value" ).invoke();
+    return paramNames( params, removeOpt$ );
+  }
+
+  static List<String> paramNames( String value, boolean removeOpt$ )
+  {
     List<String> result = List.nil();
-    StringTokenizer tokenizer = new StringTokenizer( params, "," );
+    StringTokenizer tokenizer = new StringTokenizer( value, "," );
     while( tokenizer.hasMoreTokens() )
     {
       String paramName = tokenizer.nextToken();
@@ -2282,7 +2278,7 @@ public interface ManAttr
 
   default JCTree.JCNewClass makeNewTupleClass( Type tupleType, JCTree.JCExpression treePos, List<JCTree.JCExpression> args )
   {
-    TreeMaker make = TreeMaker.instance( JavacPlugin.instance().getContext() );
+    TreeMaker make = TreeMaker.instance( JavacPlugin.instance().getContext() ).at( treePos );
     JCTree.JCNewClass tree = make.NewClass( null,
       null, make.QualIdent( tupleType.tsym ), args, null );
     Resolve rs = (Resolve)ReflectUtil.field( this, "rs" ).get();
