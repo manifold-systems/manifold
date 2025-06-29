@@ -4,10 +4,13 @@ import junit.framework.TestCase;
 import manifold.ext.rt.api.auto;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class AutoTest extends TestCase
 {
@@ -88,5 +91,29 @@ public class AutoTest extends TestCase
     } while (parent == null);
 
     return result;
+  }
+
+  public void testReturnsInsideLambdaDoNotInterfere()
+  {
+    auto result = hasReturnsInsideLambda();
+    assertTrue( result );
+  }
+
+  // this method tests that return stmts inside a lambda do not interfere with resolving the auto return type
+  private static auto hasReturnsInsideLambda()
+  {
+    auto a = true;
+    if( a )
+    {
+      List<String> x = Arrays.asList( "a", "b", "c" );
+      List<String> list = x.stream().map(s -> {
+        if (s.length() == 1) {
+          return s;
+        }
+        return s + s;
+      }).collect( Collectors.toList() );
+      return !list.isEmpty();
+    }
+    return false;
   }
 }

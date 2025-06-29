@@ -372,13 +372,6 @@ public class ManAttr_8 extends Attr implements ManAttr
     }
   }
 
-  private boolean isAutoMethod()
-  {
-    JCTree.JCMethodDecl enclMethod = getEnv().enclMethod;
-    return enclMethod != null && enclMethod.getReturnType() != null &&
-      "auto".equals( enclMethod.getReturnType().toString() );
-  }
-
   private void reassignAutoMethodReturnTypeToInferredType( JCTree.JCReturn tree )
   {
     if( tree.expr == null )

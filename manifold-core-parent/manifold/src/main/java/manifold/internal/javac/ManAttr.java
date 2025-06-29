@@ -540,6 +540,30 @@ public interface ManAttr
     return type != null && type.tsym != null && type.tsym.getQualifiedName().toString().equals( AUTO_TYPE );
   }
 
+  default boolean isAutoMethod()
+  {
+    JCTree.JCMethodDecl enclMethod = getEnv().enclMethod;
+    if( enclMethod == null )
+    {
+      return false;
+    }
+    JCTree restype = enclMethod.getReturnType();
+    if( restype == null )
+    {
+      return false;
+    }
+    Env<?> lambdaEnv = getEnv().enclosing( JCTree.Tag.LAMBDA );
+    if( lambdaEnv != null )
+    {
+      // auto is specific to the enclosing method's return type --
+      // lambda return statements are excluded from auto type inference
+      return false;
+    }
+    String returnType = restype.toString();
+    return "auto".equals( returnType ) || "manifold.ext.rt.api.auto".equals( returnType );
+  }
+
+
   /**
    * Facilitates handling shadowing where an instance field shadows an inner class of the same name.
    * This is particularly useful in code gen where both a property and an inner type are derived from the same element.
