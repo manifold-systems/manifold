@@ -22,7 +22,7 @@ The Java Preprocessor is designed exclusively for *conditional compilation* of J
 integrated into the Java compiler via the Javac _Plugin_ API. Unlike conventional preprocessors it does *not* incur
 separate build steps or additional file I/O, instead it directly contributes to the compilation pipeline.
 
-<p><img src="http://manifold.systems/images/compilerflow.png" alt="javac" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/compilerflow.png" alt="javac" width="60%"/></p>
 
 The preprocessor offers a simple and convenient way to support multiple build targets with a single codebase.  It
 provides advanced features such as tiered symbol definition via `build.properties` files, `-Akey[=value]` compiler
@@ -383,7 +383,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) d
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
-<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%"/></p>
 
 ## Sample Project
 
@@ -391,11 +391,11 @@ Experiment with the [Manifold Sample Project](https://github.com/manifold-system
 
 <kbd>File</kbd> ➜ <kbd>New</kbd> ➜ <kbd>Project from Version Control</kbd> ➜ <kbd>Git</kbd>
 
-<p><img src="http://manifold.systems/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/OpenSampleProjectMenu.png" alt="echo method" width="60%"/></p>
 
 Enter: <kbd>https://github.com/manifold-systems/manifold-sample-project.git</kbd>
 
-<p><img src="http://manifold.systems/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/OpenSampleProject.png" alt="echo method" width="60%"/></p>
 
 Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity. The plugin
 fully supports the Manifold Preprocessor. It provides an interactive mode in which you can see the effects of the

@@ -6,28 +6,28 @@ DuckDB's productive SQL extensions are directly and type-safely integrated with 
 ---
 Query types are instantly available as you type native SQL of any complexity in your Java code.
 
-><p><img src="../images/duckdb_1.png" alt="echo method" width="60%" height="60%"/></p>
+><p><img src="../images/duckdb_1.png" alt="echo method" width="60%"/></p>
 
 ---
 DuckDB's SQL extensions are type-safe and fully integrated with code completion, usage searching, etc.
 
-><p><img src="../images/duckdb_2.png" alt="echo method" width="60%" height="60%"/></p>
+><p><img src="../images/duckdb_2.png" alt="echo method" width="60%"/></p>
 
 ---
 Parameterized queries are type-safe & sql-injection safe
 
-><p><img src="../images/duckdb_3.png" alt="echo method" width="60%" height="60%"/></p>
+><p><img src="../images/duckdb_3.png" alt="echo method" width="60%"/></p>
 
 ---
 Execute any type of SQL statement type-safely, either directly or in a batch. 
 
-><p><img src="../images/duckdb_7.png" alt="echo method" width="80%" height="80%"/></p>
+><p><img src="../images/duckdb_7.png" alt="echo method" width="80%"/></p>
 
 ---
 manifold-sql streamlines DuckDB's additional APIs for a simpler, type-safe dev experience. For instance,
 the Appender API is made straightforward and foolproof.
 
-><p><img src="../images/duckdb_4.png" alt="echo method" width="100%" height="100%"/></p>
+><p><img src="../images/duckdb_4.png" alt="echo method" width="100%"/></p>
 
 ---
 Entity types are automatically derived from your database, providing type-safe CRUD, decoupled
@@ -49,12 +49,12 @@ casablanca.getLanguageId();
 ---
 Code completion supplies type-safe access to column properties for both entities and queries.
 
-><p><img src="../images/duckdb_6.png" alt="echo method" width="90%" height="90%"/></p>
+><p><img src="../images/duckdb_6.png" alt="echo method" width="90%"/></p>
 
 ---
 Quick, type-safe access to foreign key relations.
 
-><p><img src="../images/duckdb_5.png" alt="echo method" width="90%" height="90%"/></p>
+><p><img src="../images/duckdb_5.png" alt="echo method" width="90%"/></p>
 
 ---
 ## Adding manifold-sql & DuckDB to your project.

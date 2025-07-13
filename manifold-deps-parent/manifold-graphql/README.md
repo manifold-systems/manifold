@@ -577,7 +577,7 @@ in a scope named *"my_movies"*, the expression encodes this name like so:
 With Java [text block](https://openjdk.java.net/jeps/378) String literals you can author multi-line fragment
 expressions like this:
 
-<p><img src="http://manifold.systems/images/graphql_fragment.png" alt="graphql value fragment" width="70%" height="70%"/></p>
+<p><img src="http://manifold.systems/images/graphql_fragment.png" alt="graphql value fragment" width="70%"/></p>
 
 >**IntelliJ and Android Studio users...**
 >
@@ -596,7 +596,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) d
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
-<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%"/></p>
 
 ## Sample Project
 
@@ -605,11 +605,11 @@ via:
 
 <kbd>File</kbd> ➜ <kbd>New</kbd> ➜ <kbd>Project from Version Control</kbd> ➜ <kbd>Git</kbd>
 
-<p><img src="http://manifold.systems/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/OpenSampleProjectMenu.png" alt="echo method" width="60%"/></p>
 
 Enter: <kbd>*https://github.com/manifold-systems/manifold-sample-graphql-app.git</kbd>
 
-<p><img src="http://manifold.systems/images/OpenSampleProject_graphql.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/OpenSampleProject_graphql.png" alt="echo method" width="60%"/></p>
 
 Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to boost your productivity. Use code
 completion to conveniently build queries and discover the schema's fluent API.  Navigate to/from call-sites and GraphQL schema

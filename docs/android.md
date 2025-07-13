@@ -146,7 +146,7 @@ If you use a [type manifold](https://github.com/manifold-systems/manifold/tree/m
 that is based on resource files such as GraphQL, JSON, Templates, etc. you must place the resource files in the 
 *source* directory along with your Java files.  Do **NOT** place them in the *res* or *assets* directories.
  
-<p><img src="http://manifold.systems/images/android_resources.png" alt="echo method" width="50%" height="50%"/></p> 
+<p><img src="http://manifold.systems/images/android_resources.png" alt="echo method" width="50%"/></p> 
 
 ## Preprocessor and build variant symbols
 

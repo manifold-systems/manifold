@@ -634,7 +634,7 @@ For instance, the Properties manifold does not implement fragment values because
 Fragments as values are more useful with multiline String literals via the new [Text Blocks](https://openjdk.java.net/jeps/378)
 feature in Java 15:
 
-<p><img src="http://manifold.systems/images/graphql_fragment.png" alt="graphql value fragment" width="70%" height="70%"/></p>
+<p><img src="http://manifold.systems/images/graphql_fragment.png" alt="graphql value fragment" width="70%"/></p>
 
 >**Note to Type Manifold service providers**
 >
@@ -656,7 +656,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) d
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
-<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%"/></p>
 
 
 # Projects

@@ -235,7 +235,7 @@ is used in code.
 
 It's pretty simple. You inline a query definition as a comment like this:
 
-<p><img src="http://manifold.systems/images/fragment_declaration.png" alt="declaration fragment" width="80%" height="80%"/></p>
+<p><img src="http://manifold.systems/images/fragment_declaration.png" alt="declaration fragment" width="80%"/></p>
 
 The `[MyQuery.graphql/]` tag tells Java this is an inlined fragment of resource type *graphql* with name *MyQuery*, as
 if it were defined in a resource file of the same name. As such, you reference the fragment by its declared name,

@@ -67,7 +67,7 @@ you're using Java 8 or Java 9+, so refer to the Setup section in the subprojectâ
 
 Here are some companies currently using Manifold:
 
-<img width="70%" height="70%" src="http://manifold.systems/images/companies.png">
+<img width="70%" src="http://manifold.systems/images/companies.png">
 
 # Getting Help
 

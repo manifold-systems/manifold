@@ -86,7 +86,7 @@ result.movie.leadingRole.actor.likes.count++;
 Properties are fully integrated into both **IntelliJ IDEA** and **Android Studio**. Use the IDE's features to create new
 properties, verify property references, access properties with code completion, quickly navigate to/from declarations,
 and more.
-<p><img src="http://manifold.systems/images/properties.png" alt="properties" width="50%" height="50%"/></p>
+<p><img src="http://manifold.systems/images/properties.png" alt="properties" width="50%"/></p>
 
 ## More
 

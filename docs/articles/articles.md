@@ -7,7 +7,7 @@ layout: default
 <table>
  <tr>
   <td>
-  <p><a href="https://blog.jetbrains.com/platform/2020/09/an-interview-with-scott-mckinney-author-of-the-manifold-plugin/"><img width="240" height="135" src="/images/jetbrains.png" alt="a"></a></p>
+  <p><a href="https://blog.jetbrains.com/platform/2020/09/an-interview-with-scott-mckinney-author-of-the-manifold-plugin/"><img width="240" src="/images/jetbrains.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://blog.jetbrains.com/platform/2020/09/an-interview-with-scott-mckinney-author-of-the-manifold-plugin/">An Interview With Scott McKinney, Author of the Manifold Plugin</a></p>
@@ -22,7 +22,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://devm.io/java/java-type-safe-171944"><img width="240" height="135" src="/images/mco.jpg" alt="a"></a></p>
+  <p><a href="https://devm.io/java/java-type-safe-171944"><img width="240" src="/images/mco.jpg" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://devm.io/java/java-type-safe-171944">Type-safe Unit Expressions for Java (and you)</a></p>
@@ -37,7 +37,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://devm.io/java/graphql-made-easy-169181"><img width="240" height="135" src="/images/graphql.png" alt="a"></a></p>
+  <p><a href="https://devm.io/java/graphql-made-easy-169181"><img width="240" src="/images/graphql.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://devm.io/java/graphql-made-easy-169181">GraphQL Made Easy</a></p>
@@ -52,7 +52,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://devm.io/java/manifold-operator-overloading-java-163232"><img width="240" height="135" src="/images/math.png" alt="a"></a></p>
+  <p><a href="https://devm.io/java/manifold-operator-overloading-java-163232"><img width="240" src="/images/math.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://devm.io/java/manifold-operator-overloading-java-163232">Operator Overloading for Java</a></p>
@@ -68,7 +68,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/reflection.md"><img width="240" height="135" src="/images/crazy-pills.jpg" alt="a"></a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/reflection.md"><img width="240" src="/images/crazy-pills.jpg" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/reflection.md">Java Access Control, Stop the Insanity!</a></p>
@@ -83,7 +83,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/unchecked.md"><img width="240" height="135" src="/images/unchecked.png" alt="a"></a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/unchecked.md"><img width="240" src="/images/unchecked.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/unchecked.md">Say Goodbye to Checked Exceptions</a></p>
@@ -98,7 +98,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/preprocessor.md"><img width="240" height="135" src="/images/preprocessor_article.png" alt="a"></a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/preprocessor.md"><img width="240" src="/images/preprocessor_article.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/preprocessor.md">A <i>Preprocessor</i> for Java</a></p>
@@ -113,7 +113,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/jailbreak.md"><img width="240" height="135" src="/images/jailbreak.png" alt="a"></a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/jailbreak.md"><img width="240" src="/images/jailbreak.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/jailbreak.md">Type-safe reflection code with <code>@Jailbreak</code></a></p>
@@ -128,7 +128,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931"><img width="240" height="135" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
+  <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931"><img width="240" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931">REST API <i>Vision</i> with Manifold</a></p>
@@ -143,7 +143,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://devm.io/java/manifold-code-generator-part-2-151762"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
+  <p><a href="https://devm.io/java/manifold-code-generator-part-2-151762"><img width="240" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://devm.io/java/manifold-code-generator-part-2-151762">Manifold: Extension methods for Java?! (Part 2) - JAXenter</a></p>
@@ -156,7 +156,7 @@ layout: default
 
  <tr>
   <td>
-  <p><a href="https://devm.io/java/manifold-code-generators-150738"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
+  <p><a href="https://devm.io/java/manifold-code-generators-150738"><img width="240" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://devm.io/java/manifold-code-generators-150738">Manifold: The reinvention of code generators (Part 1) - JAXenter</a></p>
@@ -171,7 +171,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://devm.io/java/manifold-alien-technology-142755"><img width="240" height="135" src="/images/shutterstock_164685149-350x233.jpg" alt="b"></a></p>
+  <p><a href="https://devm.io/java/manifold-alien-technology-142755"><img width="240" src="/images/shutterstock_164685149-350x233.jpg" alt="b"></a></p>
   </td>
   <td>
   <p><a href="https://devm.io/java/manifold-alien-technology-142755">Manifold: Alien technology - JAXenter</a></p>
@@ -187,7 +187,7 @@ layout: default
   
  <tr>
   <td>
-  <p><a href="https://jaxenter.de/manifold-gepruefte-exceptions-86344"><img width="240" height="135" src="/images/unchecked.png" alt="a"></a></p>
+  <p><a href="https://jaxenter.de/manifold-gepruefte-exceptions-86344"><img width="240" src="/images/unchecked.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.de/manifold-gepruefte-exceptions-86344">Manifold: Adieu und auf Wiedersehen, geprüfte Exceptions</a></p>
@@ -202,7 +202,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.de/manifold-java-preprocessor-85925"><img width="240" height="135" src="/images/preprocessor_article.png" alt="a"></a></p>
+  <p><a href="https://jaxenter.de/manifold-java-preprocessor-85925"><img width="240" src="/images/preprocessor_article.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.de/manifold-java-preprocessor-85925">Manifold: Ein Präprozessor für Java</a></p>
@@ -218,7 +218,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.de/reflexionscode-jailbreak-manifold-typsicherheit-84641"><img width="240" height="135" src="/images/jailbreak.png" alt="a"></a></p>
+  <p><a href="https://jaxenter.de/reflexionscode-jailbreak-manifold-typsicherheit-84641"><img width="240" src="/images/jailbreak.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.de/reflexionscode-jailbreak-manifold-typsicherheit-84641">Manifold: Typsicherer Reflexionscode mit @Jailbreak</a></p>
@@ -233,7 +233,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931"><img width="240" height="135" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
+  <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931"><img width="240" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931">REST API Vision mit Manifold</a></p>
@@ -251,7 +251,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://entwickler.de/java/nicht-von-dieser-welt"><img width="240" height="135" src="/images/entwickler.png" alt="c"></a></p>
+  <p><a href="https://entwickler.de/java/nicht-von-dieser-welt"><img width="240" src="/images/entwickler.png" alt="c"></a></p>
   </td>
   <td>
   <p><a href="https://entwickler.de/java/nicht-von-dieser-welt">Manifold: Nicht von dieser Welt - entwickler</a></p>
@@ -265,7 +265,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.de/manifold-code-generator-java-metadata-74906"><img width="240" height="135" src="/images/manifold-java-code-generator.jpg" alt="c"></a></p>
+  <p><a href="https://jaxenter.de/manifold-code-generator-java-metadata-74906"><img width="240" src="/images/manifold-java-code-generator.jpg" alt="c"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.de/manifold-code-generator-java-metadata-74906">Manifold: Die Neuerfindung des Code-Generators - JAXenter</a></p>
@@ -280,7 +280,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.de/manifold-typsystem-dynamisch-erweitern-69685"><img width="240" height="135" src="/images/shutterstock_546213388-768x581.jpg" alt="d"></a></p>
+  <p><a href="https://jaxenter.de/manifold-typsystem-dynamisch-erweitern-69685"><img width="240" src="/images/shutterstock_546213388-768x581.jpg" alt="d"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.de/manifold-typsystem-dynamisch-erweitern-69685">Manifold: Eine außeridische Technik für die dynamische Erweiterung von Javas Typsystem - JAXenter</a></p>
@@ -298,7 +298,7 @@ layout: default
  
   <tr>
    <td>
-   <p><a href="/talks/manifold2019.pptx"><img width="240" height="135" src="/images/manifold2019talk.png" alt="a"></a></p>
+   <p><a href="/talks/manifold2019.pptx"><img width="240" src="/images/manifold2019talk.png" alt="a"></a></p>
    </td>
    <td>
    <p><a href="/talks/manifold2019.pptx">Manifold: X-ray Vision for Java</a></p>

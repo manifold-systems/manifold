@@ -89,7 +89,7 @@ a gateway between javac and type manifolds, effectively expanding Java's type sy
 types.  Any number of type manifolds can operate in concert; they can also cooperate so that the types contributed from 
 one can feed into the next and so on, forming a type building pipeline. 
 
-<p><img src="http://manifold.systems/images/manifold_diagram.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/manifold_diagram.png" alt="echo method" width="60%"/></p>
 
 As the diagram illustrates a type manifold contributes to the definition of types in its domain. For example, the [JSON
 type manifold](http://manifold.systems/docs.html#json-and-json-schema) produces types defined in JSON files.  A type manifold can contribute toward a type in different ways. Most
@@ -155,7 +155,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) d
 <iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
 </iframe>
 
-<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%"/></p>
 
 
 **New Project**

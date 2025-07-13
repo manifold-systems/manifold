@@ -39,7 +39,7 @@ See [Property inference](#property-inference).
 
 Properties are fully integrated in both **IntelliJ IDEA** and **Android Studio**. Use the IDE's features to create new
 properties, verify property references, access properties with code completion, and more. 
-<p><img src="http://manifold.systems/images/properties.png" alt="properties" width="50%" height="50%"/></p>
+<p><img src="http://manifold.systems/images/properties.png" alt="properties" width="50%"/></p>
 
 ### Table of Contents
 * [Declaring properties](#declaring-properties)
@@ -414,7 +414,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) d
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
-<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%"/></p>
 
 # Setup
 

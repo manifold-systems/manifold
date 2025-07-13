@@ -9,7 +9,7 @@
 >libraries can be applied toward a general solution using type-safe units and quantities. 
 
 <br>
-<p><img src="http://manifold.systems/images/mco.jpg" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/mco.jpg" alt="echo method" width="60%"/></p>
 <br>
 
 No other example of unit related failure quite measures up to the 1999 incident involving NASA's Mars Climate Orbiter (MCO).

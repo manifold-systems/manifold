@@ -1,6 +1,6 @@
 <br>
 
-<img width="500" height="121" align="top" src="./docs/images/manifold_green.png">
+<img width="500" align="top" src="./docs/images/manifold_green.png">
 
 ![latest](https://img.shields.io/badge/latest-v2025.1.24-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
@@ -40,7 +40,7 @@ All fully supported in JDK LTS releases 8 - 21 + latest with comprehensive IDE s
 
 ># _**What's New...**_
 > 
->[<img width="40%" height="40%" align="top" src="./docs/images/manifoldsql.png">](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
+>[<img width="40%" align="top" src="./docs/images/manifoldsql.png">](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
 >
 >### [Type-safe SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
 > Manifold SQL lets you write native SQL _directly_ and _type-safely_ in your Java code.
@@ -54,7 +54,7 @@ All fully supported in JDK LTS releases 8 - 21 + latest with comprehensive IDE s
 
 Sampling of companies using Manifold:
 
-<img width="80%" height="80%" src="./docs/images/companies.png">
+<img width="80%" src="./docs/images/companies.png">
 
 ## What can you do with Manifold?
 
@@ -307,7 +307,7 @@ Manifold with **IntelliJ IDEA** and **Android Studio**. The plugin provides comp
 completion, navigation, usage searching, refactoring, incremental compilation, hotswap debugging, full-featured
 template editing, integrated preprocessor, and more.
 
-<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="manifold ij plugin" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="manifold ij plugin" width="60%"/></p>
 
 [Get the plugin from JetBrains Marketplace](https://plugins.jetbrains.com/plugin/10057-manifold)
 
