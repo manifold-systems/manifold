@@ -2,6 +2,16 @@
 
 **`manifold-preprocessor-android-syms`**
 
+<!-- TOC -->
+* [Preprocessor symbols for Android applications](#preprocessor-symbols-for-android-applications)
+  * [Overview](#overview)
+    * [Example: Boolean Constant](#example-boolean-constant)
+  * [Usage](#usage)
+  * [Regenerating `BuildConfig.java` After Variant Changes](#regenerating-buildconfigjava-after-variant-changes)
+    * [✅ Steps to Refresh `BuildConfig.java`](#-steps-to-refresh-buildconfigjava)
+  * [Declaring Custom BuildConfig Fields](#declaring-custom-buildconfig-fields)
+<!-- TOC -->
+
 ## Overview
 
 `manifold-preprocessor-android-syms` automatically maps Android build variant information to preprocessor symbols. 
@@ -44,6 +54,8 @@ dependencies {
 }
 ```
 
+See [manifold-preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-preprocessor) for complete
+build setup instructions.
 
 ## Regenerating `BuildConfig.java` After Variant Changes
 
