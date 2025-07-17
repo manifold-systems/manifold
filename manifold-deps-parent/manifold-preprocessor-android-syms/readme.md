@@ -4,12 +4,12 @@
 
 <!-- TOC -->
 * [Preprocessor symbols for Android applications](#preprocessor-symbols-for-android-applications)
-  * [Overview](#overview)
+* [Overview](#overview)
     * [Example: Boolean Constant](#example-boolean-constant)
-  * [Usage](#usage)
-  * [Regenerating `BuildConfig.java` After Variant Changes](#regenerating-buildconfigjava-after-variant-changes)
+* [Usage](#usage)
+* [Regenerating `BuildConfig.java` After Variant Changes](#regenerating-buildconfigjava-after-variant-changes)
     * [✅ Steps to Refresh `BuildConfig.java`](#-steps-to-refresh-buildconfigjava)
-  * [Declaring Custom BuildConfig Fields](#declaring-custom-buildconfig-fields)
+* [Declaring Custom BuildConfig Fields](#declaring-custom-buildconfig-fields)
 <!-- TOC -->
 
 # Overview
