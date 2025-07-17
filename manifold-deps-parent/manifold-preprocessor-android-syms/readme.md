@@ -70,28 +70,44 @@ When you change the build variant (e.g., from *fullDebug* to *fullRelease*), the
 
 If you're relying on custom values in `BuildConfig`, define them in your `build.gradle` using the appropriate syntax.
 
-**Groovy DSL**
+**Kotlin DSL**
 
-```groovy
-buildTypes {
-    debug {
-        buildConfigField "String", "MY_API_URL", "\"https://debug.api.com\""
+```kotlin
+flavorDimensions += "subscription"
+
+productFlavors {
+    create("bronze") {
+        dimension = "subscription"
+        buildConfigField("String", "SUBSCRIPTION", "\"bronze\"")
     }
-    release {
-        buildConfigField "String", "MY_API_URL", "\"https://prod.api.com\""
+    create("silver") {
+        dimension = "subscription"
+        buildConfigField("String", "SUBSCRIPTION", "\"silver\"")
+    }
+    create("gold") {
+        dimension = "subscription"
+        buildConfigField("String", "SUBSCRIPTION", "\"gold\"")
     }
 }
 ```
 
-**Kotlin DSL**
+**Groovy DSL**
 
-```kotlin
-buildTypes {
-   getByName("debug") {
-      buildConfigField("String", "MY_API_URL", "\"https://debug.api.com\"")
+```groovy
+flavorDimensions "subscription"
+
+productFlavors {
+   bronze {
+      dimension "subscription"
+      buildConfigField "String", "SUBSCRIPTION", "\"bronze\""
    }
-   getByName("release") {
-      buildConfigField("String", "MY_API_URL", "\"https://prod.api.com\"")
+   silver {
+      dimension "subscription"
+      buildConfigField "String", "SUBSCRIPTION", "\"silver\""
+   }
+   gold {
+      dimension "subscription"
+      buildConfigField "String", "SUBSCRIPTION", "\"gold\""
    }
 }
 ```
