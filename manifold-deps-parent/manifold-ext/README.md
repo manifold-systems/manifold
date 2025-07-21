@@ -1206,11 +1206,10 @@ projects use operator overloading and unit expressions extensively.
 # Unit Expressions
 >**⚠️ _Experimental Feature_**
 
-Extending [operator overloading](#operator-overloading) further, Manifold seamlessly plugs into the Java compiler to
-provide Unit Expressions. In a nutshell unit expressions provide a powerfully concise syntax combining concatenative and
-object-oriented paradigms. Instead of composing _functions_ as with concatenative programming languages, unit
-expressions compose operations on juxtaposed _objects_. The result is naturally expressive, easy to read and write
-syntax.
+*Unit Expressions* extend [operator overloading](#operator-overloading) by plugging directly into the Java compiler to support
+a concise, expressive syntax that blends concatenative and object-oriented paradigms. Instead of composing *functions*,
+as in traditional concatenative languages, unit expressions compose operations on *adjacent objects*. The result is syntax
+that reads naturally, writes easily, and still compiles down to fully type-safe Java.
 
 Units tend to be simple identifiers. Normally you import predefined unit constants like the ones provided in
 `UnitConstants` from the `manifold.science.util` package:
@@ -1374,8 +1373,7 @@ Of course, as some of the examples illustrate, unit expressions are particularly
 modeling physical dimensions such as length, time, mass, etc. Indeed, check out the [manifold-science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 component.
 
-Another application of units involves the [Range API](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
-provided by the [manifold-collections](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
+Another application of units involves the [Range API](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges) provided by the [manifold-collections](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
 component. Simply by importing the static constants from `RangeFun` you can easily work with ranges:
 ```java
 IntegerRange range = 1 to 5;
