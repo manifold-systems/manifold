@@ -2,7 +2,7 @@
 
 # Optional parameters & named arguments
 
-![latest](https://img.shields.io/badge/latest-v2025.1.25-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2025.1.26-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -411,11 +411,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-params-rt:2025.1.25'
+     implementation 'systems.manifold:manifold-params-rt:2025.1.26'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-params:2025.1.25'
-     testAnnotationProcessor 'systems.manifold:manifold-params:2025.1.25'
+     annotationProcessor 'systems.manifold:manifold-params:2025.1.26'
+     testAnnotationProcessor 'systems.manifold:manifold-params:2025.1.26'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -451,7 +451,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2025.1.25</manifold.version>
+        <manifold.version>2025.1.26</manifold.version>
         <!-- choose your preferred JDK LTS release, or latest JDK release -->
         <maven.compiler.source>21</maven.compiler.target>
         <maven.compiler.target>21</maven.compiler.release>
@@ -496,10 +496,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-params`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-params/2025.1.25/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-params/2025.1.25)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-params/2025.1.26/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-params/2025.1.26)
 
 `manifold-params-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-params-rt/2025.1.25/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-params-rt/2025.1.25)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-params-rt/2025.1.26/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-params-rt/2025.1.26)
 
 # License
 
