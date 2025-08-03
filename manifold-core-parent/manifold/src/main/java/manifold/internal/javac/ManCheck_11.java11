@@ -78,7 +78,7 @@ public class ManCheck_11 extends Check
     super.checkRedundantCast( env, tree );
   }
 
-  @Override
+
   public void warnStatic( JCDiagnostic.DiagnosticPosition pos, JCDiagnostic.Warning warnKey )
   {
     JCTree tree = pos.getTree();
@@ -93,6 +93,7 @@ public class ManCheck_11 extends Check
         return;
       }
     }
-    super.warnStatic( pos, warnKey );
+    ReflectUtil.method( this, "warnStatic", JCDiagnostic.DiagnosticPosition.class, JCDiagnostic.Warning.class ).invokeSuper( pos, warnKey );
+//    super.warnStatic( pos, warnKey );
   }
 }

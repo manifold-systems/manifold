@@ -128,7 +128,7 @@ public class ManAttr_8 extends Attr implements ManAttr
     try
     {
       JCTree.JCMethodInvocation parent = peekApply();
-      DeferredAttrDiagHandler deferredAttrDiagHandler = null;
+      IDeferredAttrDiagHandler deferredAttrDiagHandler = null;
       if( parent == null || parent.meth != tree )
       {
         deferredAttrDiagHandler = suppressDiagnositics( tree );

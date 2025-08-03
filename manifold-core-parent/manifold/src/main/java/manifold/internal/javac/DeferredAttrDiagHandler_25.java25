@@ -1,0 +1,58 @@
+package manifold.internal.javac;
+
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeScanner;
+import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.Log;
+
+public class DeferredAttrDiagHandler_25 extends Log
+{
+  private static Log actualLog;
+
+  protected DeferredAttrDiagHandler_25()
+  {
+    super( new Context() );
+  }
+
+  public DeferredDiagnosticHandler make( Context context, JCTree newTree )
+  {
+    actualLog = Log.instance( context );
+    return new DeferredAttrDiagHandler( newTree);
+  }
+
+
+  static class PosScanner extends TreeScanner
+  {
+    JCDiagnostic.DiagnosticPosition pos;
+    boolean found = false;
+
+    PosScanner( JCDiagnostic.DiagnosticPosition pos )
+    {
+      this.pos = pos;
+    }
+
+    @Override
+    public void scan( JCTree tree )
+    {
+      if( tree != null &&
+          tree.pos() == pos )
+      {
+        found = true;
+      }
+      super.scan( tree );
+    }
+  }
+
+  public class DeferredAttrDiagHandler extends Log.DeferredDiagnosticHandler implements IDeferredAttrDiagHandler
+  {
+    DeferredAttrDiagHandler( JCTree newTree )
+    {
+      actualLog.super( d -> {
+        PosScanner posScanner = new PosScanner( d.getDiagnosticPosition() );
+        posScanner.scan( newTree );
+        return posScanner.found;
+      } );
+    }
+  }
+}

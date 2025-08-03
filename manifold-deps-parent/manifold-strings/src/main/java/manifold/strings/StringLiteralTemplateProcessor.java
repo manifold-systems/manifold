@@ -27,6 +27,7 @@ import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
+import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
@@ -41,12 +42,15 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
 import manifold.api.type.ICompilerComponent;
+import manifold.internal.javac.StringTemplateDiagnosticHandler;
 import manifold.rt.api.util.ServiceUtil;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.TypeProcessor;
 import manifold.rt.api.DisableStringLiteralTemplates;
 import manifold.rt.api.util.Stack;
 import manifold.strings.api.ITemplateProcessorGate;
+import manifold.util.JreUtil;
+import manifold.util.ReflectUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 public class StringLiteralTemplateProcessor extends TreeTranslator implements ICompilerComponent, TaskListener
@@ -56,7 +60,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
   private TypeProcessor _tp;
   private BasicJavacTask _javacTask;
   private Stack<Boolean> _disabled;
-  private ManDiagnosticHandler _manDiagnosticHandler;
+  private StringTemplateDiagnosticHandler _manDiagnosticHandler;
   private SortedSet<ITemplateProcessorGate> _processorGates;
   private LocklessLazyVar<Boolean> _isSimpleExprDisabled;
 
@@ -76,6 +80,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
 
   private boolean isSimpleExprDisabled()
   {
+    //noinspection resource
     JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( _javacTask.getContext() );
     String value = jpe.getOptions().get( SIMPLE_EXPR_DISABLED );
     return Boolean.parseBoolean( value );
@@ -96,7 +101,12 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
     }
 
     // Install the handler so we can filter the 'illegal escape character' errors for \$
-    _manDiagnosticHandler = new ManDiagnosticHandler( _javacTask.getContext() );
+    _manDiagnosticHandler = JreUtil.isJava25orLater()
+                            ? (StringTemplateDiagnosticHandler)ReflectUtil.method(
+                                ReflectUtil.constructor( "manifold.internal.javac.ManDiagnosticHandler_25" ).newInstance(), "make", Context.class )
+                                 .invoke( _javacTask.getContext() )
+                            : (StringTemplateDiagnosticHandler)ReflectUtil.constructor( "manifold.internal.javac.ManDiagnosticHandler_8", Context.class )
+                                .newInstance( _javacTask.getContext() );
   }
 
   @Override
@@ -110,7 +120,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
     try
     {
       // Uninstall the handler after the file parses (we create new handler for each file)
-      Log.instance( _javacTask.getContext() ).popDiagnosticHandler( _manDiagnosticHandler );
+      Log.instance( _javacTask.getContext() ).popDiagnosticHandler( (Log.DiagnosticHandler)_manDiagnosticHandler );
     }
     catch( Throwable ignore ) {}
 
@@ -407,11 +417,11 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
 
   private static class EscapeMatcher implements IntPredicate
   {
-    private final ManDiagnosticHandler _manDiagnosticHandler;
+    private final StringTemplateDiagnosticHandler _manDiagnosticHandler;
     private final int _offsetOfLiteral;
     private int _escapedCount;
 
-    private EscapeMatcher( ManDiagnosticHandler manDiagnosticHandler, int offsetOfLiteral )
+    private EscapeMatcher( StringTemplateDiagnosticHandler manDiagnosticHandler, int offsetOfLiteral )
     {
       _manDiagnosticHandler = manDiagnosticHandler;
       _offsetOfLiteral = offsetOfLiteral;

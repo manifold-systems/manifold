@@ -34,7 +34,6 @@ import java.net.URI;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.sun.tools.javac.util.List;
@@ -329,7 +328,7 @@ public interface ManAttr
       Symbol.ClassSymbol declaringClassSym = (Symbol.ClassSymbol)vsym.owner;
       JCTree.JCClassDecl enclosingClass = getEnclosingClass( tree );
 
-      MyDiagnosticHandler diagHandler = new MyDiagnosticHandler( getLogger() );
+      Log.DiagnosticHandler diagHandler = makeMyDiagnosticHandler();
       try
       {
         if( enclosingClass != null && enclosingClass.sym == declaringClassSym )
@@ -359,7 +358,7 @@ public interface ManAttr
 
         if( enclosingClass != null && enclosingClass.sym != declaringClassSym )
         {
-          diagHandler = new MyDiagnosticHandler( getLogger() );
+          diagHandler = makeMyDiagnosticHandler();
           try
           {
             // the field is not in the same class as the field access site, but the class failed to fully attribute
@@ -394,6 +393,16 @@ public interface ManAttr
       }
     }
   }
+
+  default Log.DiagnosticHandler makeMyDiagnosticHandler()
+  {
+    Log.DiagnosticHandler diagHandler = JreUtil.isJava25orLater()
+      ? (Log.DiagnosticHandler)ReflectUtil.method(
+          ReflectUtil.constructor( "manifold.internal.javac.MyDiagnosticHandler_25" ).newInstance(), "make", Log.class ).invoke( getLogger() )
+      : (Log.DiagnosticHandler)ReflectUtil.constructor( "manifold.internal.javac.MyDiagnosticHandler_8", Log.class ).newInstance( getLogger() );
+    return diagHandler;
+  }
+
   /**
    * If the method call returns `auto`, this indicates the method definition is not fully compiled yet (type attribution),
    * otherwise the `auto` type would be a real type inferred from the return statements. Therefore, we force the
@@ -425,7 +434,7 @@ public interface ManAttr
       Symbol.ClassSymbol declaringClassSym = (Symbol.ClassSymbol)msym.owner;
       JCTree.JCClassDecl enclosingClass = getEnclosingClass( tree );
 
-      MyDiagnosticHandler diagHandler = new MyDiagnosticHandler( getLogger() );
+      Log.DiagnosticHandler diagHandler = makeMyDiagnosticHandler();
       try
       {
         if( enclosingClass != null && enclosingClass.sym == declaringClassSym )
@@ -455,7 +464,7 @@ public interface ManAttr
 
         if( enclosingClass != null && enclosingClass.sym != declaringClassSym )
         {
-          diagHandler = new MyDiagnosticHandler( getLogger() );
+          diagHandler = makeMyDiagnosticHandler();
           try
           {
             // the called method is not in the same class as the call site, but the class failed to fully attribute
@@ -570,9 +579,9 @@ public interface ManAttr
    * Otherwise, use-cases such as: Person.address.builder(), don't work because address resolves as the field and not
    * the inner class.
    */
-  default void restoreDiagnostics( JCTree.JCFieldAccess tree, DeferredAttrDiagHandler deferredAttrDiagHandler )
+  default void restoreDiagnostics( JCTree.JCFieldAccess tree, IDeferredAttrDiagHandler deferredAttrDiagHandler )
   {
-    Queue<JCDiagnostic> diagnostics = deferredAttrDiagHandler.getDiagnostics();
+    Collection<JCDiagnostic> diagnostics = deferredAttrDiagHandler.getDiagnostics();
     if( !diagnostics.isEmpty() )
     {
       if( ((tree.selected instanceof JCTree.JCIdent && isType( ((JCTree.JCIdent)tree.selected).sym )) ||
@@ -580,7 +589,7 @@ public interface ManAttr
         tree.sym instanceof Symbol.VarSymbol &&
         tree.name.equals( tree.type.tsym.getSimpleName() ) )
       {
-        getLogger().popDiagnosticHandler( deferredAttrDiagHandler );
+        getLogger().popDiagnosticHandler( (Log.DiagnosticHandler)deferredAttrDiagHandler );
         tree.sym = null;
         if( tree.selected instanceof JCTree.JCIdent )
         {
@@ -600,91 +609,20 @@ public interface ManAttr
 
       deferredAttrDiagHandler.reportDeferredDiagnostics();
     }
-    getLogger().popDiagnosticHandler( deferredAttrDiagHandler );
+    getLogger().popDiagnosticHandler( (Log.DiagnosticHandler)deferredAttrDiagHandler );
   }
   static boolean isType( Symbol sym )
   {
     return sym != null && Objects.equals( ReflectUtil.field( sym, "kind" ).get(), Kind_TYP );
   }
-  default DeferredAttrDiagHandler suppressDiagnositics( JCTree.JCFieldAccess tree )
+  default IDeferredAttrDiagHandler suppressDiagnositics( JCTree.JCFieldAccess tree )
   {
-    return new DeferredAttrDiagHandler( getLogger(), tree );
-  }
-
-  class DeferredDiagnosticHandler extends Log.DiagnosticHandler
-  {
-    private Queue<JCDiagnostic> deferred = new ListBuffer<>();
-    private final Predicate<JCDiagnostic> filter;
-
-    public DeferredDiagnosticHandler(Log log) {
-      this(log, null);
-    }
-
-    public DeferredDiagnosticHandler(Log log, Predicate<JCDiagnostic> filter) {
-      this.filter = filter;
-      install(log);
-    }
-
-    @Override
-    public void report(JCDiagnostic diag) {
-      if (!diag.isFlagSet(JCDiagnostic.DiagnosticFlag.NON_DEFERRABLE) &&
-        (filter == null || filter.test(diag))) {
-        deferred.add(diag);
-      } else {
-        prev.report(diag);
-      }
-    }
-
-    public Queue<JCDiagnostic> getDiagnostics() {
-      return deferred;
-    }
-
-    /** Report all deferred diagnostics. */
-    public void reportDeferredDiagnostics() {
-      reportDeferredDiagnostics(EnumSet.allOf(JCDiagnostic.Kind.class));
-    }
-
-    /** Report selected deferred diagnostics. */
-    public void reportDeferredDiagnostics(Set<JCDiagnostic.Kind> kinds) {
-      JCDiagnostic d;
-      while ((d = deferred.poll()) != null) {
-        if (kinds.contains(d.getKind()))
-          prev.report(d);
-      }
-      deferred = null; // prevent accidental ongoing use
-    }
-  }
-  class DeferredAttrDiagHandler extends DeferredDiagnosticHandler
-  {
-    static class PosScanner extends TreeScanner
-    {
-      JCDiagnostic.DiagnosticPosition pos;
-      boolean found = false;
-
-      PosScanner( JCDiagnostic.DiagnosticPosition pos )
-      {
-        this.pos = pos;
-      }
-
-      @Override
-      public void scan( JCTree tree )
-      {
-        if( tree != null &&
-          tree.pos() == pos )
-        {
-          found = true;
-        }
-        super.scan( tree );
-      }
-    }
-    DeferredAttrDiagHandler( Log log, JCTree newTree )
-    {
-      super( log, d -> {
-        DeferredAttrDiagHandler.PosScanner posScanner = new DeferredAttrDiagHandler.PosScanner( d.getDiagnosticPosition() );
-        posScanner.scan( newTree );
-        return posScanner.found;
-      } );
-    }
+    return JreUtil.isJava25orLater()
+           ? (IDeferredAttrDiagHandler)ReflectUtil.method(
+               ReflectUtil.constructor( "manifold.internal.javac.DeferredAttrDiagHandler_25" ).newInstance(), "make", Context.class, JCTree.class )
+              .invoke( JavacPlugin.instance().getContext(), tree )
+           : (IDeferredAttrDiagHandler)ReflectUtil.constructor( "manifold.internal.javac.DeferredAttrDiagHandler_8$DeferredAttrDiagHandler", Log.class, JCTree.class )
+             .newInstance( getLogger(), tree );
   }
 
   /**
@@ -1299,20 +1237,6 @@ public interface ManAttr
            tag == Tag.BITAND ||
            tag == Tag.EQ ||
            tag == Tag.NE;
-  }
-
-  class MyDiagnosticHandler extends Log.DiagnosticHandler
-  {
-    MyDiagnosticHandler( Log log )
-    {
-      install( log );
-    }
-
-    @Override
-    public void report( JCDiagnostic jcDiagnostic )
-    {
-      prev.report( jcDiagnostic );
-    }
   }
 
   class MyRuntimeException extends RuntimeException

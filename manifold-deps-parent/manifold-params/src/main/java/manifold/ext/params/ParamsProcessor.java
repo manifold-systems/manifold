@@ -1077,12 +1077,17 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       Env<AttrContext> env = Enter.instance( getContext() ).getTopLevelEnv( (JCCompilationUnit)getCompilationUnit() );
       Env<?> localEnv = (Env<?>)ReflectUtil.method( MemberEnter.instance( getContext() ), "methodEnv", JCMethodDecl.class, Env.class )
                        .invoke( targetMethod, env );
-      if( !JreUtil.isJava9orLater() )
+      if( !JreUtil.isJava9orLater() ) // 8
       {
         ReflectUtil.method( MemberEnter.instance( getContext() ), "annotateLater", List.class, Env.class, Symbol.class, JCDiagnostic.DiagnosticPosition.class )
           .invoke( targetMethod.mods.annotations, localEnv, targetMethod.sym, targetMethod.pos() );
       }
-      else
+      else if( JreUtil.isJava25orLater() ) // 25+
+      {
+        ReflectUtil.method( Annotate.instance( getContext() ), "annotateLater", List.class, Env.class, Symbol.class, JCTree.class )
+          .invoke( targetMethod.mods.annotations, localEnv, targetMethod.sym, targetMethod );
+      }
+      else // 9 - 24
       {
         ReflectUtil.method( Annotate.instance( getContext() ), "annotateLater", List.class, Env.class, Symbol.class, JCDiagnostic.DiagnosticPosition.class )
           .invoke( targetMethod.mods.annotations, localEnv, targetMethod.sym, targetMethod.pos() );

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.strings;
+package manifold.internal.javac;
 
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.JCDiagnostic;
@@ -23,20 +23,22 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.HashSet;
 import java.util.Set;
+
 import manifold.rt.api.util.StreamUtil;
 
-public class ManDiagnosticHandler extends Log.DiagnosticHandler
+public class ManDiagnosticHandler_8 extends Log.DiagnosticHandler implements StringTemplateDiagnosticHandler
 {
   private Set<Integer> _escapedPos;
   private String _source;
 
-  ManDiagnosticHandler( Context ctx )
+  public ManDiagnosticHandler_8( Context ctx )
   {
     install( Log.instance( ctx ) );
     _escapedPos = new HashSet<>();
   }
 
-  boolean isEscapedPos( int pos )
+  @Override
+  public boolean isEscapedPos( int pos )
   {
     return _escapedPos.contains( pos );
   }

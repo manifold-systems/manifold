@@ -1,0 +1,36 @@
+package manifold.internal.javac;
+
+import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.Log;
+
+public class MyDiagnosticHandler_25 extends Log
+{
+  private static Log actualLog;
+
+  protected MyDiagnosticHandler_25()
+  {
+    super( new Context() );
+  }
+
+  public MyDiagnosticHandler make( Log log )
+  {
+    actualLog = log;
+    return new MyDiagnosticHandler();
+  }
+
+
+  public class MyDiagnosticHandler extends Log.DiagnosticHandler
+  {
+    MyDiagnosticHandler()
+    {
+      actualLog.super();
+    }
+
+    @Override
+    public void report( JCDiagnostic jcDiagnostic )
+    {
+      prev.report( jcDiagnostic );
+    }
+  }
+}

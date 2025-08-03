@@ -1,11 +1,11 @@
 # What if adjacency were a *binary operator*?
-
-What if this were a real, type-safe expression:
+                                                  
+What if this were a real, compile time type-safe expression:
 ```java
 2025 July 19   // → LocalDate 
 ```
 
-That’s the idea behind *binding expressions* -- a compiler plugin for Java I put together to explore what it would be like if adjacency were a binary operator. In a nutshell, it lets adjacent expressions bind based on their static types, to form a new expression.
+That’s the idea behind *binding expressions* -- a compiler plugin for Java that explores what it would be like if adjacency were a binary operator. In a nutshell, it lets adjacent expressions bind based on their static types, to form a new expression.
 
 ---
 
@@ -19,7 +19,7 @@ Here are some examples of binding expressions in Java with the Manifold compiler
 2025 July 19        // → LocalDate
 299.8M m/s          // → Velocity
 1 to 10             // → Range<Integer>
-Schedule meeting with Alice on Tuesday at 3pm  // → CalendarEvent
+Meet Alice Tuesday at 3pm  // → CalendarEvent
 ```
 
 A pair of adjacent expressions is a candidate for binding. If the LHS type defines:
@@ -71,14 +71,14 @@ public LocalDate postfixBind(Integer year) {
 ```
 
 The expression reduces like this:
-
 ```java
 2025 July 19
-⇒ July.prefixBind(19) // → LocalMonthDay
-⇒ .postfixBind(2025)  // → LocalDate
+⇒ July.postfixBind(2025) // → LocalYearMonth
+⇒ [retreat]              // → error: No binding with `19`
+⇒ July.prefixBind(19)    // → LocalMonthDay
+⇒ .postfixBind(2025)     // → LocalDate
 ```
-
-**Note:** Although the compiler favors left-to-right binding, it will *backtrack* if necessary to find a valid reduction path. In this case, it finds that binding `July 19` first yields a `LocalMonthDay`, which can then bind to `2025` to produce a `LocalDate`.
+Although the reduction algorithm favors left-to-right binding, it systematically **retreats** from failed paths and continues exploring alternative reductions until a valid one is found. This isn’t parser-style backtracking — instead, it's a structured search that reduces adjacent operand pairs using available binding methods. In this case, the initial attempt to bind `2025 July` succeeds, but the resulting intermediate expression cannot bind with `19`, forcing the algorithm to retreat and try a different reduction. Binding `July 19` succeeds, yielding a `LocalMonthDay`, which can then bind with `2025` to produce a `LocalDate`.
 
 ---
 
