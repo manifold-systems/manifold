@@ -46,6 +46,10 @@ public class SerializationTest
   {
     Velocity velocity = 195 mi/hr;
     assertSerialization( velocity );
+
+    // test that s/s does *not* cancel to 1, resulting in: 25 m
+    Acceleration acc = 25 m/s/s;
+    assertSerialization( acc );
   }
 
   @Test

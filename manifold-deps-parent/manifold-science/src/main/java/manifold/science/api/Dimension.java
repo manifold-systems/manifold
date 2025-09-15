@@ -68,10 +68,18 @@ public interface Dimension<S extends Dimension<S>> extends ComparableUsing<S>, S
     return copy( toBaseNumber().minus( operand.toBaseNumber() ) );
   }
 
-  default Rational div( S operand )
-  {
-    return toBaseNumber() / operand.toBaseNumber();
-  }
+// Self division is technically correct for all Dimension derivatives, however derived unit classes aren't really
+// used directly in this way. Instead, *quantities* of like dimensions can be divided, such as two lengths: 10m / 5m = 2.
+// There is no math performed internally to cancel out the length units here, the operation is performed directly on
+// lengths.
+//
+// The omission here is mostly to support binding operations more accurately e.g.
+//   `5 m/s/s` should parse as Acceleration quantity `5 ((m/s)/s)` not `(5 m)/(s/s)`, which cancels to (5 m).
+//
+//  default Rational div( S operand )
+//  {
+//    return toBaseNumber() / operand.toBaseNumber();
+//  }
 
   default Rational rem( S operand )
   {
