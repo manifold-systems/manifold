@@ -75,7 +75,7 @@ Sample build files for Gradle and Maven follow.
 ## Gradle
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired JDK LTS
-version (8 - 21, or latest non-LTS release), the script takes care of the rest.
+version (8 - 25, or latest non-LTS release), the script takes care of the rest.
 ```groovy
 plugins {
     id 'java'
@@ -84,7 +84,7 @@ plugins {
 group 'systems.manifold'
 version '1.0-SNAPSHOT'
 
-// manifold-sql works with any JDK LTS release 8 - 21, plus latest non-LTS release
+// manifold-sql works with any JDK LTS release 8 - 25, plus latest non-LTS release
 targetCompatibility = 21
 sourceCompatibility = 21
 
@@ -141,7 +141,7 @@ rootProject.name = 'MyProject'
         <!-- set latest manifold version here --> 
         <manifold.version>2025.1.27</manifold.version>
       
-        <!-- use maven.compiler settings for JDK LST release 11 - 21, or latest non-LTS release -->
+        <!-- use maven.compiler settings for JDK LST release 11 - 25, or latest non-LTS release -->
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
     </properties>

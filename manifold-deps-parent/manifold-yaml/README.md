@@ -53,7 +53,7 @@ mvn compile
 ## Using this project
 
 The `manifold-yaml` dependency works with all build tooling, including Maven and Gradle. It also works with Java
-versions 8 - 21.
+versions 8 - 25.
 
 This project consists of two modules:
 * `manifold-yaml`
@@ -75,7 +75,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 >Note, if you are using **Kotlin**, please see the [Kotlin](http://manifold.systems/kotlin.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 21), the script takes care of the rest. 
+version (8 - 25), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'

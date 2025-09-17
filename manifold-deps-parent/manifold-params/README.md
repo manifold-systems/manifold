@@ -19,7 +19,7 @@ valueOf(array, 2) // use default for count
 valueOf(array, count:20) // use default for offset by naming count
 ```
 
-This plugin **supports JDK versions 8 - 21+** and integrates seamlessly with **IntelliJ IDEA** and **Android Studio**.
+This plugin **supports JDK versions 8 - 25+** and integrates seamlessly with **IntelliJ IDEA** and **Android Studio**.
 
 ### Key features
 * **Optional parameters** -- Define default values directly in methods, constructors, and records
@@ -373,7 +373,7 @@ mvn compile
 
 ## Using this project
 
-This project works with all Java build tools, including Maven and Gradle, and supports Java versions 8 - 21.
+This project works with all Java build tools, including Maven and Gradle, and supports Java versions 8 - 25.
 
 It includes two modules:
 * `manifold-params`
@@ -393,7 +393,7 @@ If you are *not* using Maven or Gradle, download the latest binaries [here](http
 >If you are targeting **Android**, see the [Android](http://manifold.systems/android.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired JDK
-LTS release (8 - 21) or latest JDK release.
+LTS release (8 - 25) or latest JDK release.
 ```groovy
 plugins {
     id 'java'

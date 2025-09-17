@@ -30,7 +30,7 @@ Powerful **language enhancements** significantly improve developer productivity.
 
 Each feature is available as a separate dependency. Simply add the Manifold dependencies of your choosing to your existing project and begin taking advantage of them.
 
-All fully supported in JDK LTS releases 8 - 21 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
+All fully supported in JDK LTS releases 8 - 25 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
 
 ># _**What's New...**_
 >
@@ -358,7 +358,7 @@ by the core framework. Each project consists of one or more **dependencies** you
 ## Platforms
 
 Manifold supports:
-* Java SE (8 - 21)
+* Java SE (8 - 25)
 * [Android](http://manifold.systems/android.html)
 * [Kotlin](http://manifold.systems/kotlin.html) (limited)
 
