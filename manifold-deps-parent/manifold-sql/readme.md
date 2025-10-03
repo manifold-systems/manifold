@@ -63,6 +63,12 @@ An inline query is purely declarative using comment delimiters.
 Here the `Payments` query type is defined and used in the same local scope. Notice the type declaration, `Payments.sql`
 follows the file `name`.`extension` convention. The type name is `Payments` and the type domain is `sql`.
 
+>**ⓘ** In addition to SQL, the [manifold project](https://github.com/manifold-systems/manifold/blob/master/README.md) provides many other type domains such as
+> [JSON](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
+> [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
+> [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml), and more, using the same inline
+> syntax.
+
 ---
 With IntelliJ you can interactively execute parameterized SQL queries in your code directly against test data, analyze
 query execution plans, and a lot more.
