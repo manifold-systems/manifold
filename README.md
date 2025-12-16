@@ -22,7 +22,7 @@ Advanced compile-time <b>metaprogramming</b> type-safely integrates any kind of 
 * etc.
 
 
-Powerful **language enhancements** significantly improve developer productivity.
+Powerful **language enhancements** improve developer productivity.
 * [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 * [_True_ delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
