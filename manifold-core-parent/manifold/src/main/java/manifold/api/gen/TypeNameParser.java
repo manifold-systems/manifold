@@ -36,10 +36,93 @@ public class TypeNameParser
   {
     if( typeName.contains( "@" ) )
     {
-      throw new IllegalArgumentException( "Annotations are not supported in type name parsing: '" + typeName + "'" );
+      typeName = stripAnnos( typeName );
+//      throw new IllegalArgumentException( "Annotations are not supported in type name parsing: '" + typeName + "'" );
     }
 
     _tokenizer = new StringTokenizer( typeName, TOKENS, true );
+  }
+
+  // a "good-enough" effort at removing annotations from type text...
+  //
+  // This method is exclusive to IDE use -- it should never be called with annotations in the type name from javac because
+  // type names there are always extracted from type objects where annotations are by default not included in the name.
+  private String stripAnnos( String typeName )
+  {
+    boolean atSign = false;
+    boolean annoName = false;
+    boolean eatWhite = true;
+    int lparens = -1;
+
+    StringBuilder sb = new StringBuilder();
+
+    for( int i = 0; i < typeName.length(); i++ )
+    {
+      char c = typeName.charAt( i );
+
+      if( eatWhite && Character.isWhitespace( c ) )
+      {
+        continue;
+      }
+      eatWhite = false;
+
+      if( c == '@' && !atSign && lparens < 0 )
+      {
+        atSign = true;
+        eatWhite = true;
+      }
+      else if( atSign )
+      {
+        if( Character.isJavaIdentifierStart( c ) )
+        {
+          annoName = true;
+          atSign = false;
+          continue;
+        }
+        // error: should have encountered the anno name, see throw statement later in the method for not throwing justification
+        //throw new IllegalArgumentException( "Expecting annotation name after `@`, but found: '" + c + "' in " + typeName );
+        return typeName;
+      }
+      else if( annoName )
+      {
+        if( Character.isJavaIdentifierPart( c ) || c == '.' )
+        {
+          continue;
+        }
+        lparens = c == '(' ? 1 : 0;
+        annoName = false;
+        eatWhite = true;
+      }
+      else if( lparens >= 0 && c == '(' )
+      {
+        lparens++;
+        eatWhite = true;
+      }
+      else if( lparens > 0 && c == ')' )
+      {
+        lparens--;
+        if( lparens == 0 )
+        {
+          lparens = -1;
+        }
+        eatWhite = true;
+      }
+      else if( lparens <= 0 )
+      {
+        lparens = -1;
+        if( sb.length() == 0 || sb.charAt( sb.length()-1 ) != '.' || !Character.isWhitespace( c ) )
+        {
+          sb.append( c );
+        }
+      }
+    }
+
+//## not throwing here bc this method is only called from the IDE, throwing there is not ideal, fail with a bad type instead
+//    if( lparens > 0 )
+//    {
+//      throw new IllegalArgumentException( "Unbalanced parenthesis: " + typeName );
+//    }
+    return sb.toString();
   }
 
   public Type parse()
