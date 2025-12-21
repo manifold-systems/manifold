@@ -40,6 +40,7 @@ import com.sun.tools.javac.util.List;
 import manifold.api.host.IModule;
 import manifold.api.type.ITypeManifold;
 import manifold.api.util.IssueMsg;
+import manifold.api.util.JCTreeUtil;
 import manifold.internal.javac.AbstractBinder.Node;
 import manifold.rt.api.FragmentValue;
 import manifold.rt.api.Null;
@@ -1806,7 +1807,8 @@ public interface ManAttr
     JCTree.JCExpression optMethCall, Symbol.MethodSymbol paramsMethod, Symbol enclosingSymbol,
     ArrayList<JCTree.JCVariableDecl> tempVars, JCExpression receiverExpr, LinkedHashMap<String, JCExpression> args, TreeMaker make, int tempVarIndex )
   {
-    List<JCExpression> defValueMethArgs = List.nil();
+    List<JCExpression> methArgs = List.nil();
+    List<JCExpression> defMethArgs = List.nil();
     int i = -1;
     for( String paramName : args.keySet() )
     {
@@ -1818,7 +1820,7 @@ public interface ManAttr
         // set expr to a default value method call
         Symbol.MethodSymbol defValueMethSym = getDefValueMethod( paramsMethod, paramName );
         JCTree.JCMethodInvocation defValueMethCall = make.Apply( optMethCall instanceof JCTree.JCMethodInvocation ? ((JCTree.JCMethodInvocation)optMethCall).typeargs : ((JCTree.JCNewClass)optMethCall).typeargs,
-                                                                 receiverExpr != null ? IDynamicJdk.instance().Select( make, receiverExpr, defValueMethSym ) : make.Ident( defValueMethSym ), defValueMethArgs );
+                                                                 receiverExpr != null ? IDynamicJdk.instance().Select( make, receiverExpr, defValueMethSym ) : make.Ident( defValueMethSym ), defMethArgs );
         paramType = paramType.isPrimitive() ? paramType : types().erasure( paramType );
         defValueMethCall.type = paramType;
         JCTree[] argTemp = tempify( make, defValueMethCall, "$" + paramName + "_", memberAccess( make, names(), "manifold.ext.rt.api.auto" ), tempVarIndex );
@@ -1843,9 +1845,19 @@ public interface ManAttr
           expr = (JCExpression)argTemp[1];
         }
       }
-      defValueMethArgs = defValueMethArgs.append( expr );
+      methArgs = methArgs.append( expr );
+
+      if( expr.getTag() == Tag.LAMBDA )
+      {
+        // copy the lambda expr to pass along to the def value method (if necessary)
+        // (note: this is commented out due to hard to track down errors that I can't reproduce here, only in a project submitted by Eot)
+//        TreeCopier<?> copier = new TreeCopier<>( make );
+//        expr = copier.copy( expr );
+        expr = JCTreeUtil.makeNullExpression( make ); // due to issues with referencing local vars in the lambda, we aren't supporting referencing this as a prior param in a default value
+      }
+      defMethArgs = defMethArgs.append( expr );
     }
-    return defValueMethArgs;
+    return methArgs;
   }
 
   default Symbol.MethodSymbol getDefValueMethod( Symbol.MethodSymbol paramsMethod, String paramName )

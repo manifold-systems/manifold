@@ -1867,16 +1867,22 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         if( paramsAnno != null )
         {
           result = paramsAnno.value();
+          if( result != null && result.contains( "opt$" ) )
+          {
+            value = new Pair<>( (MethodSymbol)m, result );
+            break; // override the hack below
+          }
         }
         else
         {
+          //hack: annotations may not have been processed yet, in this case we use the hacky map here
+          // note, this hack just looks up by name and can yield a false positive if there is an overload that is not
+          // related to the params method indicated by the params string in the map.
           result = _paramsByName.get( m.owner.getQualifiedName() + "#$" + m.name );
-        }
-
-        if( result != null && result.contains( "opt$" ) )
-        {
-          value = new Pair<>( (MethodSymbol)m, result );
-          break;
+          if( result != null && result.contains( "opt$" ) )
+          {
+            value = new Pair<>( (MethodSymbol)m, result );
+          }
         }
       }
     }

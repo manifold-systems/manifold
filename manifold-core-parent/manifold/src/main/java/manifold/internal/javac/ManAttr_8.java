@@ -515,7 +515,7 @@ public class ManAttr_8 extends Attr implements ManAttr
   }
 
   /**
-   * Handles @Jailbreak, unit expressions, 'auto'
+   * Handles @Jailbreak, unit expressions, 'auto', tuples
    */
   @Override
   public void visitApply( JCTree.JCMethodInvocation tree )

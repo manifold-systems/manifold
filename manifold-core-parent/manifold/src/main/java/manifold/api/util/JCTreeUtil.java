@@ -1,6 +1,5 @@
 package manifold.api.util;
 
-import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.TypeTag;
@@ -53,6 +52,11 @@ public class JCTreeUtil
     return types.isSameType( valueType, types.erasure( valueType ) )
            ? make.TypeCast( valueType, make.Literal( TypeTag.BOT, null ) )
            : make.Literal( TypeTag.BOT, null );
+  }
+
+  public static JCTree.JCExpression makeNullExpression( TreeMaker make )
+  {
+    return make.Literal( TypeTag.BOT, null );
   }
 
   public static Object defaultPrimitiveValue( Type type, Symtab syms )

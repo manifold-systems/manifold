@@ -46,7 +46,7 @@ public class TypeNameParser
   // a "good-enough" effort at removing annotations from type text...
   //
   // This method is exclusive to IDE use -- it should never be called with annotations in the type name from javac because
-  // type names there are always extracted from type objects where annotations are by default not included in the name.
+  // type names there are always extracted from type objects where annotations are by defaults not included in the name.
   private String stripAnnos( String typeName )
   {
     boolean atSign = false;
