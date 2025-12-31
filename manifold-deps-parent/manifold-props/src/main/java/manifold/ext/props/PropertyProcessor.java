@@ -898,10 +898,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       boolean readableProperty = isReadableProperty( tree.sym );
       boolean writableProperty = isWritableProperty( tree.sym );
 
+      JCClassDecl cls = _classes.peek();
       JCAnnotation override = getAnnotation( tree, override.class );
       if( override != null )
       {
-        if( tree.sym.isStatic() )
+        if( !isInterface( cls ) && tree.sym.isStatic() )
         {
           reportError( tree, PropIssueMsg.MSG_DOES_NOT_OVERRIDE_ANYTHING.get( tree.name ) );
         }
@@ -954,7 +955,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           }
         }
       }
-      else if( !tree.sym.isStatic() )
+      else if( isInterface( cls ) || !tree.sym.isStatic() )
       {
         if( readableProperty )
         {
