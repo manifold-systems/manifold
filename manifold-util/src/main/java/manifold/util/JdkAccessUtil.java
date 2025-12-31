@@ -376,9 +376,9 @@ public class JdkAccessUtil
     if( values.stream().noneMatch( arg -> arg.contains( "--sun-misc-unsafe-memory-access=allow" ) ) )
     {
       // this message prints immediately after JDK's Unsafe warning message
-      System.err.println( "#  To remove this warning add the following Java process option:\n" +
+      System.err.println( "# To eliminate the warning, configure Manifold to use an alternative to sun.misc.Unsafe:\n" +
                           "#      --add-exports=java.base/jdk.internal.access=ALL-UNNAMED\n" +
-                          "#  If you are using the Java Platform Module System (JPMS), use this instead:\n" +
+                          "# If using JPMS with named modules:\n" +
                           "#      --add-exports=java.base/jdk.internal.access=manifold.util\n" );
     }
   }

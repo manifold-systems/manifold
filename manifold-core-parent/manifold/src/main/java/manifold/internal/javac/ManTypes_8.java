@@ -38,6 +38,8 @@ import manifold.rt.api.util.TypesUtil;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
+import static manifold.api.util.JavacUtil.getMetadata;
+
 public class ManTypes_8 extends Types implements ManTypes
 {
   private static final String TYPES_FIELD = "types";
@@ -232,7 +234,7 @@ public class ManTypes_8 extends Types implements ManTypes
       return null;
     }
 
-    SymbolMetadata metadata = sym.getMetadata();
+    SymbolMetadata metadata = getMetadata( sym );
     if( metadata == null || metadata.isTypesEmpty() )
     {
       return null;
@@ -258,7 +260,7 @@ public class ManTypes_8 extends Types implements ManTypes
       return false;
     }
 
-    SymbolMetadata metadata = sym.getMetadata();
+    SymbolMetadata metadata = getMetadata( sym );
     if( metadata == null || metadata.isTypesEmpty() )
     {
       return false;

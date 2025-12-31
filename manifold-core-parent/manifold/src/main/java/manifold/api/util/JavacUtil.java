@@ -16,6 +16,8 @@
 
 package manifold.api.util;
 
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.SymbolMetadata;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Options;
@@ -49,5 +51,19 @@ public class JavacUtil
     {
       return JreUtil.JAVA_VERSION;
     }
+  }
+
+  public static SymbolMetadata getMetadata( Symbol sym )
+  {
+    SymbolMetadata metadata = sym.getMetadata();
+    if( metadata == null )
+    {
+      Symbol baseSym = sym.baseSymbol();
+      if( baseSym != null && baseSym != sym )
+      {
+        return getMetadata( baseSym );
+      }
+    }
+    return metadata;
   }
 }

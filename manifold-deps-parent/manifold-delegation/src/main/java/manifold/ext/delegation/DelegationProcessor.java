@@ -615,11 +615,6 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       // Method type as a member of the delegating class
       Type emt = getTypes().memberType( classDecl.sym.type, m );
-      Type csr = emt;
-      while( csr instanceof Type.DelegatedType )
-      {
-        csr = ((Type.DelegatedType)csr).qtype;
-      }
       if( linkInfo.hasMethodType( m.name, emt ) )
       {
         // already defined previously in this link

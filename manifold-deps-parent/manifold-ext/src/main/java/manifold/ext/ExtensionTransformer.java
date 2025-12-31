@@ -63,6 +63,7 @@ import java.util.stream.Collectors;
 
 import static com.sun.tools.javac.code.Flags.*;
 import static com.sun.tools.javac.code.TypeTag.*;
+import static manifold.api.util.JavacUtil.getMetadata;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
 import static manifold.util.JreUtil.isJava8;
@@ -1567,7 +1568,7 @@ public class ExtensionTransformer extends TreeTranslator
       return false;
     }
 
-    SymbolMetadata metadata = sym.getMetadata();
+    SymbolMetadata metadata = getMetadata( sym );
     if( metadata == null || (metadata.isTypesEmpty() && metadata.isEmpty()) )
     {
       return false;
