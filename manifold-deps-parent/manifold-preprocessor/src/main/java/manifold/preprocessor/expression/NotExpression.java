@@ -24,7 +24,7 @@ public class NotExpression extends Expression
 {
   private final Expression _expr;
 
-  NotExpression( Expression expr, int start, int end )
+  public NotExpression( Expression expr, int start, int end )
   {
     super( start, end );
     _expr = expr;
