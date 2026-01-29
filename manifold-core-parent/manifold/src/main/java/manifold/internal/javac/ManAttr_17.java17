@@ -339,46 +339,7 @@ public class ManAttr_17 extends Attr implements ManAttr
       ReflectUtil.method( ReflectUtil.field( loopEnv.info, "scope" ).get(), "leave" ).invoke();
     }
   }
-
-  private void inferAutoLocalVar( JCTree.JCVariableDecl tree )
-  {
-    if( !isAutoType( tree.type ) )
-    {
-      // not 'auto' variable
-      return;
-    }
-
-//    if( ((Scope)ReflectUtil.field( getEnv().info, "scope" ).get()).owner.kind != MTH )
-//    {
-//      // not a local var
-//      return;
-//    }
-
-    JCTree.JCExpression initializer = tree.getInitializer();
-    if( initializer == null )
-    {
-      // no initializer, no type inference
-
-      Tree parent = JavacPlugin.instance().getTypeProcessor().getParent( tree, getEnv().toplevel );
-      if( !(parent instanceof JCTree.JCEnhancedForLoop) )
-      {
-        IDynamicJdk.instance().logError( Log.instance( JavacPlugin.instance().getContext() ), tree.getType().pos(),
-          "proc.messager", IssueMsg.MSG_AUTO_CANNOT_INFER_WO_INIT.get() );
-      }
-      return;
-    }
-
-    if( initializer.type == syms().botType )
-    {
-      IDynamicJdk.instance().logError( Log.instance( JavacPlugin.instance().getContext() ), tree.getType().pos(),
-        "proc.messager", IssueMsg.MSG_AUTO_CANNOT_INFER_FROM_NULL.get() );
-      return;
-    }
-
-    tree.type = initializer.type;
-    tree.sym.type = initializer.type;
-  }
-
+  
   @Override
   public void visitReturn( JCTree.JCReturn tree )
   {

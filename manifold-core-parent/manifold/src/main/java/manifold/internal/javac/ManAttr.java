@@ -545,6 +545,48 @@ public interface ManAttr
     return getEnclosingClass( JavacPlugin.instance().getTypeProcessor().getParent( tree, getEnv().toplevel ) );
   }
 
+  default void inferAutoLocalVar( JCTree.JCVariableDecl tree )
+  {
+    if( !isAutoType( tree.type ) )
+    {
+      // not 'auto' variable
+      return;
+    }
+
+//    if( ((Scope)ReflectUtil.field( getEnv().info, "scope" ).get()).owner.kind != MTH )
+//    {
+//      // not a local var
+//      return;
+//    }
+
+    JCTree.JCExpression initializer = tree.getInitializer();
+    if( initializer == null )
+    {
+      // no initializer, no type inference
+
+      Tree parent = JavacPlugin.instance().getTypeProcessor().getParent( tree, getEnv().toplevel );
+      if( !(parent instanceof JCTree.JCEnhancedForLoop) )
+      {
+        IDynamicJdk.instance().logError( Log.instance( JavacPlugin.instance().getContext() ), tree.getType().pos(),
+                                         "proc.messager", IssueMsg.MSG_AUTO_CANNOT_INFER_WO_INIT.get() );
+      }
+      return;
+    }
+
+    if( initializer.type == syms().botType )
+    {
+      IDynamicJdk.instance().logError( Log.instance( JavacPlugin.instance().getContext() ), tree.getType().pos(),
+                                       "proc.messager", IssueMsg.MSG_AUTO_CANNOT_INFER_FROM_NULL.get() );
+      return;
+    }
+
+    // using baseType to avoid propagating the constant value in place of the var,
+    // baseType() removes metadata that marks the type as constant)
+    Type initType = initializer.type == null ? null : initializer.type.baseType();
+    tree.type = initType;
+    tree.sym.type = initType;
+  }
+
   default boolean isAutoType( Type type )
   {
     return type != null && type.tsym != null && type.tsym.getQualifiedName().toString().equals( AUTO_TYPE );

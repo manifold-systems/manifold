@@ -93,6 +93,17 @@ public class AutoTest extends TestCase
     return result;
   }
 
+  public void testCompileTimeConstant()
+  {
+    auto x = 0;
+    x = 3;
+    assertEquals( 3, x );
+
+    auto y = "hi";
+    y = "bye";
+    assertEquals( "bye", y );
+  }
+
   public void testReturnsInsideLambdaDoNotInterfere()
   {
     auto result = hasReturnsInsideLambda();
