@@ -2,7 +2,7 @@
 
 # Manifold : XML
 
-![latest](https://img.shields.io/badge/latest-v2025.1.31-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2026.1.0-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -333,11 +333,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-xml-rt:2025.1.31'
+    implementation 'systems.manifold:manifold-xml-rt:2026.1.0'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-xml:2025.1.31'
-    testAnnotationProcessor 'systems.manifold:manifold-xml:2025.1.31'
+    annotationProcessor 'systems.manifold:manifold-xml:2026.1.0'
+    testAnnotationProcessor 'systems.manifold:manifold-xml:2026.1.0'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -373,7 +373,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2025.1.31</manifold.version>
+        <manifold.version>2026.1.0</manifold.version>
     </properties>
     
     <dependencies>
@@ -417,10 +417,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-xml`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml/2025.1.31/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml/2025.1.31)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml/2026.1.0/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml/2026.1.0)
 
 `manifold-xml-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml-rt/2025.1.31/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml-rt/2025.1.31)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml-rt/2026.1.0/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml-rt/2026.1.0)
 
 
 # License

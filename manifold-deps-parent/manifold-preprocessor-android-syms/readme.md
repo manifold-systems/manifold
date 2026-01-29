@@ -49,8 +49,8 @@ Both libraries should be declared as either `compileOnly`(Kotlin DSL) or `annota
 
 ```kotlin
 dependencies {
-    compileOnly("systems.manifold:manifold-preprocessor:2025.1.31")
-    compileOnly("systems.manifold:manifold-preprocessor-android-syms:2025.1.31")
+    compileOnly("systems.manifold:manifold-preprocessor:2026.1.0")
+    compileOnly("systems.manifold:manifold-preprocessor-android-syms:2026.1.0")
 }
 ```
 
