@@ -128,6 +128,19 @@ public class SrcClassUtil
       }
       srcClass.addInterface( makeNestedType( iface ) );
     }
+    if( JreUtil.isJava17orLater() )
+    {
+      ((com.sun.tools.javac.util.List<Type>)ReflectUtil.method( classSymbol, "getPermittedSubclasses" ).invoke() ).stream()
+        .forEach( permits -> {
+        if( permits.tsym.getQualifiedName().toString().startsWith( "java.lang.constant." ) )
+        {
+          // android: for some reason android does not resolve this package, i don't like you android
+          return;
+        }
+        permits = Types.instance( javacTask.getContext() ).erasure( permits );
+        srcClass.addPermits( makeNestedType( permits ) );
+      } );
+    }
     if( withMembers )
     {
       java.util.List<Symbol> members = classSymbol.getEnclosedElements();

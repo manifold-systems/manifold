@@ -38,6 +38,8 @@ import manifold.internal.javac.JavacPlugin;
 import manifold.rt.api.Array;
 import manifold.rt.api.anno.any;
 import manifold.rt.api.util.Pair;
+import manifold.util.JreUtil;
+import manifold.util.ReflectUtil;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -189,6 +191,14 @@ class ExtCodeGen
     for( JCTree.JCExpression iface : classDecl.implementing )
     {
       srcExtended.addInterface( iface.toString() );
+    }
+    if( JreUtil.isJava17orLater() )
+    {
+      List<JCTree.JCExpression> permitting = (List<JCTree.JCExpression>)ReflectUtil.field( classDecl, "permitting" ).get();
+      for( JCTree.JCExpression permit : permitting )
+      {
+        srcExtended.addPermits( permit.toString() );
+      }
     }
     return srcExtended;
   }

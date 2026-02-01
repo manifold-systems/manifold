@@ -38,6 +38,7 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
   private SrcType _superClass;
   private final AbstractSrcClass _enclosingClass;
   private final List<SrcType> _interfaces = new ArrayList<>();
+  private final List<SrcType> _permits = new ArrayList<>();
   private final List<SrcField> _fields = new ArrayList<>();
   private final List<SrcField> _enumConsts = new ArrayList<>();
   private final List<SrcConstructor> _constructors = new ArrayList<>();
@@ -117,6 +118,16 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
     return name;
   }
 
+  public boolean isSealed()
+  {
+    return (getModifiers() & SEALED) != 0;
+  }
+
+  public boolean isNonSealed()
+  {
+    return (getModifiers() & NON_SEALED) != 0;
+  }
+
   public T superClass( SrcType superClass )
   {
     _superClass = superClass;
@@ -152,6 +163,25 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
   {
     SrcType t = new SrcType( iface );
     return addInterface( t );
+  }
+
+  public T addPermits( SrcType type )
+  {
+    _permits.add( type );
+    type.setOwner( this );
+    return (T)this;
+  }
+
+  public T addPermits( Class type )
+  {
+    SrcType t = new SrcType( type );
+    return addPermits( t );
+  }
+
+  public T addPermits( String type )
+  {
+    SrcType t = new SrcType( type );
+    return addPermits( t );
   }
 
   public T addField( SrcField field )
@@ -511,6 +541,7 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
     sb.append( _kind == AbstractSrcClass.Kind.Interface ? "interface " : "class " ).append( getSimpleName() ).append( renderTypeVars( _typeVars, sb ) )
       .append( genClassExtends( sb ) )
       .append( renderClassImplements( sb ) )
+      .append( renderClassPermits( sb ) )
       .append( " {\n" );
 
     renderClassFeatures( sb, indent + INDENT );
@@ -527,6 +558,7 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
     sb.append( "record " ).append( getSimpleName() ).append( renderTypeVars( _typeVars, sb ) );
     renderRecordParams( sb );
     sb.append( renderClassImplements( sb ) )
+      .append( renderClassPermits( sb ) )
       .append( " {\n" );
 
     renderClassFeatures( sb, indent + INDENT );
@@ -583,6 +615,24 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
       SrcType iface = _interfaces.get( i );
       sb.append( i > 0 ? ", " : "" );
       iface.render( sb, 0 );
+    }
+    return "";
+  }
+
+  private String renderClassPermits( StringBuilder sb )
+  {
+    if( _permits.isEmpty() )
+    {
+      return "";
+    }
+
+    sb.append( " permits " );
+
+    for( int i = 0; i < _permits.size(); i++ )
+    {
+      SrcType type = _permits.get( i );
+      sb.append( i > 0 ? ", " : "" );
+      type.render( sb, 0 );
     }
     return "";
   }

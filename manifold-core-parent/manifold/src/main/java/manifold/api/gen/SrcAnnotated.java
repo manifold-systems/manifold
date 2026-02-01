@@ -31,6 +31,9 @@ import java.util.function.Function;
  */
 public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
 {
+  public static final long SEALED = 1L<<62;
+  public static final long NON_SEALED = 1L<<63;
+
   private List<SrcAnnotationExpression> _annotations = new ArrayList<>();
   private long _modifiers;
   private String _name;
@@ -119,6 +122,15 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
         case STRICTFP:
           mods |= Flags.STRICTFP;
           break;
+        default:
+          if( mod.name().equals( "SEALED" ) )
+          {
+            mods |= SEALED;
+          }
+          else if( mod.name().equals( "NON_SEALED" ) )
+          {
+            mods |= NON_SEALED;
+          }
       }
     }
     return mods;
@@ -376,6 +388,14 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
     if( (modifiers & Modifier.STATIC) != 0 )
     {
       sb.append( "static " );
+    }
+    if( (modifiers & SEALED) != 0 )
+    {
+      sb.append( "sealed " );
+    }
+    if( (modifiers & NON_SEALED) != 0 )
+    {
+      sb.append( "non-sealed " );
     }
     if( (modifiers & Modifier.FINAL) != 0 )
     {
