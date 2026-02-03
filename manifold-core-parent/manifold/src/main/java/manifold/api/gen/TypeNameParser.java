@@ -16,6 +16,8 @@
 
 package manifold.api.gen;
 
+import manifold.util.ReflectUtil;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +29,7 @@ public class TypeNameParser
 {
   private static final String TOKENS = "<>,[]?& ";
 
-  private final StringTokenizer _tokenizer;
+  private final Tokenizer _tokenizer;
   private String _token;
 
 
@@ -39,8 +41,7 @@ public class TypeNameParser
       typeName = stripAnnos( typeName );
 //      throw new IllegalArgumentException( "Annotations are not supported in type name parsing: '" + typeName + "'" );
     }
-
-    _tokenizer = new StringTokenizer( typeName, TOKENS, true );
+    _tokenizer = new Tokenizer( typeName );
   }
 
   // a "good-enough" effort at removing annotations from type text...
@@ -207,7 +208,7 @@ public class TypeNameParser
         {
           if( !match( '>' ) )
           {
-            throw new TypeNameParserException( "expecting '>" );
+            throw new TypeNameParserException( "expecting '>'\n" + _tokenizer.errorPosition() );
           }
           if( any.equals( "any" ) )
           {
@@ -227,7 +228,7 @@ public class TypeNameParser
       parseParamList( type );
       if( !match( '>' ) )
       {
-        throw new TypeNameParserException( "expecting '>" );
+        throw new TypeNameParserException( "expecting '>'" + _tokenizer.errorPosition() );
       }
       Type innerType = parseType();
       if( innerType != null )
@@ -294,7 +295,7 @@ public class TypeNameParser
 
   private boolean matchName()
   {
-    if( _token.length() > 0 && !TOKENS.contains( _token ) )
+    if( !_token.isEmpty() && !TOKENS.contains( _token ) )
     {
       nextToken();
       return true;
@@ -432,6 +433,46 @@ public class TypeNameParser
     public String toString()
     {
       return getFullName();
+    }
+  }
+
+  private class Tokenizer
+  {
+    private final String _typeName;
+    private final StringTokenizer _tokenizer;
+
+    Tokenizer( String typeName )
+    {
+      _typeName = typeName;
+      _tokenizer = new StringTokenizer( typeName, TOKENS, true );
+    }
+
+    boolean hasMoreTokens()
+    {
+      return _tokenizer.hasMoreTokens();
+    }
+
+    String nextToken()
+    {
+      return _tokenizer.nextToken();
+    }
+
+    String errorPosition()
+    {
+      StringBuilder sb = new StringBuilder( "\n" ).append( _typeName ).append( '\n' );
+      int pos = -1;
+      try
+      {
+        pos = (int)ReflectUtil.field( _tokenizer, "currentPosition" ).get();
+        pos -= (_token == null ? 0 : _token.length());
+        for( int i = 0; i < pos; i++ )
+        {
+          sb.append( ' ' );
+        }
+        sb.append( '^' );
+      }
+      catch( Throwable ignore ) {}
+      return sb.toString();
     }
   }
 }

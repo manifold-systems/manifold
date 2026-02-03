@@ -40,6 +40,42 @@ public class TypeNameParserTest extends TestCase
     assertType( "Map<@Nullable ? extends @Nullable Number, ? super String>", "Map<? extends Number, ? super String>" );
   }
 
+  public void testMissingAngleBracket()
+  {
+    tryMissingAngleBracket( "Foo<" );
+    tryMissingAngleBracket( "Foo<Bar" );
+    tryMissingAngleBracket( "Foo<Bar<Baz>" );
+    tryMissingAngleBracket( "Foo<Bar<Baz>Blah", "Foo<Bar<Baz>".length() );
+  }
+
+  private void tryMissingAngleBracket( String badType )
+  {
+    tryMissingAngleBracket( badType, badType.length() );
+  }
+  private void tryMissingAngleBracket( String badType, int errorPos )
+  {
+    TypeNameParser parser = new TypeNameParser( badType );
+    try
+    {
+      parser.parse();
+      throw new RuntimeException( "Should not have parsed: " + badType );
+    }
+    catch( TypeNameParserException tnpe )
+    {
+      assertEquals( tnpe.getMessage(), "expecting '>'\n" + badType + "\n" + spaces( badType ) + "^" );
+    }
+  }
+
+  private String spaces( String badType )
+  {
+    StringBuilder result = new StringBuilder();
+    for( int i = 0; i < badType.length(); i++ )
+    {
+      result.append( ' ' );
+    }
+    return result.toString();
+  }
+
   private void assertType( String fqn )
   {
     assertType( fqn, fqn );
