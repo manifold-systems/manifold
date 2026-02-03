@@ -305,7 +305,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
       }
     }
 
-    result = concat == null ? result : concat;
+    result = concat == null ? result : maker.Parens( concat );
   }
 
   public List<JCTree.JCExpression> parse( String stringValue, int literalOffset )
