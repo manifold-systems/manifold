@@ -50,8 +50,7 @@ import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 
-import static com.sun.tools.javac.code.Flags.ABSTRACT;
-import static com.sun.tools.javac.code.Flags.DEFAULT;
+import static com.sun.tools.javac.code.Flags.*;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static manifold.api.util.JavacUtil.getMetadata;
 import static manifold.util.JreUtil.isJava8;
@@ -190,6 +189,7 @@ public class SrcClassUtil
       //    abstract String foo();
       // }
       modifiers = modifiers & ~ABSTRACT;
+      modifiers = modifiers & ~SrcAnnotated.SEALED; // enums can't be sealed
     }
     return Flags.asModifierSet( modifiers );
   }
