@@ -96,9 +96,9 @@ repositories {
 dependencies {
     
      // Manifold SQL dependencies    
-     implementation 'systems.manifold:manifold-sql-rt:2026.1.1'
-     annotationProcessor 'systems.manifold:manifold-sql:2026.1.1'
-     testAnnotationProcessor 'systems.manifold:manifold-sql:2026.1.1'
+     implementation 'systems.manifold:manifold-sql-rt:2026.1.2'
+     annotationProcessor 'systems.manifold:manifold-sql:2026.1.2'
+     testAnnotationProcessor 'systems.manifold:manifold-sql:2026.1.2'
 
      // DuckDB dependencies
      implementation 'org.duckdb:duckdb_jdbc:1.3.0.0'
@@ -139,7 +139,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2026.1.1</manifold.version>
+        <manifold.version>2026.1.2</manifold.version>
       
         <!-- use maven.compiler settings for JDK LST release 11 - 25, or latest non-LTS release -->
         <maven.compiler.source>21</maven.compiler.source>
