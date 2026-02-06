@@ -136,15 +136,22 @@ public class ExpressionParser
     {
       skipWhitespace();
       if ( match( ExpressionTokenType.OpenParen )) {
-          int startOffset = expr.getStartOffset();
-          expr = parseUnaryExpression();
+        int startOffset = expr.getStartOffset();
+        expr = parseUnaryExpression();
 
-          skipWhitespace();
-          if ( !match( ExpressionTokenType.CloseParen )) {
-            expr.error( "')' Expected", _tokenizer.getTokenStart() );
-          }
-          int endOffset = _tokenizer.getTokenEnd();
+        skipWhitespace();
+        if ( !match( ExpressionTokenType.CloseParen )) {
+          expr.error( "Expecting ')'", _tokenizer.getTokenStart() );
+        }
+        int endOffset = _tokenizer.getTokenEnd();
+        if( expr instanceof Identifier )
+        {
           expr = new Identifier(((Identifier)expr).getName(), startOffset, endOffset );
+        }
+        else
+        {
+          expr.error( "Expecting an identifier within defined(...) expression", expr.getStartOffset() );
+        }
       }
 
     }
@@ -166,7 +173,7 @@ public class ExpressionParser
       int endOffset = expr.getEndOffset();
       if( !match( ExpressionTokenType.CloseParen, false ) )
       {
-        expr.error( "')' Expected", _tokenizer.getTokenStart() );
+        expr.error( "Expecting ')'", _tokenizer.getTokenStart() );
       }
       else
       {
