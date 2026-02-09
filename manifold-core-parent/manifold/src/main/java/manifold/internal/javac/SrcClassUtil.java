@@ -52,6 +52,8 @@ import manifold.util.ReflectUtil;
 
 import static com.sun.tools.javac.code.Flags.*;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
+import static manifold.api.gen.SrcAnnotated.SEALED;
+import static manifold.api.gen.SrcAnnotated.NON_SEALED;
 import static manifold.api.util.JavacUtil.getMetadata;
 import static manifold.util.JreUtil.isJava8;
 
@@ -176,7 +178,7 @@ public class SrcClassUtil
     return srcClass;
   }
 
-  private static Set<javax.lang.model.element.Modifier> getClassSymbolModifiers( Symbol.ClassSymbol classSymbol )
+  private Set<javax.lang.model.element.Modifier> getClassSymbolModifiers( Symbol.ClassSymbol classSymbol )
   {
     long modifiers = classSymbol.flags() & ~DEFAULT;
     if( classSymbol.isEnum() )
@@ -189,9 +191,60 @@ public class SrcClassUtil
       //    abstract String foo();
       // }
       modifiers = modifiers & ~ABSTRACT;
-      modifiers = modifiers & ~SrcAnnotated.SEALED; // enums can't be sealed
+      modifiers = modifiers & ~SEALED; // enums can't be sealed
     }
+    modifiers |= isEffectivelyNonSealed( classSymbol ) ? NON_SEALED : 0L;
     return Flags.asModifierSet( modifiers );
+  }
+
+  // the non-sealed modifier is not encoded in bytecode, so we have to infer its presence
+  private boolean isEffectivelyNonSealed( Symbol.ClassSymbol cls )
+  {
+    if( !JreUtil.isJava17orLater() )
+    {
+      return false;
+    }
+
+    long flags = cls.flags();
+
+    if( (flags & (Flags.FINAL | SEALED)) != 0 )
+    {
+      return false;
+    }
+
+    Type superClass = cls.getSuperclass();
+    if( superClass != null && superClass.tsym instanceof Symbol.ClassSymbol )
+    {
+      if( isSealed( (Symbol.ClassSymbol)superClass.tsym ) )
+      {
+        return true;
+      }
+    }
+
+    for( Type iface : cls.getInterfaces() )
+    {
+      if( iface.tsym instanceof Symbol.ClassSymbol )
+      {
+        if( isSealed( (Symbol.ClassSymbol)iface.tsym ) )
+        {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private boolean isSealed( Symbol.ClassSymbol sym )
+  {
+    if( (sym.flags() & SEALED) != 0 )
+    {
+      return true;
+    }
+
+    // in case flag isn't set
+    List<?> permittedSubclasses = (List<?>)ReflectUtil.method( sym, "getPermittedSubclasses" ).invoke();
+    return permittedSubclasses != null && !permittedSubclasses.isEmpty();
   }
 
   /*
