@@ -51,93 +51,93 @@ Java compiler are only accessible from the processor path, therefore they have n
 
 #### Manifold Core
 ```groovy
-compileOnly 'systems.manifold:manifold:2026.1.2'
-implementation 'systems.manifold:manifold-rt:2026.1.2'
+compileOnly 'systems.manifold:manifold:2026.1.3'
+implementation 'systems.manifold:manifold-rt:2026.1.3'
 ```
 #### Manifold : Extensions
 ```groovy
-compileOnly 'systems.manifold:manifold-ext:2026.1.2'
-implementation 'systems.manifold:manifold-ext-rt:2026.1.2'
+compileOnly 'systems.manifold:manifold-ext:2026.1.3'
+implementation 'systems.manifold:manifold-ext-rt:2026.1.3'
 ```
 #### Manifold : Props
 ```groovy
-compileOnly 'systems.manifold:manifold-props:2026.1.2'
-implementation 'systems.manifold:manifold-props-rt:2026.1.2'
+compileOnly 'systems.manifold:manifold-props:2026.1.3'
+implementation 'systems.manifold:manifold-props-rt:2026.1.3'
 ```
 #### Manifold : GraphQL
 ```groovy
-compileOnly 'systems.manifold:manifold-graphql:2026.1.2'
-implementation 'systems.manifold:manifold-graphql-rt:2026.1.2'
+compileOnly 'systems.manifold:manifold-graphql:2026.1.3'
+implementation 'systems.manifold:manifold-graphql-rt:2026.1.3'
 ```
 #### Manifold : JSON
 ```groovy
-compileOnly 'systems.manifold:manifold-json:2026.1.2'
-implementation 'systems.manifold:manifold-json-rt:2026.1.2'
+compileOnly 'systems.manifold:manifold-json:2026.1.3'
+implementation 'systems.manifold:manifold-json-rt:2026.1.3'
 ```
 #### Manifold : XML
 ```groovy
-compileOnly 'systems.manifold:manifold-xml:2026.1.2'
-implementation 'systems.manifold:manifold-xml-rt:2026.1.2'
+compileOnly 'systems.manifold:manifold-xml:2026.1.3'
+implementation 'systems.manifold:manifold-xml-rt:2026.1.3'
 ```
 #### Manifold : YAML
 ```groovy
-compileOnly 'systems.manifold:manifold-yaml:2026.1.2'
-implementation 'systems.manifold:manifold-yaml-rt:2026.1.2'
+compileOnly 'systems.manifold:manifold-yaml:2026.1.3'
+implementation 'systems.manifold:manifold-yaml-rt:2026.1.3'
 ```
 #### Manifold : CSV
 ```groovy
-compileOnly 'systems.manifold:manifold-csv:2026.1.2'
-implementation 'systems.manifold:manifold-csb-rt:2026.1.2'
+compileOnly 'systems.manifold:manifold-csv:2026.1.3'
+implementation 'systems.manifold:manifold-csb-rt:2026.1.3'
 ```
 #### Manifold : Properties Files
 ```groovy
-compileOnly 'systems.manifold:manifold-properties:2026.1.2'
+compileOnly 'systems.manifold:manifold-properties:2026.1.3'
 ```
 #### Manifold : Image Files
 ```groovy
-compileOnly 'systems.manifold:manifold-image:2026.1.2'
+compileOnly 'systems.manifold:manifold-image:2026.1.3'
 ```
 #### Manifold : JavaScript
 ```groovy
-compileOnly 'systems.manifold:manifold-js:2026.1.2'
-implementation 'systems.manifold:manifold-js-rt:2026.1.2'
+compileOnly 'systems.manifold:manifold-js:2026.1.3'
+implementation 'systems.manifold:manifold-js-rt:2026.1.3'
 ```
 #### Manifold : Templates
 ```groovy
-compileOnly 'systems.manifold:manifold-templates:2026.1.2'
-implementation 'systems.manifold:manifold-templates-rt:2026.1.2'
+compileOnly 'systems.manifold:manifold-templates:2026.1.3'
+implementation 'systems.manifold:manifold-templates-rt:2026.1.3'
 ```
 #### Manifold : String Interpolation
 ```groovy
-compileOnly 'systems.manifold:manifold-strings:2026.1.2'
+compileOnly 'systems.manifold:manifold-strings:2026.1.3'
 ```
 #### Manifold : (Un)checked Exceptions
 ```groovy
-compileOnly 'systems.manifold:manifold-exceptions:2026.1.2'
+compileOnly 'systems.manifold:manifold-exceptions:2026.1.3'
 ```
 #### Manifold : Preprocessor
 ```groovy
-compileOnly 'systems.manifold:manifold-preprocessor:2026.1.2'
+compileOnly 'systems.manifold:manifold-preprocessor:2026.1.3'
 ```
 #### Manifold : Preprocessor : Android Symbols
 ```groovy
-compileOnly 'systems.manifold:manifold-preprocessor-android-syms:2026.1.2'
+compileOnly 'systems.manifold:manifold-preprocessor-android-syms:2026.1.3'
 ```
 #### Manifold : Science
 ```groovy
-implementation 'systems.manifold:manifold-science:2026.1.2'
+implementation 'systems.manifold:manifold-science:2026.1.3'
 ```
 #### Manifold : Collections Extension
 ```groovy
-implementation 'systems.manifold:manifold-collections:2026.1.2'
+implementation 'systems.manifold:manifold-collections:2026.1.3'
 ```
 #### Manifold : IO Extensions
 ```groovy
-implementation 'systems.manifold:manifold-io:2026.1.2'
+implementation 'systems.manifold:manifold-io:2026.1.3'
 ```
 #### Manifold : Text Extensions
 ```groovy
-implementation 'systems.manifold:manifold-text:2026.1.2'
+implementation 'systems.manifold:manifold-text:2026.1.3'
 ```
 
 ## Resources
@@ -165,7 +165,7 @@ build.gradle
 ```groovy
 dependencies {
     ...
-    compileOnly 'systems.manifold:manifold-preprocessor:2026.1.2'
-    compileOnly 'systems.manifold:manifold-preprocessor-android-syms:2026.1.2'
+    compileOnly 'systems.manifold:manifold-preprocessor:2026.1.3'
+    compileOnly 'systems.manifold:manifold-preprocessor-android-syms:2026.1.3'
 }
 ```
