@@ -24,6 +24,7 @@ import manifold.ext.rt.api.ThisClass;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 @Extension
@@ -61,5 +62,10 @@ public class MyObjectExt
       return null;
     }
     return callingClass;
+  }
+
+  public static Optional<@Self Object> asOpt( @This Object me )
+  {
+    return Optional.ofNullable( me );
   }
 }

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import junit.framework.TestCase;
 import manifold.ext.rt.api.Self;
@@ -42,6 +43,17 @@ public class SelfTypeTest extends TestCase
     LinkedList<String> ll = new LinkedList<>();
     ll.add( "hi" );
     String result = ll.brapple( l -> l.getFirst() );
+  }
+
+  public void testSelfOnTypeParamInReturnType()
+  {
+    Optional<String> opt = getOptionalString();
+    assertEquals( "hi", opt.get() );
+  }
+
+  private Optional<String> getOptionalString()
+  {
+    return "hi".asOpt();
   }
 
   static class Foo<T>

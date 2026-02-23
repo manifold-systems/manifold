@@ -218,6 +218,8 @@ public class ManTypes_8 extends Types implements ManTypes
     try
     {
       return methodDef != null && methodDef.sym != null &&
+             //methodDef.sym.baseSymbol().equals( memberSym.baseSymbol() );
+             methodDef.sym.name == memberSym.name &&
              isSameType( erasure( methodDef.sym.type ), erasure( memberSym.type ) );
     }
     catch( AssertionError ae )
