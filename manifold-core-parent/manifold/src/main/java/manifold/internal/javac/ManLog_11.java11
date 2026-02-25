@@ -159,6 +159,14 @@ public class ManLog_11 extends Log
 
   private boolean isSuppressed( JCDiagnostic.DiagnosticPosition pos, String key, Object[] args )
   {
+    if( isSealedModuleRelatedError( key ) )
+    {
+      // This is necessary with JDK 25+ for an extension class on sealed type where the type's permits clause
+      // contains a type that is in a different package or module. Note that since extension classes are a compile-time facade,
+      // there is no runtime impact here.
+      return true;
+    }
+
     for( ICompilerComponent cc: JavacPlugin.instance().getTypeProcessor().getCompilerComponents() )
     {
       if( cc.isSuppressed( pos, key, args ) )
@@ -167,6 +175,12 @@ public class ManLog_11 extends Log
       }
     }
     return false;
+  }
+
+  private boolean isSealedModuleRelatedError( String key )
+  {
+    return key.contains( "class.in.unnamed.module.cant.extend.sealed.in.diff.package" ) ||
+           key.contains( "class.in.module.cant.extend.sealed.in.diff.module" );
   }
 
   private DiagnosticHandler getDiagnosticHandler()
