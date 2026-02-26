@@ -171,7 +171,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       if( pos.getTree() instanceof JCAnnotation )
       {
         JCMethodDecl methodDecl = findEnclosing( pos.getTree(), JCMethodDecl.class );
-        if( methodDecl == null )
+        if( methodDecl == null || methodDecl.sym == null )
         {
           return false;
         }
