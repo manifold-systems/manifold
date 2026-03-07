@@ -25,6 +25,8 @@ public enum TokenType
   CharLiteral(),
   TextBlock(),
   If("if"),
+  Ifdef("ifdef"),
+  Ifndef("ifndef"),
   Elif("elif"),
   Else("else"),
   Endif("endif"),
