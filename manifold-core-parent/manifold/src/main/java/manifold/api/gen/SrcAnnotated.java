@@ -17,6 +17,9 @@
 package manifold.api.gen;
 
 import com.sun.tools.javac.code.Flags;
+import manifold.util.JreUtil;
+import manifold.util.ReflectUtil;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -31,8 +34,8 @@ import java.util.function.Function;
  */
 public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
 {
-  public static final long SEALED = 1L<<62;
-  public static final long NON_SEALED = 1L<<63;
+  public static final long SEALED = JreUtil.isJava17orLater() ? (long)ReflectUtil.field( Flags.class, "SEALED" ).getStatic() : 0L;
+  public static final long NON_SEALED = JreUtil.isJava17orLater() ? (long)ReflectUtil.field( Flags.class, "NON_SEALED" ).getStatic() : 0L;;
 
   private List<SrcAnnotationExpression> _annotations = new ArrayList<>();
   private long _modifiers;
