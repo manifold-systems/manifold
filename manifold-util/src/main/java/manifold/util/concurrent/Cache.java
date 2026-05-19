@@ -27,13 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
-import manifold.util.ILogger;
 
 /**
  * static var MY_CACHE = new Cache<Foo, Bar>( 1000, \ foo -> getBar( foo ) )
@@ -49,8 +44,6 @@ public class Cache<K, V>
   private final AtomicInteger _requests = new AtomicInteger();
   private final AtomicInteger _misses = new AtomicInteger();
   private final AtomicInteger _hits = new AtomicInteger();
-
-  private ScheduledFuture<?> _loggingTask;
 
   /**
    * This will create a new cache
@@ -162,44 +155,6 @@ public class Cache<K, V>
     else
     {
       return ((double)hits) / requests;
-    }
-  }
-
-  /**
-   * Sets up a recurring task every n seconds to report on the status of this cache.  This can be useful
-   * if you are doing exploratory caching and wish to monitor the performance of this cache with minimal fuss.
-   * Consider
-   *
-   * @param seconds how often to log the entry
-   * @param logger  the logger to use
-   *
-   * @return this
-   */
-  public synchronized Cache<K, V> logEveryNSeconds( int seconds, final ILogger logger )
-  {
-    if( _loggingTask == null )
-    {
-      ScheduledExecutorService service = Executors.newScheduledThreadPool( 1 );
-      _loggingTask = service.scheduleAtFixedRate( new Runnable()
-      {
-        public void run()
-        {
-          logger.info( Cache.this );
-        }
-      }, seconds, seconds, TimeUnit.SECONDS );
-    }
-    else
-    {
-      throw new IllegalStateException( "Logging for " + this + " is already enabled" );
-    }
-    return this;
-  }
-
-  public synchronized void stopLogging()
-  {
-    if( _loggingTask != null )
-    {
-      _loggingTask.cancel( false );
     }
   }
 

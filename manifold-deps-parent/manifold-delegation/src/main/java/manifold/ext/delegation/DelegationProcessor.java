@@ -30,16 +30,19 @@ import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.*;
+import com.sun.tools.javac.tree.TreeCopier;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.*;
 import com.sun.tools.javac.util.List;
 import manifold.api.type.ICompilerComponent;
+import manifold.api.util.JCTreeUtil;
 import manifold.api.util.JavacDiagnostic;
-import manifold.ext.delegation.rt.RuntimeMethods;
+import manifold.ext.delegation.rt.api.DelegationLinkageError;
+import manifold.ext.delegation.rt.api.internal;
 import manifold.ext.delegation.rt.api.link;
 import manifold.ext.delegation.rt.api.part;
-import manifold.ext.delegation.rt.api.tags.enter_finish;
+import manifold.ext.delegation.rt.internal.$PartClass;
 import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.api.Structural;
 import manifold.internal.javac.*;
@@ -57,16 +60,24 @@ import static com.sun.tools.javac.code.Flags.SYNTHETIC;
 import static java.lang.reflect.Modifier.*;
 import static manifold.ext.delegation.DelegationIssueMsg.*;
 import static manifold.ext.delegation.Util.getAnnotation;
-import static manifold.ext.delegation.rt.RuntimeMethods.COVERED_FIELD;
-import static manifold.ext.delegation.rt.RuntimeMethods.SELF_FIELD;
 import static manifold.util.JreUtil.isJava8;
 
 public class DelegationProcessor implements ICompilerComponent, TaskListener
 {
+  private static final String LINKED_INTERFACES_FIELD = "$LINK_SCOPE_";
+  private static final String LINK_PART_TO_SELF = "$linkPartToSelf";
+  private static final String SELVES = "$selves";
+
   private BasicJavacTask _javacTask;
   private Context _context;
   private Stack<ClassInfo> _classInfoStack;
   private Stack<JCClassDecl> _classDeclStack;
+  private Map<Name, Map<Name, Integer>> _classToInterfaceToIndex;
+
+  //todo: factor out the TaskEventTracker aspect into an abstract "BasicCompileComponent" class and factor out other common aspects
+  //todo: extend BasicCompilerComponent in other compiler components, and replace their existing ways of detecting already processed types
+  private TaskEventTracker _taskEventTracker;
+
   private TaskEvent _taskEvent;
   private ParentMap _parents;
 
@@ -77,6 +88,8 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     _context = _javacTask.getContext();
     _classInfoStack = new Stack<>();
     _classDeclStack = new Stack<>();
+    _classToInterfaceToIndex = new HashMap<>();
+    _taskEventTracker = new TaskEventTracker();
     _parents = new ParentMap( () -> getCompilationUnit() );
 
     if( JavacPlugin.instance() == null )
@@ -155,10 +168,27 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       : null;
   }
 
+  private int indexOfInterface( Type partClass, Type iface )
+  {
+    Type partType = getTypes().erasure( partClass );
+    return _classToInterfaceToIndex.computeIfAbsent( partType.tsym.getQualifiedName(), __ -> {
+      ArrayList<ClassType> result = new ArrayList<>();
+      findAllInterfaces( partType, new HashSet<>(), result );
+      Map<Name, Integer> map = new HashMap<>();
+      for( int i = 0; i < result.size(); i++ )
+      {
+        ClassType t = result.get( i );
+        map.put( getTypes().erasure( t ).tsym.getQualifiedName(), i );
+      }
+      return map;
+    } ).get( getTypes().erasure( iface ).tsym.getQualifiedName() );
+  }
+
   @Override
   public void started( TaskEvent e )
   {
-    if( e.getKind() != TaskEvent.Kind.ANALYZE )
+    if( e.getKind() != TaskEvent.Kind.ENTER &&
+        e.getKind() != TaskEvent.Kind.ANALYZE )
     {
       return;
     }
@@ -173,7 +203,15 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         if( tree instanceof JCClassDecl )
         {
           JCClassDecl classDecl = (JCClassDecl)tree;
-          if( e.getKind() == TaskEvent.Kind.ANALYZE )
+          if( _taskEventTracker.alreadyProcessed( e, true, classDecl ) )
+          {
+            continue;
+          }
+          if( e.getKind() == TaskEvent.Kind.ENTER )
+          {
+            classDecl.accept( new Enter_Start() );
+          }
+          else if( e.getKind() == TaskEvent.Kind.ANALYZE )
           {
             classDecl.accept( new Analyze_Start() );
           }
@@ -204,6 +242,11 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       {
         if( tree instanceof JCClassDecl )
         {
+          if( _taskEventTracker.alreadyProcessed( e, false, (JCClassDecl)tree ) )
+          {
+            continue;
+          }
+
           JCClassDecl classDecl = (JCClassDecl)tree;
           if( e.getKind() == TaskEvent.Kind.ENTER )
           {
@@ -243,6 +286,8 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
         super.visitClassDef( classDecl );
 
+        postProcessPartClass();
+
         ClassInfo classInfo = _classInfoStack.peek();
         if( classInfo.hasLinks() )
         {
@@ -264,8 +309,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
             // define interface method symbols and add them to the class symbol's members
             for( JCMethodDecl methDecl : li.getGeneratedMethods() )
             {
-              ReflectUtil.method( MemberEnter.instance( getContext() ), "memberEnter", JCTree.class, Env.class )
-                .invoke( methDecl, Enter.instance( getContext() ).getClassEnv( classDecl.sym ) );
+              memberEnter( methDecl, classDecl );
             }
           }
         }
@@ -273,6 +317,209 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       finally
       {
         _classInfoStack.pop();
+      }
+    }
+
+    private void postProcessPartClass()
+    {
+      JCClassDecl classDecl = _classInfoStack.peek()._classDecl;
+      if( !isPartClass( classDecl.sym ) )
+      {
+        return;
+      }
+
+      if( classDecl.sym.getSimpleName().contentEquals( "$Impl" ) )
+      {
+        generate$ImplClass();
+      }
+
+      addAsLinkMethods();
+      addLinkScopeFields();
+      addLinkPartToSelfMethod();
+    }
+
+    private void addAsLinkMethods()
+    {
+      JCClassDecl classDecl = _classInfoStack.peek()._classDecl;
+      if( (classDecl.mods.flags & ABSTRACT) == 0 )
+      {
+        return;
+      }
+
+      for( JCTree def : classDecl.defs )
+      {
+        if( def instanceof JCMethodDecl && ((JCMethodDecl)def).sym.isConstructor() && (((JCMethodDecl)def).sym.flags_field & SYNTHETIC) == 0 )
+        {
+          JCMethodDecl methDecl = generateAsLinkStaticMethod( (JCMethodDecl)def );
+          classDecl.defs = classDecl.defs.append( methDecl );
+          memberEnter( methDecl, classDecl );
+        }
+      }
+    }
+
+    /**
+     * Generates a `$linkPartToSelf()` method on part classes (class annotated with '@part'). This method is responsible
+     * for wiring the composite object's "self" identities to linked part classes throughout the composite. The wiring happens
+     * at `@link` field assignments where a call to `$PartClass.Internal#linkPart()` is generated and subsumes the RHS of
+     * the assignment. The `linkPart()` method tests for error conditions and, if the RHS is a part class instance, forwards
+     * the delegating class instance to the part's `$linkPartToSelf()` as its "self" identity, then returns the original RHS.
+     * In addition to assigning delegating class identity to the part class `$linkPartToSelf()` also propagates the identity
+     * by recursing into the part's own `@link` fields.
+     * <p/>
+     * Following the documentation's Teacher Assistant example:
+     * <pre><code>
+     *
+     * // StudentPart is a `@part` class
+     *
+     * {@literal @}link Student student = new StudentPart(person);
+     *
+     * // RHS of assignment is rewrittent as:
+     *
+     * {@literal @}link Student student = $PartClass.Internal.linkPart(
+     *   this, new Class[] {Student.class, Person.class}, "student", new StudentPart(person));
+     *
+     * // linkPart() calls $linkPartToSelf(), where the delegating class `this` is
+     * // propagated as the composite identity in terms of Student and Person:
+     *
+     * (($PartClass)delegate).$linkPartToSelf(this, new Class[] {Student.class, Person.class});
+     *
+     * </code></pre>
+     * StudentPart (from the TA sample code) has a $linkPartToSelf method that looks like this:
+     * <pre><code>
+     *     public void $linkPartToSelf(Object root, Class[] linkScope) {
+     *         for(Class linkIface : linkScope) {
+     *             if (Student.class == linkIface) {
+     *               if($selves[0] == root) reportCycle(this, root, Student.class);
+     *               $selves[0] = root;
+     *               continue;
+     *             }
+     *             if (Person.class == linkIface) {
+     *               if($selves[1] == root) reportCycle(this, root, Student.class);
+     *               $selves[1] = root;
+     *               continue;
+     *             }
+     *             throw new DelegationLinkageError("Unimplemented linked interface: " + linkIface);
+     *         }
+     *         // recurse through the fields of this class that are linked to `@part` classes
+     *         Class[] root_personIntersection = Internal.intersect($LINK_SCOPE__person, linkScope);
+     *         if (root_personIntersection.length != 0 && this._person instanceof .PartClass) {
+     *             ((.PartClass)this._person).$linkPartToSelf(root, root_personIntersection);
+     *         }
+     *     }
+     * </code></pre>
+     */
+    private void addLinkPartToSelfMethod()
+    {
+      ClassInfo ci = _classInfoStack.peek();
+      JCClassDecl classDecl = ci._classDecl;
+
+      TreeMaker make = getTreeMaker();
+      make.pos = classDecl.pos;
+
+      // Method name & modifiers
+      JCModifiers access = make.Modifiers( PUBLIC /*| Flags.BRIDGE*/ );
+      Names names = getNames();
+      Name methName = names.fromString( LINK_PART_TO_SELF );
+
+      // Params
+      List<JCVariableDecl> params = List.nil();
+
+      Name rootName = names.fromString( "root" );
+      JCExpression rootType = make.Type( getSymtab().objectType );
+      JCVariableDecl rootParam = make.VarDef( make.Modifiers( FINAL | Flags.PARAMETER ), rootName, rootType, null );
+      params = params.append( rootParam );
+
+      Name linkScopeName = names.fromString( "linkScope" );
+      Type classType = getTypes().erasure( getSymtab().classType );
+      JCExpression linkScopeType = make.Type( getTypes().makeArrayType( classType ) );
+      JCVariableDecl linkScopeParam = make.VarDef( make.Modifiers( FINAL | Flags.PARAMETER ), linkScopeName, linkScopeType, null );
+      params = params.append( linkScopeParam );
+
+      // Return type
+      JCExpression resType = make.Type( getSymtab().voidType );
+
+      // Code
+      List<JCStatement> loopStmts = List.nil();
+      Name linkIfaceName = names.fromString( "linkIface" );
+      for( ClassType iface : ci.getInterfaces() )
+      {
+        int ifaceIndex = indexOfInterface( classDecl.sym.type, iface );
+        JCIf ifStmt = make.If(
+          make.Binary( Tag.EQ, make.ClassLiteral( iface ), make.Ident( linkIfaceName ) ),
+          make.Block( 0, List.of( make.If(
+                                    make.Binary( Tag.EQ,
+                                                 make.Indexed( make.Ident( names.fromString( SELVES ) ),
+                                                               make.Literal( TypeTag.INT, ifaceIndex ) ),
+                                                 make.Ident( rootName ) ),
+                                    make.Exec( make.Apply( List.nil(), make.Select( make.Ident( names.fromString( "Internal" ) ), names.fromString( "reportCycle" ) ),
+                                                           List.of( make.This( classDecl.sym.type ), make.Ident( rootName ), make.ClassLiteral( iface ) ) ) ),
+                                    null ),
+                                  make.Exec( make.Assign( make.Indexed( make.Ident( names.fromString( SELVES ) ),
+                                                                        make.Literal( TypeTag.INT, ifaceIndex ) ),
+                                                          make.Ident( rootName ) ) ),
+                                  make.Continue( null ) ) ),
+          null );
+        loopStmts = loopStmts.append( ifStmt );
+      }
+      JCThrow throwDelegationLinkageError = make.Throw(
+        make.NewClass( null, null, memberAccess( make, DelegationLinkageError.class.getTypeName() ),
+                       List.of( make.Binary( Tag.PLUS, make.Literal( "Unimplemented linked interface: " ), make.Ident( linkIfaceName ) ) ), null ) );
+      loopStmts = loopStmts.append( throwDelegationLinkageError );
+      JCEnhancedForLoop assignSelves = make.ForeachLoop( make.VarDef( make.Modifiers( FINAL ), linkIfaceName, make.Type( classType ), null ),
+                                                         make.Ident( linkScopeName ), make.Block( 0, loopStmts ) );
+      List<JCStatement> methodBody = List.of( assignSelves );
+      for( Map.Entry<JCVariableDecl, LinkInfo> link : ci.getLinks().entrySet() )
+      {
+        JCVariableDecl field = link.getKey();
+        Name fieldName = field.name;
+
+        JCMethodInvocation rootIntersection = make.Apply( List.nil(), make.Select( make.Ident( names.fromString( "Internal" ) ), names.fromString( "intersect" ) ),
+                                                          List.of( make.Ident( names.fromString( LINKED_INTERFACES_FIELD + fieldName ) ), make.Ident( linkScopeName ) ) );
+        Type.ArrayType arrayOfClassesType = getTypes().makeArrayType( getTypes().erasure( getSymtab().classType ) );
+        Name rootIntersectionName = names.fromString( "root" + fieldName + "Intersection" );
+        methodBody = methodBody.append(
+          make.VarDef( make.Modifiers( FINAL ), rootIntersectionName, make.Type( arrayOfClassesType ), rootIntersection ) );
+        methodBody = methodBody.append(
+          make.If( make.Binary( Tag.AND,
+                                make.Binary( Tag.NE,
+                                             make.Select( make.Ident( rootIntersectionName ), names.fromString( "length" ) ),
+                                             make.Literal( TypeTag.INT, 0 ) ),
+                                make.TypeTest( make.Ident( fieldName ), memberAccess( make, $PartClass.class.getTypeName() ) ) ),
+                   make.Exec( make.Apply( List.nil(), make.Select( make.TypeCast( memberAccess( make, $PartClass.class.getTypeName() ), make.Ident( fieldName ) ), methName ),
+                                          List.of( make.Ident( rootName ), make.Ident( rootIntersectionName ) ) ) ),
+                   null ) );
+      }
+      Type superclass = classDecl.sym.getSuperclass();
+      if( superclass != null && !getTypes().isSameType( superclass, getSymtab().objectType ) )
+      {
+        methodBody = methodBody.append( make.Exec( make.Apply( List.nil(), make.Select( make.Ident( names._super ), methName ),
+                                                               List.of( make.Ident( rootName ), make.Ident( linkScopeName ) ) ) ) );
+      }
+      JCBlock block = make.Block( 0, methodBody );
+      JCMethodDecl methDecl = make.MethodDef( access, methName, resType, List.nil(), params, List.nil(), block, null );
+
+      classDecl.defs = classDecl.defs.append( methDecl );
+
+      memberEnter( methDecl, classDecl );
+    }
+
+    private void addLinkScopeFields()
+    {
+      ClassInfo ci = _classInfoStack.peek();
+      for( Map.Entry<JCVariableDecl, LinkInfo> link: ci.getLinks().entrySet() )
+      {
+        TreeMaker make = getTreeMaker();
+        make.pos = ci._classDecl.pos;
+
+        JCVariableDecl field = link.getKey();
+        LinkInfo li = link.getValue();
+        Type.ArrayType arrayOfClassesType = getTypes().makeArrayType( getTypes().erasure( getSymtab().classType ) );
+        ArrayList<ClassType> interfaces = li.getInterfaces();
+        List<JCExpression> interfaceTypes = List.from( interfaces.stream().map( t -> make.ClassLiteral( getTypes().erasure( t ) ) ).collect( Collectors.toList() ) );
+        JCNewArray interfaceArray = make.NewArray( make.Type( getTypes().erasure( getSymtab().classType ) ), List.nil(), interfaceTypes );
+        interfaceArray.type = arrayOfClassesType;
+
+        addWiringField( ci._classDecl, Flags.STATIC, LINKED_INTERFACES_FIELD + field.name, interfaceArray.type, interfaceArray );
       }
     }
 
@@ -291,35 +538,42 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       //       ReflectUtil.invokeDefault
       //     else
       //       Iface.super.method()
-      java.util.List<Type> interfaces = classDecl.implementing.stream().map( e -> e.type ).collect( Collectors.toList() );
-      sortInterfaces( interfaces );
-      for( Type iface: interfaces )
+      java.util.List<Type> implIfaces = classDecl.implementing.stream().map( e -> e.type ).collect( Collectors.toList() );
+      sortInterfaces( implIfaces );
+      for( Type implIface: implIfaces )
       {
-        if( iface.isErroneous() || !iface.isInterface() )
+        ArrayList<ClassType> superIfaces = new ArrayList<>();
+        findAllInterfaces( classDecl.sym.type, new HashSet<>(), superIfaces );
+        sortInterfaces( superIfaces, false );
+
+        for( ClassType superIface : superIfaces )
         {
-          continue;
-        }
-        ArrayList<MethodSymbol> defaultMethods = new ArrayList<>();
-        findDefaultMethodsToForward( classDecl, iface, new HashSet<>(), defaultMethods );
-        Set<NamedMethodType> seen = new HashSet<>();
-        for( MethodSymbol m : defaultMethods )
-        {
-          if( isExtensionMethod( m ) )
+          if( superIface.isErroneous() || !superIface.isInterface() )
           {
             continue;
           }
-
-          Type type = getTypes().memberType( iface, m );
-          if( type instanceof MethodType )
+          ArrayList<MethodSymbol> defaultMethods = new ArrayList<>();
+          findDefaultMethodsToForward( classDecl, superIface, new HashSet<>(), defaultMethods );
+          Set<NamedMethodType> seen = new HashSet<>();
+          for( MethodSymbol m : defaultMethods )
           {
-            NamedMethodType namedMt = new NamedMethodType( m, type );
-            if( !seen.contains( namedMt ) )
+            if( isExtensionMethod( m ) )
             {
-              ClassInfo ci = _classInfoStack.peek();
-              ci.addDefaultMethodForwarder( namedMt );
-              generateDefaultMethodForwarder( classDecl, (ClassType)iface, namedMt );
+              continue;
             }
-            seen.add( namedMt );
+
+            Type type = getTypes().memberType( superIface, m );
+            if( type instanceof MethodType )
+            {
+              NamedMethodType namedMt = new NamedMethodType( m, type );
+              if( !seen.contains( namedMt ) )
+              {
+                ClassInfo ci = _classInfoStack.peek();
+                ci.addDefaultMethodForwarder( namedMt );
+                generateDefaultMethodForwarder( classDecl, (ClassType)implIface, superIface, namedMt );
+              }
+              seen.add( namedMt );
+            }
           }
         }
       }
@@ -352,7 +606,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       interfaces.forEach( t -> findDefaultMethodsToForward( classDecl, t, seen, result ) );
     }
 
-    private void generateDefaultMethodForwarder( JCClassDecl classDecl, ClassType iface, NamedMethodType namedMt )
+    private void generateDefaultMethodForwarder( JCClassDecl classDecl, ClassType implIface, ClassType delegatedIface, NamedMethodType namedMt )
     {
       Type csr = namedMt.getType();
       while( csr instanceof Type.DelegatedType )
@@ -400,21 +654,20 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       // Return type
       JCExpression resType = make.Type( mt.getReturnType() );
 
-
-      //     if( RuntimeMethods.linksInterfaceTo( $self ) )
-      //       RuntimeMethods.invokeDefault  // call default method from $self
+      //     Object $self = $selves[<index of iface>]
+      //     if( $self != this )
+      //       $PartClass.Internal.invokeDefault  // call default method from $self
       //     else
       //       Iface.super.method()  // call as-is
 
 
       Symtab symtab = getSymtab();
 
-      // RuntimeMethods.linksInterfaceTo( $self )
+      // $self = $selves[<index of iface>]
 
       Types types = getTypes();
-      JCTree.JCMethodInvocation linksInterfaceToCall = make.Apply( List.nil(),
-        memberAccess( make, RuntimeMethods.class.getTypeName() + ".linksInterfaceTo" ),
-        List.of( make.ClassLiteral( types.erasure( iface ) ), make.Ident( names.fromString( SELF_FIELD ) ), make.This( classDecl.sym.type ) ) );
+      JCVariableDecl selfVar = make.VarDef( make.Modifiers( FINAL ), getNames().fromString( "$self" ), make.Type( getSymtab().objectType ),
+                                            getSelf( classDecl, classDecl, delegatedIface, false ) );
 
       // ReflectUtil.invokeDefaultAsSelf
 
@@ -422,9 +675,9 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       JCNewArray paramTypesArray = make.NewArray( make.Type( types.erasure( symtab.classType ) ), List.nil(), List.from( paramTs ) );
       ArrayList<JCIdent> argIdents = params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toCollection( () -> new ArrayList<>() ) );
       JCNewArray argsArray = make.NewArray( make.Type( symtab.objectType ), List.nil(), List.from( argIdents) );
-      List<JCExpression> theArgs = List.of( make.Ident( names.fromString( SELF_FIELD ) ), make.ClassLiteral( types.erasure( iface ) ), make.Literal( namedMt.getName().toString() ),
+      List<JCExpression> theArgs = List.of( make.Ident( names.fromString( "$self" ) ), make.ClassLiteral( types.erasure( delegatedIface ) ), make.Literal( namedMt.getName().toString() ),
         paramTypesArray, argsArray );
-      JCTree.JCMethodInvocation linkPartCall = make.Apply( List.nil(), memberAccess( make, RuntimeMethods.class.getTypeName() + ".invokeDefault" ), theArgs );
+      JCTree.JCMethodInvocation linkPartCall = make.Apply( List.nil(), memberAccess( make, $PartClass.Internal.class.getCanonicalName() + ".invokeDefault" ), theArgs );
 
       JCStatement invokeDefaultAsSelfStmt;
       if( types.isSameType( mt.getReturnType(), getSymtab().voidType ) )
@@ -440,7 +693,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       // Iface.super.method()
 
       JCTree.JCFieldAccess forwardRef = IDynamicJdk.instance().Select(
-        make, make.Select( make.Type( iface ), names._super ), namedMt.getMethodSymbol() );
+        make, make.Select( make.Type( implIface ), names._super ), namedMt.getMethodSymbol() );
       forwardRef.type = mt.getReturnType();
       java.util.List<JCExpression> args = params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toList() );
       JCTree.JCMethodInvocation forwardCall = make.Apply( List.nil(), forwardRef, List.from( args ) );
@@ -457,13 +710,14 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         invokeSuperStmt = make.Return( forwardCall );
       }
 
-      // if( linksInterfaceToCall() )
+      // <iface> $self = $selves[<index of iface>]
+      // if( $self != this )
       //   invokeDefaultAsSelfStmt
       // else
       //   invokeSuperStmt
-      JCIf ifStmt = make.If( linksInterfaceToCall, invokeDefaultAsSelfStmt, invokeSuperStmt );
-
-      JCBlock block = make.Block( 0, List.of( ifStmt ) );
+      JCIf ifStmt = make.If( make.Binary( Tag.NE, make.Ident( getNames().fromString( "$self" ) ), make.QualThis( classDecl.sym.type ) ),
+                     invokeDefaultAsSelfStmt, invokeSuperStmt );
+      JCBlock block = make.Block( 0, List.of( selfVar, ifStmt ) );
 
       JCMethodDecl defaultMethodForwarder = make.MethodDef( access, name, resType, typeParams, List.from( params ), thrown, block, null );
 
@@ -471,83 +725,94 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       newDefs.add( defaultMethodForwarder );
       classDecl.defs = List.from( newDefs );
 
-      ReflectUtil.method( MemberEnter.instance( getContext() ), "memberEnter", JCTree.class, Env.class )
-        .invoke( defaultMethodForwarder, Enter.instance( getContext() ).getClassEnv( classDecl.sym ) );
+      memberEnter( defaultMethodForwarder, classDecl );
     }
 
     private void processPartClass( JCClassDecl classDecl )
     {
+      checkSuperclass( classDecl );
+
       if( !isPartClass( classDecl.sym ) )
       {
         return;
       }
 
-      if( hasSelfField( classDecl ) )
-      {
-        // already processed, probably an annotation processing round
-        return;
-      }
+      addSelvesField();
 
-      checkSuperclass( classDecl );
-
-      addSelfField( classDecl );
-      addCoveredField( classDecl );
       overrideDefaultInterfaceMethods( classDecl );
     }
 
-    private boolean hasSelfField( JCClassDecl classDecl )
-    {
-      return classDecl.defs.stream()
-        .anyMatch( def -> def instanceof JCVariableDecl &&
-          SELF_FIELD.equals( ((JCVariableDecl)def).name.toString() ) );
-    }
-
+    // enforce:
+    // part subclass requires part superclass
+    // part superclass requires part subclass
     private void checkSuperclass( JCClassDecl classDecl )
     {
-      Type superclass = classDecl.sym.getSuperclass();
-      if( classDecl.getExtendsClause() != null &&
-        superclass != null && getAnnotationMirror( superclass.tsym, part.class ) == null )
+      if( classDecl.getExtendsClause() == null )
       {
-        reportError( classDecl.getExtendsClause(), MSG_SUPERCLASS_NOT_PART.get() );
+        return;
+      }
+
+      Type superclass = classDecl.sym.getSuperclass();
+      if( superclass == null || getTypes().isSameType( superclass, getSymtab().objectType ) )
+      {
+        return;
+      }
+
+      Attribute.Compound partMirror = getAnnotationMirror( superclass.tsym, part.class );
+      if( isPartClass( classDecl.sym ) )
+      {
+        if( partMirror == null )
+        {
+          // part subclass must derive from part
+          reportError( classDecl.getExtendsClause(), MSG_SUPERCLASS_NOT_PART.get() );
+        }
+      }
+      else
+      {
+        if( partMirror != null )
+        {
+          // non-part subclass cannot derive from part
+          reportError( classDecl.getExtendsClause(), MSG_SUPERCLASS_PART.get() );
+        }
       }
     }
 
-    private void addSelfField( JCClassDecl classDecl )
+    private void addSelvesField()
     {
-      addWiringField( classDecl, SELF_FIELD, getSymtab().objectType );
+      ClassInfo ci = _classInfoStack.peek();
+      JCClassDecl classDecl = ci._classDecl;
+
+      TreeMaker make = getTreeMaker();
+      make.pos = classDecl.pos;
+
+      // initialize with `this` to avoid having to do so at runtime, $linkPartToSelf overwrites these values as needed
+      ArrayList<ClassType> interfaces = ci.getInterfaces();
+      List<JCExpression> thisExprs = List.fill( interfaces.size(), make.QualThis( classDecl.sym.type ) );
+      JCNewArray interfaceArray = make.NewArray( make.Type( getSymtab().objectType ), List.nil(), thisExprs );
+      interfaceArray.type = getTypes().makeArrayType( getSymtab().objectType );
+
+      addWiringField( classDecl, FINAL, SELVES, interfaceArray.type, interfaceArray );
     }
 
-    // This field is a performance measure which helps with 'this' substitution. Basically, we can skip the work of determining
-    // whether the interface of the context of 'this' is linked from $self to 'this'. Because, if we know all 'this' interfaces
-    // are linked by $self, we know the context interface is linked to 'this'. (we determine statically that the interface
-    // is implemented by 'this')
-    private void addCoveredField( JCClassDecl classDecl )
-    {
-      addWiringField( classDecl, COVERED_FIELD, getSymtab().booleanType );
-    }
-
-    private void addWiringField( JCClassDecl classDecl, String fieldName, Type fieldType )
+    private void addWiringField( JCClassDecl classDecl, long mods, String fieldName, Type fieldType, JCExpression initExpr )
     {
       TreeMaker make = getTreeMaker();
       make.pos = classDecl.pos;
 
       // field name & modifiers & type
-      JCModifiers access = make.Modifiers( PRIVATE );
+      JCModifiers access = make.Modifiers( PRIVATE | mods /*| ACC_SYNTHETIC*/ );
       Names names = getNames();
       Name name = names.fromString( fieldName );
       JCExpression type = make.Type( fieldType );
 
       // the field
-      JCVariableDecl fieldDecl = make.VarDef( access, name, type, null );
+      JCVariableDecl fieldDecl = make.VarDef( access, name, type, initExpr );
 
-      // add field def to class AST
-      ArrayList<JCTree> newDefs = new ArrayList<>( classDecl.defs );
-      newDefs.add( fieldDecl );
-      classDecl.defs = List.from( newDefs );
+      // add to AST
+      classDecl.defs = classDecl.defs.append( fieldDecl );
 
-      // define covered field and add it to the class symbol's members
-      ReflectUtil.method( MemberEnter.instance( getContext() ), "memberEnter", JCTree.class, Env.class )
-        .invoke( fieldDecl, Enter.instance( getContext() ).getClassEnv( classDecl.sym ) );
+      // enter symbol as class member
+      memberEnter( fieldDecl, classDecl );
     }
 
     private void processMethodOverlap( ClassInfo classInfo )
@@ -663,16 +928,19 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         {
           boolean isInterfaceShared = checkSharedLinks( iface, lis );
 
-          StringBuilder fieldNames = new StringBuilder();
-          lis.forEach( li -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( li._linkField.name ) );
           for( LinkInfo li: lis )
           {
+            StringBuilder overlappingLinks = new StringBuilder();
+            lis.stream()
+              .filter( l -> l != li )
+              .forEach( l -> overlappingLinks.append( overlappingLinks.length() > 0 ? ", " : "" ).append( l._linkField.name ) );
+
             if( !li.shares( iface ) )
             {
               if( !isInterfaceShared )
               {
-                reportWarning( li.getLinkField(),
-                  DelegationIssueMsg.MSG_INTERFACE_OVERLAP.get( iface.tsym.getSimpleName(), fieldNames ) );
+                reportError( li.getLinkField(),
+                  DelegationIssueMsg.MSG_INTERFACE_OVERLAP.get( iface.tsym.getSimpleName(), overlappingLinks ) );
               }
 
               // remove the overlap interface from the link, only the sharing link provides it
@@ -713,6 +981,218 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       processLinkField( tree );
     }
 
+    private void generate$ImplClass()
+    {
+      JCClassDecl classDecl = _classInfoStack.peek()._classDecl;
+      JCClassDecl classDeclOwner = _classInfoStack.peek( 1 )._classDecl;
+
+      if( !isPartClass( classDecl.sym ) )
+      {
+        return;
+      }
+
+      TreeMaker make = getTreeMaker();
+      make.pos = classDecl.pos;
+
+      // generate stub overrides for each abstract method
+      List<JCTree> implDefs = List.nil();
+      ArrayList<MethodSymbol> unimplementedMethods = findUnimplementedInterfaceMethods( classDeclOwner.sym );
+      for( MethodSymbol m: unimplementedMethods )
+      {
+        Type type = getTypes().memberType( classDecl.sym.type, m );
+        MethodType mt = (MethodType)type;
+        implDefs = implDefs.append( generateDeferredStub( m, mt ) );
+      }
+
+      // generate forwarding constructors mirroring super's constructors
+      java.util.List<JCMethodDecl> ctors = classDeclOwner.defs.stream()
+        .filter( def -> def instanceof JCMethodDecl && ((JCMethodDecl)def).sym.isConstructor() && (((JCMethodDecl)def).sym.flags_field & SYNTHETIC) == 0 )
+        .map( def -> (JCMethodDecl)def )
+        .collect( Collectors.toList() );
+
+      removeUnwantedNoArgCtor( classDecl );
+
+      for( JCMethodDecl def : ctors )
+      {
+        JCMethodDecl methDecl = generateForwardingConstructor( (JCMethodDecl)def );
+        implDefs = implDefs.append( methDecl );
+      }
+
+      classDecl.defs = classDecl.defs.appendList( implDefs );
+      implDefs.forEach( d -> memberEnter( d, classDecl ) );
+    }
+
+    // remove free no-arg ctor we don't want (we add it below if needed)
+    private void removeUnwantedNoArgCtor( JCClassDecl classDecl )
+    {
+      for( JCTree def: classDecl.defs )
+      {
+        if( def instanceof JCMethodDecl && ((JCMethodDecl)def).sym.isConstructor() )
+        {
+          classDecl.sym.members().remove( ((JCMethodDecl)def).sym );
+        }
+      }
+      classDecl.defs = List.from( classDecl.defs.stream()
+                                    .filter( def -> !(def instanceof JCMethodDecl) || !((JCMethodDecl)def).sym.isConstructor() )
+                                    .collect( Collectors.toList() ) );
+    }
+
+    private ArrayList<MethodSymbol> findUnimplementedInterfaceMethods( ClassSymbol classSym )
+    {
+      Set<String> visited = new HashSet<>();
+      ArrayList<MethodSymbol> unimplemented = new ArrayList<>();
+
+      ArrayList<ClassType> interfaces = new ArrayList<>();
+      findAllInterfaces( classSym.type, new HashSet<>(), interfaces );
+      for( ClassType iface : interfaces )
+      {
+        Iterable<Symbol> members = IDynamicJdk.instance().getMembers(
+          (ClassSymbol)iface.tsym,
+          m -> m instanceof MethodSymbol &&
+               !m.isStatic() &&
+               (m.flags() & SYNTHETIC) == 0 &&
+               !((MethodSymbol)m).isDefault() );
+        for( Symbol member : members )
+        {
+          MethodSymbol m = (MethodSymbol)member;
+          MethodSymbol impl = m.implementation( classSym, getTypes(), false );
+          if( impl == null || (impl.flags() & ABSTRACT) != 0 )
+          {
+            String sig = m.name + getTypes().erasure( m.type ).toString();
+            if( visited.add( sig ) )
+            {
+              unimplemented.add( m );
+            }
+          }
+        }
+      }
+      return unimplemented;
+    }
+
+    private JCMethodDecl generateDeferredStub( MethodSymbol m, MethodType mt )
+    {
+      TreeMaker make = getTreeMaker();
+      make.pos = _classInfoStack.peek()._classDecl.pos;
+      Names names = getNames();
+
+      List<JCTypeParameter> typeParams;
+      if( m.type instanceof Type.ForAll )
+      {
+        typeParams = make.TypeParams( m.type.getTypeArguments() );
+      }
+      else
+      {
+        List<Type> typeParamTypes = List.from( m.getTypeParameters().stream()
+          .map( tp -> tp.type ).collect( Collectors.toList() ) );
+        typeParams = make.TypeParams( typeParamTypes );
+      }
+
+      ArrayList<JCVariableDecl> params = new ArrayList<>();
+      for( int i = 0; i < mt.getParameterTypes().size(); i++ )
+      {
+        params.add( make.VarDef(
+          make.Modifiers( FINAL | Flags.PARAMETER ),
+          names.fromString( "$p" + i ),
+          make.Type( mt.getParameterTypes().get( i ) ),
+          null ) );
+      }
+
+      JCExpression errorClass = JCTreeUtil.memberAccess( make, names, DelegationLinkageError.class.getTypeName() );
+      JCNewClass newError = make.NewClass( null, List.nil(), errorClass,
+      List.of( make.Literal( "Abstract method '" + m.name + "' called on unlinked part" ) ), null );
+
+      return make.MethodDef(
+        make.Modifiers( PUBLIC ),
+        m.name,
+        make.Type( mt.getReturnType() ),
+        typeParams,
+        List.from( params ),
+        make.Types( mt.getThrownTypes() ),
+        make.Block( 0, List.of( make.Throw( newError ) ) ),
+        null );
+    }
+
+    private JCMethodDecl generateAsLinkStaticMethod( JCMethodDecl meth )
+    {
+      MethodSymbol m = meth.sym;
+      MethodType mt = (MethodType)m.type;
+
+      ClassInfo classInfo = _classInfoStack.peek();
+      JCClassDecl classDecl = classInfo._classDecl;
+
+      TreeMaker make = getTreeMaker();
+      make.pos = classDecl.pos;
+      Names names = getNames();
+
+      List<JCTypeParameter> typeParams = List.nil();
+      List<JCTypeParameter> classTypeParams = List.nil();
+      TreeCopier copier = new TreeCopier( make );
+      for( JCTypeParameter tp: classDecl.getTypeParameters() )
+      {
+        JCTypeParameter copy = (JCTypeParameter)copier.copy( tp );
+        classTypeParams = classTypeParams.append( copy );
+        typeParams = typeParams.append( copy );
+      }
+      for( JCTypeParameter tp: meth.getTypeParameters() )
+      {
+        typeParams = typeParams.append( (JCTypeParameter)copier.copy( tp ) );
+      }
+
+      List<JCVariableDecl> params = copier.copy( meth.getParameters() );
+
+      List<JCExpression> typeArgs = List.nil();
+      for( JCTypeParameter tp: classDecl.getTypeParameters() )
+      {
+        typeArgs = typeArgs.append( make.Ident( tp.name ) );
+      }
+
+      List<JCExpression> args = List.nil();
+      for( JCVariableDecl param: meth.params )
+      {
+        args = args.append( make.Ident( param.name ) );
+      }
+      JCNewClass implClassCtor = make.NewClass( null, typeArgs, make.Ident( names.fromString( "$Impl" ) ), args, null );
+
+
+      JCExpression returnType = null;
+      if( !classTypeParams.isEmpty() )
+      {
+        List<JCExpression> tps = List.from( classTypeParams.stream().map( tp -> make.Ident( tp.name ) ).collect( Collectors.toList() ) );
+        returnType = make.TypeApply( make.Ident( classDecl.getSimpleName() ), tps );
+      }
+      else
+      {
+        returnType = make.Type( classDecl.sym.type );
+      }
+      return make.MethodDef(
+        make.Modifiers( STATIC | (m.flags_field & (PRIVATE | PROTECTED | PUBLIC)) ),
+        getNames().fromString( "asLink" ),
+        returnType,
+        typeParams,
+        List.from( params ),
+        make.Types( mt.getThrownTypes() ),
+        make.Block( 0, List.of( make.Return( implClassCtor ) ) ),
+        null );
+    }
+
+    private JCMethodDecl generateForwardingConstructor( JCMethodDecl meth )
+    {
+      TreeMaker make = getTreeMaker();
+      make.pos = _classInfoStack.peek()._classDecl.pos;
+      Names names = getNames();
+
+      TreeCopier copier = new TreeCopier( make );
+      JCMethodDecl copy = (JCMethodDecl)copier.copy( meth );
+
+      // super(...)
+      List<JCExpression> args = List.from(
+        meth.params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toList() ) );
+      JCMethodInvocation superCall = make.Apply( List.nil(), make.Ident( names._super ), args );
+      copy.body = make.Block( 0, List.of( make.Exec( superCall ) ) );
+
+      return copy;
+    }
+
     private void processLinkField( JCVariableDecl varDecl )
     {
       int modifiers = (int)varDecl.getModifiers().flags;
@@ -733,13 +1213,6 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
           reportError( varDecl, MSG_LINK_STATIC_FIELD.get() );
           return;
         }
-
-        if( getAnnotationMirror( varDecl.sym, enter_finish.class ) != null )
-        {
-          // already processed, probably an annotation processing round
-          return;
-        }
-        addAnnotation( varDecl.sym, enter_finish.class );
 
         checkModifiersAndApplyDefaults( varDecl, modifiers, classDecl );
 
@@ -786,45 +1259,101 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       ArrayList<ClassType> interfaces = new ArrayList<>();
       ArrayList<ClassType> shared = new ArrayList<>();
       ArrayList<ClassType> fromAnno = new ArrayList<>();
-      boolean shareAll = getInterfacesFromLinkAnno( linkAnno, fromAnno, shared );
+      getInterfacesFromLinkAnno( linkAnno, fromAnno, shared );
       if( fromAnno.isEmpty() )
       {
         // derive interfaces from field's declared type
 
-        interfaces.addAll( getCommonInterfaces( ci, field.sym.type ) );
-        if( interfaces.isEmpty() )
+        Type fieldType = field.sym.type;
+        interfaces.addAll( getCommonInterfaces( ci.getInterfaces(), fieldType, false, true ) );
+
+        if( fieldType.isInterface() && ci.getInterfaces().stream().noneMatch( t -> getTypes().isSameType( t, fieldType ) ) )
         {
+          // if the linked field's type is an interface, the delegating class must implement it
+          reportError( linkAnno, MSG_DELEGATING_CLASS_DOES_NOT_IMPLEMENT.get( ci._classDecl.name, fieldType, field.name ) );
+        }
+        else if( interfaces.isEmpty() )
+        {
+          // if the linked field's type is *not* an interface, the interfaces the type has in common with the delegating class must be non-empty
           reportError( field.getType(), MSG_NO_INTERFACES.get( field.sym.type, ci._classDecl.sym.type ) );
+        }
+        else if( (fieldType.tsym.flags_field & ABSTRACT) == 0 ) // abstract classes and interfaces are preferred
+        {
+          ArrayList<ClassType> minimizedInterfaces = minimizeInterfaces( interfaces );
+          if( minimizedInterfaces.size() == 1 )
+          {
+            reportWarning( field.getType(), MSG_INTERFACE_LINK_FIELD_TYPE_EXPECTED_1.get(
+              field.sym.type.tsym.getSimpleName(), minimizedInterfaces.get( 0 ).tsym.getSimpleName(),
+              minimizedInterfaces.get( 0 ).tsym.getSimpleName() + ".class" ) );
+          }
+          else
+          {
+            reportWarning( field.getType(), MSG_INTERFACE_LINK_FIELD_TYPE_EXPECTED_N.get(
+              field.sym.type.tsym.getSimpleName(),
+              minimizedInterfaces.stream().map( t -> t.tsym.getSimpleName() + ".class" )
+                .collect( Collectors.joining( ", " ) ) ) );
+          }
         }
       }
       else
       {
         // derive interfaces from @link provided interfaces
 
-        for( ClassType iface : fromAnno )
+        for( int i = 0; i < fromAnno.size(); i++ )
         {
-          Set<ClassType> commonInterfaces = getCommonInterfaces( ci, iface, true );
+          ClassType iface = fromAnno.get( i );
+          Set<ClassType> commonInterfaces = getCommonInterfaces( ci.getInterfaces(), iface, true );
           interfaces.addAll( commonInterfaces );
-          if( commonInterfaces.isEmpty() )
+
+          if( ci.getInterfaces().stream()
+            .map( t -> getTypes().erasure( t ) )
+            .noneMatch( t -> getTypes().isSameType( t, getTypes().erasure( iface ) ) ) )
           {
-            reportError( linkAnno, MSG_NO_INTERFACES.get( iface, ci._classDecl.sym.type ) );
+            // delegating class must implement all the interfaces specified in the link annotation
+            reportError( linkAnno.getArguments().get( i ), MSG_DELEGATING_CLASS_DOES_NOT_IMPLEMENT.get( ci._classDecl.name, iface.tsym.getSimpleName(), field.name ) );
           }
         }
-        verifyFieldTypeSatisfiesAnnoTypes( field, interfaces );
+        checkFieldTypeSatisfiesAnnoTypes( field, interfaces );
       }
 
       removeDups( interfaces );
 
-      if( shareAll || !shared.isEmpty() )
+      if( !shared.isEmpty() )
       {
         // shared links must be final
         field.getModifiers().flags |= FINAL;
       }
-      
-      ci.getLinks().put( field, new LinkInfo( field, interfaces, shareAll, shared ) );
+
+      ci.getLinks().put( field, new LinkInfo( field, interfaces, shared ) );
     }
 
-    private void verifyFieldTypeSatisfiesAnnoTypes( JCVariableDecl field, ArrayList<ClassType> interfaces )
+    ArrayList<ClassType> minimizeInterfaces( ArrayList<ClassType> list )
+    {
+      Set<ClassType> result = new LinkedHashSet<>();
+      outer:
+      for( int i = 0; i < list.size(); i++ )
+      {
+        ClassType ti = list.get( i );
+        for( int j = 0; j < list.size(); j++ )
+        {
+          if( i == j )
+          {
+            continue;
+          }
+
+          ClassType tj = list.get( j );
+          if( !getTypes().isSameType( ti, tj ) && getTypes().isSubtype( tj, ti ) )
+          {
+            continue outer; // ti is redundant
+          }
+        }
+        result.add( ti );
+      }
+
+      return new ArrayList<>( result );
+    }
+
+    private void checkFieldTypeSatisfiesAnnoTypes( JCVariableDecl field, ArrayList<ClassType> interfaces )
     {
       Types types = getTypes();
       for( ClassType t: interfaces )
@@ -832,121 +1361,10 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         if( !types.isAssignable( field.sym.type, t ) )
         {
           JCTree typeTree = field.getType();
-          reportError( typeTree == null ? field : typeTree, MSG_FIELD_TYPE_NOT_ASSIGNABLE_TO.get(
+          reportWarning( typeTree == null ? field : typeTree, MSG_FIELD_TYPE_NOT_ASSIGNABLE_TO.get(
             field.sym.type.tsym.getQualifiedName(), t.tsym.getQualifiedName() ) );
         }
       }
-    }
-
-    private void removeDups( ArrayList<ClassType> interfaces )
-    {
-      Types types = getTypes();
-      for( int i = 0; i < interfaces.size(); i++ )
-      {
-        ClassType ti = interfaces.get( i );
-        for( int j = i+1; j < interfaces.size(); j++ )
-        {
-          ClassType tj = interfaces.get( j );
-          if( types.isSameType( ti, tj ) )
-          {
-            interfaces.remove( j-- );
-          }
-        }
-      }
-    }
-
-    private boolean getInterfacesFromLinkAnno( JCAnnotation linkAnno, ArrayList<ClassType> interfaces, ArrayList<ClassType> share )
-    {
-      List<JCExpression> args = linkAnno.getArguments();
-      if( args.isEmpty() )
-      {
-        return false;
-      }
-
-      boolean shareAll = false;
-      Attribute.Compound annoValues = linkAnno.attribute.getValue();
-      int i = 0;
-      for( Map.Entry<MethodSymbol, Attribute> entry: annoValues.getElementValues().entrySet() )
-      {
-        MethodSymbol argSym = entry.getKey();
-        Attribute value = entry.getValue();
-        if( argSym.name.toString().equals( "shareAll" ) )
-        {
-          shareAll = (boolean)value.getValue();
-        }
-        else if( argSym.name.toString().equals( "share" ) )
-        {
-          processClassType( share, value, args.get( i ) );
-        }
-        else if( argSym.name.toString().equals( "value" ) )
-        {
-          processClassType( interfaces, value, args.get( i ) );
-        }
-        else
-        {
-          throw new IllegalStateException();
-        }
-        i++;
-      }
-      return shareAll;
-    }
-
-    private void processClassType( ArrayList<ClassType> share, Attribute value, JCExpression expr )
-    {
-      if( value instanceof Attribute.Class )
-      {
-        processClassType( (Attribute.Class) value, share, expr );
-      }
-      if( value instanceof Attribute.Array )
-      {
-        for( Attribute cls : ((Attribute.Array) value).values )
-        {
-          processClassType( (Attribute.Class)cls, share, expr );
-        }
-      }
-    }
-
-    private void processClassType( Attribute.Class value, ArrayList<ClassType> interfaces, JCExpression location )
-    {
-      ClassType classType = (ClassType)value.classType;
-      if( classType.isInterface() )
-      {
-        interfaces.add( classType );
-      }
-      else
-      {
-        reportError( location, MSG_ONLY_INTERFACES_HERE.get() );
-      }
-    }
-
-    private Set<ClassType> getCommonInterfaces( ClassInfo ci, Type fieldType )
-    {
-      return getCommonInterfaces( ci, fieldType, false );
-    }
-    private Set<ClassType> getCommonInterfaces( ClassInfo ci, Type fieldType, boolean erasure )
-    {
-      ArrayList<ClassType> linkFieldInterfaces = new ArrayList<>();
-      findAllInterfaces( fieldType, new HashSet<>(), linkFieldInterfaces );
-
-      if( fieldType.isInterface() && Util.getAnnotationMirror( fieldType.tsym, Structural.class ) != null )
-      {
-        // A structural interface is assumed to be fully mapped onto the declaring class.
-        // Note, structural interfaces work only with forwarding, not with parts
-        return new HashSet<>( linkFieldInterfaces );
-      }
-
-      Types types = getTypes();
-      if( erasure )
-      {
-        return ci.getInterfaces().stream()
-          .filter( i1 -> linkFieldInterfaces.stream()
-            .anyMatch( i2 -> types.isSameType( types.erasure( i1 ), types.erasure( i2 ) ) ) )
-          .collect( Collectors.toSet() );
-      }
-      return ci.getInterfaces().stream()
-        .filter( i1 -> linkFieldInterfaces.stream()
-          .anyMatch( i2 -> types.isSameType( i1, i2 ) ) )
-        .collect( Collectors.toSet() );
     }
 
     private void linkInterfaces( LinkInfo li )
@@ -966,6 +1384,20 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
     private void generateInterfaceImplMethod( LinkInfo li, NamedMethodType namedMt )
     {
+      JCVariableDecl linkField = li.getLinkField();
+      Type linkType = linkField.vartype.type;
+      if( !linkType.isInterface() )
+      {
+        ArrayList<MethodSymbol> unimpled = findUnimplementedInterfaceMethods( (ClassSymbol)linkType.tsym );
+        for( MethodSymbol m : unimpled )
+        {
+          if( new NamedMethodType( m, m.type ).equals( namedMt ) )
+          {
+            // force delegating class to impl abstract methods
+            return;
+          }
+        }
+      }
       Type csr = namedMt.getType();
       while( csr instanceof Type.DelegatedType )
       {
@@ -974,7 +1406,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       MethodType mt = (MethodType)csr;
 
       TreeMaker make = getTreeMaker();
-      make.pos = li.getLinkField().pos;
+      make.pos = linkField.pos;
 
       // Method name & modifiers
       JCModifiers access = make.Modifiers( PUBLIC );
@@ -1013,7 +1445,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       JCExpression resType = make.Type( mt.getReturnType() );
 
       // Forward call statement
-      JCExpression link = make.Ident( li.getLinkField() );
+      JCExpression link = make.Ident( linkField );
       JCTree.JCFieldAccess forwardRef = IDynamicJdk.instance().Select( make, link, namedMt.getMethodSymbol() );
       forwardRef.type = mt.getReturnType();
       java.util.List<JCExpression> args = params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toList() );
@@ -1037,6 +1469,193 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     }
   }
 
+  private void memberEnter( JCTree memberDecl, JCClassDecl classDecl )
+  {
+    ReflectUtil.method( MemberEnter.instance( getContext() ), "memberEnter", JCTree.class, Env.class )
+      .invoke( memberDecl, Enter.instance( getContext() ).getClassEnv( classDecl.sym ) );
+  }
+
+  private void removeDups( ArrayList<ClassType> interfaces )
+  {
+    Types types = getTypes();
+    for( int i = 0; i < interfaces.size(); i++ )
+    {
+      ClassType ti = interfaces.get( i );
+      for( int j = i+1; j < interfaces.size(); j++ )
+      {
+        ClassType tj = interfaces.get( j );
+        if( types.isSameType( ti, tj ) )
+        {
+          interfaces.remove( j-- );
+        }
+      }
+    }
+  }
+
+  private void getInterfacesFromLinkAnno( JCAnnotation linkAnno, ArrayList<ClassType> interfaces, ArrayList<ClassType> share )
+  {
+    List<JCExpression> args = linkAnno.getArguments();
+    if( args.isEmpty() )
+    {
+      return;
+    }
+
+    Attribute.Compound annoValues = linkAnno.attribute.getValue();
+    int i = 0;
+    for( Map.Entry<MethodSymbol, Attribute> entry: annoValues.getElementValues().entrySet() )
+    {
+      MethodSymbol argSym = entry.getKey();
+      Attribute value = entry.getValue();
+      if( argSym.name.toString().equals( "share" ) )
+      {
+        processClassType( share, value, args.get( i ) );
+      }
+      else if( argSym.name.toString().equals( "value" ) )
+      {
+        processClassType( interfaces, value, args.get( i ) );
+      }
+      else
+      {
+        throw new IllegalStateException();
+      }
+      i++;
+    }
+  }
+
+  private void processClassType( ArrayList<ClassType> share, Attribute value, JCExpression expr )
+  {
+    if( value instanceof Attribute.Class )
+    {
+      processClassType( (Attribute.Class) value, share, expr );
+    }
+    if( value instanceof Attribute.Array )
+    {
+      for( Attribute cls : ((Attribute.Array) value).values )
+      {
+        processClassType( (Attribute.Class)cls, share, expr );
+      }
+    }
+  }
+
+  private void processClassType( Attribute.Class value, ArrayList<ClassType> interfaces, JCExpression location )
+  {
+    ClassType classType = (ClassType)value.classType;
+    if( classType.isInterface() )
+    {
+      interfaces.add( classType );
+    }
+    else
+    {
+      reportError( location, MSG_ONLY_INTERFACES_HERE.get() );
+    }
+  }
+
+  private Set<ClassType> getCommonInterfaces( ArrayList<ClassType> ci, Type fieldType, boolean erasure )
+  {
+    return getCommonInterfaces( ci, fieldType, erasure, false );
+  }
+  private Set<ClassType> getCommonInterfaces( ArrayList<ClassType> ci, Type fieldType, boolean erasure, boolean excludeInternal  )
+  {
+    ArrayList<ClassType> linkFieldInterfaces = new ArrayList<>();
+    findAllInterfaces( fieldType, new HashSet<>(), linkFieldInterfaces, excludeInternal );
+
+    if( fieldType.isInterface() && Util.getAnnotationMirror( fieldType.tsym, Structural.class ) != null )
+    {
+      // A structural interface is assumed to be fully mapped onto the declaring class.
+      // Note, structural interfaces work only with forwarding, not with parts
+      return new HashSet<>( linkFieldInterfaces );
+    }
+
+    Types types = getTypes();
+    if( erasure )
+    {
+      return ci.stream()
+        .filter( i1 -> linkFieldInterfaces.stream()
+          .anyMatch( i2 -> types.isSameType( types.erasure( i1 ), types.erasure( i2 ) ) ) )
+        .collect( Collectors.toSet() );
+    }
+    return ci.stream()
+      .filter( i1 -> linkFieldInterfaces.stream()
+        .anyMatch( i2 -> types.isSameType( i1, i2 ) ) )
+      .collect( Collectors.toSet() );
+  }
+
+  // add $PartClass to implements clause
+  private class Enter_Start extends TreeTranslator
+  {
+    @Override
+    public void visitClassDef( JCClassDecl classDecl )
+    {
+      if( classDecl.mods.annotations.stream().noneMatch( anno ->
+            anno.annotationType.toString().equals( part.class.getSimpleName() ) ||
+            anno.annotationType.toString().equals( part.class.getTypeName() ) ) )
+      {
+        // not a @part class
+        super.visitClassDef( classDecl );
+        return;
+      }
+
+      if( classDecl.implementing.stream().anyMatch( e -> e.toString().contains( $PartClass.class.getSimpleName() ) ) )
+      {
+        // already processed, probably an annotation processing round
+        result = classDecl;
+        return;
+      }
+
+      // add $PartClass to interfaces as a marker for quicker instanceof part check
+      List<JCExpression> implementsClause = classDecl.getImplementsClause();
+      if( implementsClause.stream().noneMatch( iface -> iface.toString().contains( $PartClass.class.getSimpleName() ) ) )
+      {
+        // add $PartClass to interfaces if not already added
+        TreeMaker make = getTreeMaker();
+        make.pos = classDecl.pos;
+        classDecl.implementing = implementsClause
+          .append( JCTreeUtil.memberAccess( make, getNames(), $PartClass.class.getTypeName() ) );
+      }
+
+      generate$ImplClassShell( classDecl );
+
+      super.visitClassDef( classDecl );
+    }
+
+    private void generate$ImplClassShell( JCClassDecl classDecl )
+    {
+      if( (classDecl.mods.flags & ABSTRACT) == 0 ||
+          classDecl.getModifiers().getAnnotations().stream()
+            .noneMatch( expr -> expr.annotationType.toString().contains( "part" ) ) )
+      {
+        return;
+      }
+
+      TreeMaker make = getTreeMaker();
+      make.pos = classDecl.pos;
+      Names names = getNames();
+      TreeCopier copier = new TreeCopier( make );
+
+      JCExpression extendedType;
+      if( classDecl.getTypeParameters().isEmpty() )
+      {
+        extendedType = make.Ident( classDecl.name );
+      }
+      else
+      {
+        List<JCExpression> typeParams = List.from( classDecl.getTypeParameters().stream().map( tp -> make.Ident( tp.name ) ).collect( Collectors.toList() ) );
+        extendedType = make.TypeApply( make.Ident( classDecl.getSimpleName() ), typeParams );
+      }
+
+      JCClassDecl implClass = make.ClassDef(
+        make.Modifiers( PRIVATE | STATIC, List.of( make.Annotation( memberAccess( make, part.class.getTypeName() ), List.nil() ) ) ),
+        names.fromString( "$Impl" ),
+        copier.copy( classDecl.getTypeParameters() ),
+        extendedType, // extends the abstract @part
+        List.nil(),
+        List.nil()
+      );
+
+      classDecl.defs = classDecl.defs.append( implClass );
+    }
+  }
+
   // - reduce parenthesized expressions of the form (this) and (Foo.this) to this and Foo.this. To make 'this' replacements
   // easier to deal with.
   //
@@ -1054,8 +1673,8 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     }
   }
   
-  // - for @link fields, assign linking class instance to $self of part classes
-  // - for @part classes, replace 'this' with '$self' where applicable
+  // - for @link fields, assign linking class instance to '$selves[<interface index>]' of part classes
+  // - for @part classes, replace 'this' with '$selves[<interface index>]' where applicable
   //
   private class Analyze_Finish extends TreeTranslator
   {
@@ -1103,7 +1722,6 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       if( isPartClass( tree.type.tsym ) )
       {
         if( !replaceThisArgument( tree ) &&
-          !replaceThisReceiver( tree ) &&
           !replaceThisReturn( tree ) &&
           !replaceThisCast( tree ) &&
           !replaceThisTernary( tree ) &&
@@ -1122,7 +1740,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         if( assignment.type.isInterface() )
         {
           JCClassDecl classDecl = findClassDecl( tree.type );
-          result = replaceThis( tree, classDecl, assignment.type );
+          result = getSelf( tree, classDecl, assignment.type );
         }
         else
         {
@@ -1136,7 +1754,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         if( varDecl.getType().type.isInterface() )
         {
           JCClassDecl classDecl = findClassDecl( tree.type );
-          result = replaceThis( tree, classDecl, varDecl.getType().type );
+          result = getSelf( tree, classDecl, varDecl.getType().type );
         }
         else
         {
@@ -1156,7 +1774,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         if( ternary.type.isInterface() )
         {
           JCClassDecl classDecl = findClassDecl( tree.type );
-          result = replaceThis( tree, classDecl, ternary.type );
+          result = getSelf( tree, classDecl, ternary.type );
         }
         else
         {
@@ -1176,38 +1794,13 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         if( cast.type.isInterface() )
         {
           JCClassDecl classDecl = findClassDecl( tree.type );
-          result = replaceThis( tree, classDecl, cast.type );
+          result = getSelf( tree, classDecl, cast.type );
         }
         else
         {
           reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
         return true;
-      }
-      return false;
-    }
-
-    private boolean replaceThisReceiver( JCExpression tree )
-    {
-      Tree parent = getParent( tree );
-      if( parent instanceof JCFieldAccess )
-      {
-        JCFieldAccess fa = (JCFieldAccess)parent;
-        if( !(fa.sym instanceof MethodSymbol) )
-        {
-          return false;
-        }
-        MethodSymbol sym = (MethodSymbol)fa.sym;
-        Pair<JCClassDecl, Type> enclClass_Iface = findInterfaceOfEnclosingTypeThatSymImplements( sym );
-        if( enclClass_Iface == null )
-        {
-          return false;
-        }
-        if( enclClass_Iface.snd != null )
-        {
-          result = replaceThis( tree, enclClass_Iface.fst, enclClass_Iface.snd );
-          return true;
-        }
       }
       return false;
     }
@@ -1222,13 +1815,13 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         {
           Types types = getTypes();
           JCMethodDecl method = findMethod( retStmt );
-          if( method != null )
+          if( method != null && !LINK_PART_TO_SELF.equals( method.name.toString() ) )
           {
             Type returnType = types.erasure( method.sym.getReturnType() );
             if( returnType.isInterface() )
             {
               JCClassDecl classDecl = findClassDecl( tree.type );
-              result = replaceThis( tree, classDecl, returnType );
+              result = getSelf( tree, classDecl, returnType );
             }
             else if( !types.isSameType( getSymtab().objectType, returnType ) )
             {
@@ -1265,8 +1858,17 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         if( m.getArguments() != null && m.getArguments().contains( tree ) && !isException_Arg( m ) )
         {
           int index = m.getArguments().indexOf( tree );
-          MethodSymbol sym = (MethodSymbol)(m.meth instanceof JCFieldAccess ? ((JCFieldAccess)m.meth).sym : ((JCIdent)m.meth).sym);
-          Symbol.VarSymbol paramSym = sym.getParameters().get( index );
+          Symbol sym = m.meth instanceof JCFieldAccess ? ((JCFieldAccess)m.meth).sym : ((JCIdent)m.meth).sym;
+          if( !(sym instanceof MethodSymbol) )
+          {
+            return false;
+          }
+          if( sym.owner.type.tsym.getQualifiedName().toString().equals( $PartClass.Internal.class.getCanonicalName() ) )
+          {
+            // call to $PartClass.Interal, do not replace
+            return false;
+          }
+          Symbol.VarSymbol paramSym = ((MethodSymbol)sym).getParameters().get( index );
           Types types = getTypes();
           Type paramType = types.erasure( paramSym.type );
           if( paramType.isInterface() )
@@ -1274,7 +1876,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
             JCClassDecl classDecl = findClassDecl( m.args.get( index ).type );
             if( classDecl != null )
             {
-              result = replaceThis( tree, classDecl, paramType );
+              result = getSelf( tree, classDecl, paramType );
             }
           }
           else if( !types.isSameType( getSymtab().objectType, paramType ) )
@@ -1292,9 +1894,108 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     {
       super.visitApply( tree );
 
-      processImpliedThisCall( tree );
-      replaceSuperDefaultMethodCall( tree, false );
+      if( !replaceThisMethodCall( tree ) )
+      {
+        replaceSuperDefaultMethodCall( tree, false );
+      }
+      checkInternalCall( tree );
     }
+
+    private void checkInternalCall( JCMethodInvocation tree )
+    {
+      if( !(tree.meth instanceof JCFieldAccess) )
+      {
+        return;
+      }
+
+      JCFieldAccess fa = (JCFieldAccess)tree.meth;
+      if( !(fa.sym instanceof MethodSymbol) )
+      {
+        return;
+      }
+      MethodSymbol msym = (MethodSymbol)fa.sym;
+
+      if( !hasInternalAnnotation( msym, new HashSet<>() ) )
+      {
+        return;
+      }
+      
+      if( tree.meth instanceof JCFieldAccess )
+      {
+        if( fa.selected instanceof JCIdent && ((JCIdent)fa.selected).name.toString().equals( "this" ) ||
+            fa.selected instanceof JCFieldAccess && fa.selected.toString().endsWith( ".this" ) ||
+            fa.selected instanceof JCIdent && ((JCIdent)fa.selected).name.toString().equals( "super" ) ||
+            fa.selected instanceof JCFieldAccess && fa.selected.toString().endsWith( ".super" ) )
+        {
+          // this or super access
+          return;
+        }
+
+        if( fa.selected instanceof JCIdent )
+        {
+          JCIdent ident = (JCIdent)fa.selected;
+          boolean isLinkFieldRef = ident.sym.getAnnotation( link.class ) != null;
+          if( isLinkFieldRef )
+          {
+            // link field access
+            return;
+          }
+        }
+
+        reportError( tree, MSG_INTERNAL_ACCESS_NOT_ALLOWED_HERE.get( msym, msym.owner.getQualifiedName() ) );
+      }
+    }
+
+    private boolean hasInternalAnnotation( MethodSymbol m, Set<MethodSymbol> visited )
+    {
+      if( !visited.add( m ) )
+      {
+        return false;
+      }
+
+      if( hasInternalAnnotation( m ) )
+      {
+        return true;
+      }
+
+      // walk supers
+      ClassSymbol owner = (ClassSymbol)m.owner;
+      for( Type sup : getTypes().closure( owner.type ) )
+      {
+        if( sup.tsym == owner )
+        {
+          continue;
+        }
+
+        for( Symbol sym : IDynamicJdk.instance().getMembersByName( (ClassSymbol)sup.tsym, m.name ) )
+        {
+          if( sym instanceof MethodSymbol )
+          {
+            if( m.overrides( sym, owner, getTypes(), false ) )
+            {
+              if( hasInternalAnnotation( (MethodSymbol)sym, visited ) )
+              {
+                return true;
+              }
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    private boolean hasInternalAnnotation( MethodSymbol m )
+    {
+      for( Attribute.Compound attr : m.getRawTypeAttributes() )
+      {
+        if( attr.type.tsym.getQualifiedName().contentEquals( internal.class.getTypeName() ) )
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+
 
     @Override
     public void visitExec( JCExpressionStatement tree )
@@ -1307,81 +2008,74 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       }
     }
 
-    private void processImpliedThisCall( JCMethodInvocation tree )
+    private boolean replaceThisMethodCall( JCMethodInvocation tree )
     {
+      JCClassDecl classDecl = _classDeclStack.peek();
+      if( !isInPartClass( classDecl.sym ) )
+      {
+        return false;
+      }
+
+      Symbol sym = null;
       if( tree.meth instanceof JCIdent )
       {
-        Symbol methSym = ((JCIdent)tree.meth).sym;
-        if( !(methSym instanceof MethodSymbol) )
+        sym = ((JCIdent)tree.meth).sym;
+      }
+      else if( tree.meth instanceof JCFieldAccess )
+      {
+        JCFieldAccess fa = (JCFieldAccess)tree.meth;
+        if( fa.selected instanceof JCIdent && ((JCIdent)fa.selected).name.toString().equals( "this" ) ||
+            fa.selected instanceof JCFieldAccess && fa.selected.toString().endsWith( ".this" ) )
         {
-          return;
-        }
-
-        MethodSymbol sym = (MethodSymbol)methSym;
-        if( sym.isStatic() )
-        {
-          return;
-        }
-
-        JCClassDecl classDecl = _classDeclStack.peek();
-        if( !isInPartClass( classDecl.sym ) )
-        {
-          return;
-        }
-
-        Pair<JCClassDecl, Type> enclClass_Iface = findInterfaceOfEnclosingTypeThatSymImplements( sym );
-        if( enclClass_Iface == null || !isPartClass( enclClass_Iface.fst.sym ) )
-        {
-          return;
-        }
-
-        if( enclClass_Iface.snd != null )
-        {
-          JCExpression thisSub = replaceThis( tree, enclClass_Iface.fst, enclClass_Iface.snd );
-          TreeMaker make = getTreeMaker();
-          make.pos = tree.pos;
-          JCMethodInvocation apply = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, thisSub, sym ), tree.args );
-          apply.type = tree.type;
-          result = apply;
+          sym = ((JCFieldAccess)tree.meth).sym;
         }
       }
-    }
 
-    private JCExpression replaceThis( JCExpression tree, JCClassDecl receiverType, Type contextType )
-    {
-      ClassSymbol runtimeMethodsClassSym = getRtClassSym( RuntimeMethods.class );
+      if( !(sym instanceof MethodSymbol) )
+      {
+        return false;
+      }
 
-      Names names = getNames();
+      MethodSymbol methSym = (MethodSymbol)sym;
+      if( methSym.isStatic() )
+      {
+        return false;
+      }
 
-      Symtab symtab = getSymtab();
-      MethodSymbol replaceThisMethod = resolveMethod( getContext(), getCompilationUnit(),
-        tree.pos(), names.fromString( "replaceThis" ),
-        runtimeMethodsClassSym.type,
-        List.from( new Type[]{symtab.classType, symtab.objectType, symtab.objectType} ) );
+      Pair<JCClassDecl, Type> enclClass_Iface = findInterfaceOfEnclosingTypeThatSymImplements( methSym );
+      if( enclClass_Iface == null || !isPartClass( enclClass_Iface.fst.sym ) )
+      {
+        return false;
+      }
 
-      TreeMaker make = getTreeMaker();
+      if( enclClass_Iface.snd != null )
+      {
+        Type iface = enclClass_Iface.snd;
+        JCClassDecl encClass = enclClass_Iface.fst;
+        JCExpression thisSub = getSelf( tree, encClass, iface );
+        TreeMaker make = getTreeMaker();
+        make.pos = tree.pos;
 
-      JCIdent selfIdent = make.Ident( resolveField( tree.pos(), getContext(), names.fromString( SELF_FIELD ),
-        receiverType.sym.type, receiverType ) );
+        // For a method call like `this.foo("hi")` we not only need to swap out `this` with `selves[i]`, but since `selves[i]`
+        // is always an interface-directed receiver and `this` is always an implementor, we must also re-resolve the method
+        // as seen from the interface. This is necessary, for example, with generic interfaces like:
+        // `interface Foo<T> { void foo(T t ); }` where:
+        // `class StringFoo implements Foo<String> { public void foo(String t) {...} }`.
+        // If we rewrite the receiver without re-resolving the method, the call will result in a runtime exception
+        // because `this` statically resolves as `FooString` so the method originally resolves as `foo(String)` which
+        // does not exist in interface `Foo`. The Foo-resolved method is `Foo(Object)`. Note, the runtime class of `this`
+        // will have a bridge method for Foo(Object) that redirects the call to its Foo(Stirng) implementation.
+        methSym = resolveMethod( getContext(), getCompilationUnit(), tree.pos(),
+                                 methSym.name, iface,
+                                 List.from( tree.args.stream().map( e -> e.type ).collect( Collectors.toList() ) ) );
 
-      JCExpression thisExpr = make.QualThis( receiverType.sym.type );
+        JCMethodInvocation apply = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, thisSub, methSym ), tree.args );
+        apply.type = tree.type;
 
-      JCMethodInvocation replaceThisCall = make.Apply( List.nil(),
-        memberAccess( make, RuntimeMethods.class.getTypeName() + ".replaceThis" ),
-        List.of( make.ClassLiteral( getTypes().erasure( contextType ) ), selfIdent, thisExpr ) );
-      replaceThisCall.setPos( tree.pos );
-      replaceThisCall.type = symtab.objectType;
-      JCFieldAccess methodSelect = (JCFieldAccess)replaceThisCall.getMethodSelect();
-      methodSelect.sym = replaceThisMethod;
-      methodSelect.type = replaceThisMethod.type;
-      methodSelect.pos = tree.pos;
-      assignTypes( methodSelect.selected, runtimeMethodsClassSym );
-      methodSelect.selected.pos = tree.pos;
-
-      //noinspection UnnecessaryLocalVariable
-      JCTypeCast castExpr = make.TypeCast( contextType, replaceThisCall );
-
-      return castExpr;
+        result = apply;
+        return true;
+      }
+      return false;
     }
 
     private JCClassDecl findClassDecl( Type type )
@@ -1428,7 +2122,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       {
         JCFieldAccess fa = (JCFieldAccess)((JCFieldAccess)tree.meth).selected;
         if( fa.type instanceof ClassType &&
-          fa.type.tsym.getQualifiedName().toString().equals( RuntimeMethods.class.getTypeName() ) )
+          fa.type.tsym.getQualifiedName().toString().equals( $PartClass.Internal.class.getCanonicalName() ) )
         {
           // don't replace 'this' for generated methods
           return true;
@@ -1458,7 +2152,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       JCFieldAccess meth = (JCFieldAccess)superInterfaceCall.meth;
       Type iface = meth.selected.type;
-      if( iface.isErroneous() )
+      if( iface.isErroneous() || !(meth.sym instanceof MethodSymbol) )
       {
         return;
       }
@@ -1477,27 +2171,10 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       Names names = getNames();
       Symtab symtab = getSymtab();
-
-      // RuntimeMethods class sym
-      Symbol.ClassSymbol runtimeMethodsClassSym = getRtClassSym( RuntimeMethods.class );
-      MethodSymbol linksInterfaceToMethod = resolveMethod( getContext(), getCompilationUnit(), superInterfaceCall, getNames().fromString( "linksInterfaceTo" ), runtimeMethodsClassSym.type,
-        List.of( symtab.classType, symtab.objectType, symtab.objectType ) );
-
-      // SELF_FIELD sym
-      JCIdent selfIdent = make.Ident( resolveField( tree.pos(), getContext(), names.fromString( SELF_FIELD ),
-        classDecl.sym.type, classDecl ) );
-
-      // RuntimeMethods.linksInterfaceTo( $self )
-
       Types types = getTypes();
-      JCTree.JCMethodInvocation linksInterfaceToCall = make.Apply( List.nil(),
-        memberAccess( make, RuntimeMethods.class.getTypeName() + ".linksInterfaceTo" ),
-        List.of( make.ClassLiteral( types.erasure( iface ) ), selfIdent, make.This( classDecl.sym.type ) ) );
-      linksInterfaceToCall.type = symtab.booleanType;
-      JCTree.JCFieldAccess methodSelect = (JCTree.JCFieldAccess)linksInterfaceToCall.getMethodSelect();
-      methodSelect.sym = linksInterfaceToMethod;
-      methodSelect.type = linksInterfaceToMethod.type;
-      assignTypes( methodSelect.selected, runtimeMethodsClassSym );
+
+      // $PartClass.Internal class sym
+      Symbol.ClassSymbol internalMethodsClassSym = getRtClassSym( $PartClass.Internal.class );
 
       // ReflectUtil.invokeDefaultAsSelf
 
@@ -1510,26 +2187,26 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       paramTypesArray.type = new Type.ArrayType( symtab.classType, symtab.arrayClass );
       JCNewArray argsArray = make.NewArray( make.Type( symtab.objectType ), List.nil(), List.from( superInterfaceCall.args ) );
       argsArray.type = new Type.ArrayType( symtab.objectType, symtab.arrayClass );
-      List<JCExpression> theArgs = List.of( selfIdent, make.ClassLiteral( types.erasure( iface ) ),
+      List<JCExpression> theArgs = List.of( getSelf( superInterfaceCall, classDecl, iface ), make.ClassLiteral( types.erasure( iface ) ),
         make.Literal( namedMt.getName().toString() ), paramTypesArray, argsArray );
 
       // make invokeDefault() call
       MethodSymbol invokeDefaultMethod = resolveMethod( getContext(), getCompilationUnit(), superInterfaceCall,
-        getNames().fromString( "invokeDefault" ), runtimeMethodsClassSym.type,
+        getNames().fromString( "invokeDefault" ), internalMethodsClassSym.type,
         List.of( symtab.objectType, symtab.classType, symtab.stringType, symtab.objectType, symtab.objectType ) );
       JCTree.JCMethodInvocation invokeDefaultCall = make.Apply( List.nil(),
-        memberAccess( make, RuntimeMethods.class.getTypeName() + ".invokeDefault" ), theArgs );
+        memberAccess( make, $PartClass.Internal.class.getCanonicalName() + ".invokeDefault" ), theArgs );
       invokeDefaultCall.type = symtab.booleanType;
       JCTree.JCFieldAccess mselect = (JCTree.JCFieldAccess)invokeDefaultCall.getMethodSelect();
       mselect.sym = invokeDefaultMethod;
       mselect.type = invokeDefaultMethod.type;
-      assignTypes( mselect.selected, runtimeMethodsClassSym );
+      assignTypes( mselect.selected, internalMethodsClassSym );
 
       if( exec )
       {
         // note, the result in this case comes from visitExec(), it's not the JCMethodInvocation, it's a JCExpressionStatement
 
-        result = make.If( linksInterfaceToCall, make.Exec( invokeDefaultCall ), make.Exec( superInterfaceCall ) );
+        result = make.If( hasSelf( superInterfaceCall, classDecl, iface ), make.Exec( invokeDefaultCall ), make.Exec( superInterfaceCall ) );
       }
       else
       {
@@ -1537,7 +2214,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
         // replace superInterfaceCall with:  linksInterfaceToCall() ? invokeDefaultCall : superInterfaceCall
 
-        JCConditional conditional = make.Conditional( linksInterfaceToCall, castInvokeDefaultCall, superInterfaceCall );
+        JCConditional conditional = make.Conditional( hasSelf( superInterfaceCall, classDecl, iface ), castInvokeDefaultCall, superInterfaceCall );
         conditional.type = mt.getReturnType();
 
         result = conditional;
@@ -1588,35 +2265,127 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       // replace assigned expr
       //   field = <value-expr>
       // with method call expr
-      //   field = (<field-ref-expr-type>)RuntimeMethods.linkPart( this, <field-name>, <value-expr> )
+      //   field = (<field-ref-expr-type>)$PartClass.Internal.linkPart( this, <field-name>, <value-expr> )
 
-      Symbol.ClassSymbol runtimeMethodsClassSym = getRtClassSym( RuntimeMethods.class );
+      checkAbstract( linkField, rhs );
+
+      Symbol.ClassSymbol internalMethodsClassSym = getRtClassSym( $PartClass.Internal.class );
 
       Names names = getNames();
 
       Symtab symtab = getSymtab();
+      Type.ArrayType arrayOfClassesType = getTypes().makeArrayType( symtab.classType );
       Symbol.MethodSymbol assignPartMethod = resolveMethod( getContext(), getCompilationUnit(),
-        assignmentOrVarDecl.pos(), names.fromString( "linkPart" ),
-        runtimeMethodsClassSym.type,
-        List.from( new Type[]{symtab.objectType, symtab.stringType, symtab.objectType} ) );
+                                                            assignmentOrVarDecl.pos(), names.fromString( "linkPart" ),
+                                                            internalMethodsClassSym.type,
+                                                            List.from( new Type[]{symtab.objectType, arrayOfClassesType, symtab.stringType, symtab.objectType} ) );
 
       TreeMaker make = getTreeMaker();
+      make.pos = assignmentOrVarDecl.pos;
+
+      ArrayList<ClassType> interfaces = getDelegatedInterfaces( linkField );
+      verifyLinkedDelegatedInterfacesAgainstDelegateType( interfaces, rhs );
+      List<JCExpression> interfaceTypes = List.from( interfaces.stream().map( t -> make.ClassLiteral( t ) ).collect( Collectors.toList() ) );
+      JCNewArray interfaceArray = make.NewArray( make.Type( symtab.classType ), List.nil(), interfaceTypes );
+      interfaceArray.type = arrayOfClassesType;
 
       JCTree.JCMethodInvocation assignPartCall = make.Apply( List.nil(),
-        memberAccess( make, RuntimeMethods.class.getTypeName() + ".linkPart" ),
-        List.of( make.This( _classDeclStack.peek().type ), make.Literal( linkField.name.toString() ), rhs ) );
-      assignPartCall.setPos( assignmentOrVarDecl.pos );
+        memberAccess( make, $PartClass.Internal.class.getCanonicalName() + ".linkPart" ),
+        List.of( make.This( _classDeclStack.peek().type ), interfaceArray, make.Literal( linkField.name.toString() ), rhs ) );
       assignPartCall.type = symtab.objectType;
       JCTree.JCFieldAccess methodSelect = (JCTree.JCFieldAccess)assignPartCall.getMethodSelect();
       methodSelect.sym = assignPartMethod;
       methodSelect.type = assignPartMethod.type;
-      methodSelect.pos = assignmentOrVarDecl.pos;
-      assignTypes( methodSelect.selected, runtimeMethodsClassSym );
-      methodSelect.selected.pos = assignmentOrVarDecl.pos;
+      assignTypes( methodSelect.selected, internalMethodsClassSym );
 
       //noinspection UnnecessaryLocalVariable
       JCTypeCast castExpr = make.TypeCast( linkField.type, assignPartCall );
       return castExpr;
+    }
+
+    private void checkAbstract( Symbol linkField, JCExpression rhs )
+    {
+      if( (rhs.type.tsym.flags_field & ABSTRACT) != 0 && !rhs.type.isInterface() &&
+          !getTypes().isSameType( getTypes().erasure( rhs.type ), getTypes().erasure( linkField.type ) ) )
+      {
+        reportError( rhs, MSG_LINK_TYPE_MUST_MATCH_ABSTRACT_PART_TYPE.get( linkField.type.tsym.getQualifiedName(), rhs.type.tsym.getQualifiedName() ) );
+      }
+    }
+
+    private void verifyLinkedDelegatedInterfacesAgainstDelegateType( ArrayList<ClassType> interfaces, JCExpression rhs )
+    {
+      Symbol.TypeSymbol delegateSym = rhs.type.tsym;
+      for( Attribute.TypeCompound attr : delegateSym.getRawTypeAttributes() )
+      {
+        if( !attr.type.tsym.getQualifiedName().toString().equals( internal.class.getTypeName() ) )
+        {
+          continue;
+        }
+
+        TypeAnnotationPosition p = attr.position;
+        if( p.type == TargetType.CLASS_EXTENDS )
+        {
+          int ifaceIndex = p.type_index;
+
+          List<Type> delegateClassImplementsList = ((ClassSymbol)rhs.type.tsym).getInterfaces();
+          if( ifaceIndex >= 0 && ifaceIndex < delegateClassImplementsList.size() )
+          {
+            Type t = getTypes().erasure( delegateClassImplementsList.get( ifaceIndex ) );
+            if( interfaces.stream().anyMatch( iface -> getTypes().isSameType( iface, t ) ) )
+            {
+              reportError( rhs, MSG_INTERFACE_IS_INTERNAL_TO_DELEGATE.get( t.tsym.getQualifiedName(), rhs.type.tsym.getQualifiedName() ) );
+            }
+          }
+        }
+      }
+    }
+
+    // Note, we recompute these here to include interfaces that would otherwise be bypassed by use of `share`
+    private ArrayList<ClassType> getDelegatedInterfaces( Symbol linkFieldSym )
+    {
+      JCClassDecl classDecl = _classDeclStack.peek();
+      JCVariableDecl linkField = (JCVariableDecl)classDecl.defs.stream()
+        .filter( def -> def instanceof JCVariableDecl && ((JCVariableDecl)def).sym == linkFieldSym )
+        .findFirst()
+        .orElseThrow( () -> new IllegalStateException( "Should have found @link field for " + linkFieldSym.name ) );
+
+      JCAnnotation linkAnno = getAnnotation( linkField, link.class );
+      if( linkAnno == null )
+      {
+        // compile error was issued for this during enter
+        return new ArrayList<>();
+      }
+
+      ArrayList<ClassType> interfaces = new ArrayList<>();
+      ArrayList<ClassType> shared = new ArrayList<>();
+      ArrayList<ClassType> fromAnno = new ArrayList<>();
+      getInterfacesFromLinkAnno( linkAnno, fromAnno, shared );
+      ArrayList<ClassType> enclClassInterfaces = new ArrayList<>();
+      findAllInterfaces( classDecl.sym.type, new HashSet<>(), enclClassInterfaces );
+      if( fromAnno.isEmpty() )
+      {
+        // derive interfaces from field's declared type
+
+        interfaces.addAll( getCommonInterfaces( enclClassInterfaces, linkFieldSym.type, false, true ) );
+      }
+      else
+      {
+        // derive interfaces from @link provided interfaces
+
+        for( ClassType iface : fromAnno )
+        {
+          Set<ClassType> commonInterfaces = getCommonInterfaces( enclClassInterfaces, iface, true );
+          interfaces.addAll( commonInterfaces );
+          if( commonInterfaces.isEmpty() )
+          {
+            reportError( linkAnno, MSG_NO_INTERFACES.get( iface, classDecl.sym.type ) );
+          }
+        }
+      }
+
+      removeDups( interfaces );
+
+      return interfaces;
     }
 
     private void assignTypes( JCExpression m, Symbol symbol )
@@ -1669,7 +2438,53 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     }
   }
 
+  /**
+   * generates `$selves[N]`, by computing N as the compile-time constant index of `iface`
+   * which corresponds with its position in the list of interfaces obtained from ClassInfo#getInterfaces.
+   */
+  private JCExpression getSelf( JCTree tree, JCClassDecl receiverType, Type iface )
+  {
+    return getSelf( tree, receiverType, iface, true );
+  }
+  private JCExpression getSelf( JCTree tree, JCClassDecl receiverType, Type iface, boolean typed )
+  {
+    Names names = getNames();
+    TreeMaker make = getTreeMaker();
+    make.pos = tree.pos;
+
+    JCLiteral interfaceIndex = make.Literal( TypeTag.INT, indexOfInterface( receiverType.sym.type, iface ) );
+    interfaceIndex.type = getSymtab().intType;
+    JCIdent selves = make.Ident( names.fromString( SELVES ) );
+    if( typed )
+    {
+      selves.sym = resolveField( tree.pos(), getContext(), names.fromString( SELVES ), receiverType.type, receiverType );
+      selves.type = getTypes().makeArrayType( getSymtab().objectType );
+    }
+    JCArrayAccess arrayAccessExpr = make.Indexed( selves, interfaceIndex );
+
+    return make.TypeCast( iface, arrayAccessExpr );
+  }
+
+  // hasSelf tests if `iface` is "owned": `selves[<index of `iface>] != this` means `iface` is dispatched through a delegating class
+  private JCExpression hasSelf( JCExpression tree, JCClassDecl receiverType, Type iface )
+  {
+    TreeMaker make = getTreeMaker();
+    make.pos = tree.pos;
+
+    JCExpression getSelf = getSelf( tree, receiverType, iface );
+    JCBinary hasSelf = make.Binary( Tag.NE, getSelf, make.QualThis( receiverType.sym.type ) );
+
+    Env<AttrContext> classEnv = Enter.instance( getContext() ).getClassEnv( receiverType.sym );
+    Attr.instance( getContext() ).attribExpr( hasSelf, classEnv );
+
+    return hasSelf;
+  }
+
   private void findAllInterfaces( Type type, Set<Type> seen, ArrayList<ClassType> result )
+  {
+    findAllInterfaces( type, seen, result, false );
+  }
+  private void findAllInterfaces( Type type, Set<Type> seen, ArrayList<ClassType> result, boolean excludeInternal )
   {
     if( seen.stream().anyMatch( t -> getTypes().isSameType( t, type ) ) )
     {
@@ -1677,7 +2492,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     }
     seen.add( type );
 
-    if( type.isInterface() )
+    if( type.isInterface() && !isInterfaceExcluded( type ) )
     {
       if( result.stream()
         .noneMatch( e -> getTypes().isSameType( e, type ) ) )
@@ -1688,24 +2503,75 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     else
     {
       Type superClass = ((ClassSymbol)type.tsym).getSuperclass();
-      findAllInterfaces( type, superClass, seen, result );
+      findAllInterfaces( type, superClass, seen, result, excludeInternal );
     }
 
-    List<Type> superInterfaces = ((ClassSymbol)type.tsym).getInterfaces();
+    List<Type> superInterfaces = getInterfaces( type, excludeInternal );
     if( superInterfaces != null )
     {
-      superInterfaces.forEach( superInterface -> findAllInterfaces( type, superInterface, seen, result ) );
+      superInterfaces.forEach( superInterface -> findAllInterfaces( type, superInterface, seen, result, excludeInternal ) );
     }
+  }
+
+  // Don't include interfaces in a class's implements list annotated with @internal
+  private List<Type> getInterfaces( Type type, boolean excludeInternal )
+  {
+    ArrayList<Type> interfaces = new ArrayList<>( ((ClassSymbol)type.tsym).getInterfaces() );
+    if( type.isInterface() )
+    {
+      // an interface can't have internal interfaces (only a class's implements clause may annotate interfaces with @internal)
+      return List.from( interfaces );
+    }
+
+    if( excludeInternal )
+    {
+      Symbol.TypeSymbol delegateSym = type.tsym;
+      for( Attribute.TypeCompound attr : delegateSym.getRawTypeAttributes() )
+      {
+        if( !attr.type.tsym.getQualifiedName().toString().equals( internal.class.getTypeName() ) )
+        {
+          continue;
+        }
+
+        TypeAnnotationPosition p = attr.position;
+        if( p.type == TargetType.CLASS_EXTENDS )
+        {
+          int ifaceIndex = p.type_index;
+          if( ifaceIndex >= 0 && ifaceIndex < interfaces.size() )
+          {
+            interfaces.set( ifaceIndex, null );
+          }
+        }
+      }
+      interfaces.removeIf( e -> e == null );
+    }
+
+    return List.from( interfaces );
+  }
+
+  private static boolean isInterfaceExcluded( Type type )
+  {
+    // internal interface $PartClass should never be included as a delegatable interface
+    return type.tsym.getQualifiedName().toString().equals( $PartClass.class.getTypeName() );
   }
 
   private void findAllInterfaces( Type type, Type superType, Set<Type> seen, ArrayList<ClassType> result )
   {
+    findAllInterfaces( type, superType, seen, result, false );
+  }
+  private void findAllInterfaces( Type type, Type superType, Set<Type> seen, ArrayList<ClassType> result, boolean excludeInternal )
+  {
+    if( getTypes().isSameType( getSymtab().objectType, superType ) )
+    {
+      return;
+    }
+
     superType = getUnderlyingType( superType );
     if( superType != Type.noType && !superType.isErroneous() )
     {
       // map the super type as declared in type
       superType = getTypes().asSuper( type, superType.tsym );
-      findAllInterfaces( superType, seen, result );
+      findAllInterfaces( superType, seen, result, excludeInternal );
     }
   }
 
@@ -1741,8 +2607,11 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
   {
     ClassSymbol annoSym = IDynamicJdk.instance().getTypeElement( _context,
       getCompilationUnit(), annoClass.getTypeName() );
-    Attribute.Compound anno = new Attribute.Compound( annoSym.type,List.nil() );
-    sym.appendAttributes( List.of( anno ) );
+    if( annoSym != null ) // annoSym can be null if processing an extension class's extended class e.g., java.lang.Object can't see an annotation in a manifold package
+    {
+      Attribute.Compound anno = new Attribute.Compound( annoSym.type, List.nil() );
+      sym.appendAttributes( List.of( anno ) );
+    }
   }
 
   static Attribute.Compound getAnnotationMirror( Symbol sym, Class<? extends Annotation> annoClass )
@@ -1786,10 +2655,10 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
   private Symbol.ClassSymbol getRtClassSym( Class cls )
   {
-    Symbol.ClassSymbol sym = IDynamicJdk.instance().getTypeElement( getContext(), getCompilationUnit(), cls.getTypeName() );
+    Symbol.ClassSymbol sym = IDynamicJdk.instance().getTypeElement( getContext(), getCompilationUnit(), cls.getCanonicalName() );
     if( sym == null )
     {
-      sym = JavacElements.instance( getContext() ).getTypeElement( cls.getTypeName() );
+      sym = JavacElements.instance( getContext() ).getTypeElement( cls.getCanonicalName() );
     }
     return sym;
   }
@@ -1825,6 +2694,10 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
    */
   private void sortInterfaces( java.util.List<? extends Type> interfaces )
   {
+    sortInterfaces( interfaces, true );
+  }
+  private void sortInterfaces( java.util.List<? extends Type> interfaces, boolean subFirst )
+  {
     interfaces.sort( (t1, t2) -> {
       Type et2 = getTypes().erasure( t2 );
       Type et1 = getTypes().erasure( t1 );
@@ -1832,9 +2705,13 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       {
         return 0;
       }
-      return getTypes().isAssignable( et1, et2 )
+      return (subFirst
+             ? getTypes().isAssignable( et1, et2 )
+             : getTypes().isAssignable( et2, et1 ))
         ? -1
-        : getTypes().isAssignable( et2, et1 ) ? 1 : 0;
+        : subFirst
+          ? getTypes().isAssignable( et2, et1 ) ? 1 : 0
+          : getTypes().isAssignable( et1, et2 ) ? 1 : 0;
     } );
   }
   private List<Type> sortInterfaces( List<Type> interfaces )
@@ -1915,16 +2792,14 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     private final Map<Name, Set<NamedMethodType>> _methodTypes;
     private final ArrayList<ClassType> _interfaces;
     private final ArrayList<ClassType> _shared;
-    private final boolean _shareAll;
 
-    LinkInfo( JCVariableDecl linkField, ArrayList<ClassType> linkdInterfaces, boolean shareAll, ArrayList<ClassType> shared )
+    LinkInfo( JCVariableDecl linkField, ArrayList<ClassType> linkedInterfaces, ArrayList<ClassType> shared )
     {
       _linkField = linkField;
       _generatedMethods = new ArrayList<>();
       _methodTypes = new HashMap<>();
-      _interfaces = new ArrayList<>( linkdInterfaces );
+      _interfaces = new ArrayList<>( linkedInterfaces );
       sortInterfaces( _interfaces );
-      _shareAll = shareAll;
       _shared = shared;
     }
 
@@ -1970,7 +2845,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
     public boolean shares( ClassType iface )
     {
-      return _shareAll || _shared.stream().anyMatch( t -> getTypes().isSameType( t, getTypes().erasure( iface ) ) );
+      return _shared.stream().anyMatch( t -> getTypes().isSameType( t, getTypes().erasure( iface ) ) );
     }
   }
 

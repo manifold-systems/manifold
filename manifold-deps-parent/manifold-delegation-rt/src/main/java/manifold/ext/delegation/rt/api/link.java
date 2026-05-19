@@ -24,10 +24,10 @@ import java.lang.annotation.Target;
 /**
  * Use {@code @link} to automatically transfer calls on unimplemented interface methods to fields in the same class.
  * <ul>
- * <li> Choose between call forwarding and true delegation with {@code @part} </li>
+ * <li> Choose between call forwarding with any class or true delegation with {@code @part} classes </li>
  * <li> Override linked interface methods, optionally using {@link part} classes (solves <a href="https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html">the Self problem</a>) </li></li>
  * <li> Share super interface implementations (solves <a href="https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem">the Diamond problem</a>)</li>
- * <li> Configure class implementation dynamically</li>
+ * <li> Configure class implementation dynamically by leveraging the late-bound nature of links via constructor Dependency Injection (DI)</li>
  * </ul>
  * Classes and links are many-to-many: Many of a class's interfaces may be linked to a single field. A single class may
  * have many linked fields.
@@ -59,10 +59,4 @@ public @interface link
    * If two or more links declare to share the same interface, a compiler error results.
    */
   Class<?>[] share() default {};
-
-  /**
-   * If true, indicates this link is shared where interface overlap exists with other links. Similar to {@link #share},
-   * but includes all interfaces from this link that overlap.
-   */
-  boolean shareAll() default false;
 }

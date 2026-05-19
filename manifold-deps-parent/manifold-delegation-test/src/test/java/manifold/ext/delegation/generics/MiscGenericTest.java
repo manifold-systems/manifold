@@ -46,6 +46,36 @@ public class MiscGenericTest extends TestCase
     }
   }
 
+  public void testList2()
+  {
+    MyList2<String> l = new MyList2<>();
+    ArrayList<String> other = new ArrayList<String>(){{add("hi"); add("bye");}};
+    l.add( "one" );
+    l.addAll( other );
+    assertEquals( 3, l.size() );
+  }
+  static class MyList2<E> implements List<E>
+  {
+    @link ArrayList<E> l = new ArrayList<>();
+    int times = 0;
+
+    @Override
+    public boolean add( E e )
+    {
+      times++;
+      return l.add( e );
+    }
+  }
+
+  public void testMyMap()
+  {
+    MyMap<Integer> m = new MyMap<>();
+    m.put( "one", 1 );
+    m.put( "two", 2 );
+    assertEquals( 2, m.size() );
+    assertEquals( 1, m.get( "one" ).intValue() );
+    assertEquals( 2, m.get( "two" ).intValue() );
+  }
   static @part class MyMap<E> implements Map<String, E>
   {
     @link Map<String, E> m = new HashMap<>();
@@ -63,14 +93,5 @@ public class MiscGenericTest extends TestCase
     {
       return Map.super.computeIfPresent( key, remappingFunction );
     }
-  }
-
-  interface Foo<E> {
-    E asdf( E e );
-  }
-  interface Bar<E> extends Foo<String> {
-  }
-  static class FooImpl<E> implements Bar<E> {
-    @link Bar<E> foo;
   }
 }

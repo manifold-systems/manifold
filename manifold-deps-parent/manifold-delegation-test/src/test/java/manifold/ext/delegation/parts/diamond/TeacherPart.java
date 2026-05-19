@@ -41,4 +41,9 @@ public @part class TeacherPart implements Teacher
   {
     return "Prof";
   }
+
+  public String callTitledNameFromInsideTeacherPart()
+  {
+    return getTitledName();
+  }
 }

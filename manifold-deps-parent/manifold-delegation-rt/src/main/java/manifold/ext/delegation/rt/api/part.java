@@ -24,15 +24,18 @@ import java.lang.annotation.Target;
 /**
  * When combined with the {@link link} annotation, a part class is a building block for interface composition & <i>true</i>
  * delegation. A part class may also be used as a regular class anywhere you would normally use a class.
- * <p/>
+ * <p>
  * When used for delegation, one or more fields of a class are marked with {@code @link} where each is assigned an instance
- * of a {@code part} class. The field's enclosing class, called the linking class, delegates the implementation of linked
+ * of a {@code part} class. The field's enclosing class, called the linking (or delegating) class, delegates the implementation of linked
  * interfaces to a {@code part} class, where the linking class can override methods in the link. In turn, linked interfaces
- * invoked from the {@code part} class are also polymorphic with respect to the linking class. As with sub/super classes,
+ * invoked from the {@code part} class are polymorphic with respect to the linking class. As with sub/super classes,
  * linked interface method calls are polymorphic both going it and out of a {@code part} class.
+ * <p>
+ * Note, an abstract {@code @part} class can be used with {@code @link} via the {@code asLink()} static method, which is
+ * generated on abstract {@code @part} classes.
  */
-@Target( ElementType.TYPE )
-@Retention( RetentionPolicy.CLASS )
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.CLASS)
 public @interface part
 {
 }

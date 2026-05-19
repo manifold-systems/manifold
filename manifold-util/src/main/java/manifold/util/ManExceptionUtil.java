@@ -19,17 +19,17 @@ package manifold.util;
 public class ManExceptionUtil
 {
   /**
-   * Throws an unchecked exception without having to declare or catch it.
+   * Throws a checked exception without having to declare or catch it.
    *
    * @param t Any exception
    * @return The {@link RuntimeException} return type is here so you can do this:<br>
-   * {@code throw ManExceptionUtil.uncheck(new SomeException())}
+   * {@code throw ManExceptionUtil.uncheck(new SomeCheckedException())}
    */
   public static RuntimeException unchecked( Throwable t )
   {
     _unchecked( t );
 
-    // above statement always throws, this is unreachable
+    // above statement always throws, this is unreachable, but here to allow RuntimeException return type
     throw new IllegalStateException();
   }
 

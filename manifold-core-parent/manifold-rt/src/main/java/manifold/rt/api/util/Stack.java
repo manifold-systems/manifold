@@ -61,11 +61,16 @@ public class Stack<T> implements Iterable<T>
 
   public T peek()
   {
+    return peek( 0 );
+  }
+
+  public T peek( int offset )
+  {
     if( isEmpty() )
     {
       throw new EmptyStackException();
     }
-    return _list.get( size() - 1 );
+    return _list.get( size() - 1 - offset );
   }
 
   public T getBase()

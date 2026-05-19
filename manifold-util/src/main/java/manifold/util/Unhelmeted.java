@@ -28,10 +28,7 @@ public class Unhelmeted
     {
       if( useInternalUnsafe() )
       {
-        Field theUnsafe = Unsafe.class.getDeclaredField( "theInternalUnsafe" );
-        theUnsafe.setAccessible( true );
-        return UNSAFE = theUnsafe.get( null );
-//        return UNSAFE = Class.forName( "jdk.internal.misc.Unsafe" ).getMethod( "getUnsafe" ).invoke( null );
+        return UNSAFE = Class.forName( "jdk.internal.misc.Unsafe" ).getMethod( "getUnsafe" ).invoke( null );
       }
       else
       {

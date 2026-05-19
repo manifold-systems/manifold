@@ -65,4 +65,12 @@ public class DiamondTest extends TestCase
     assertEquals( "TA", fred.getPersonFromThisCast().getTitle() );
     assertEquals( "TA", fred.getPersonFromQualThisCast().getTitle() );
   }
+
+  public void testSharedLinkStillWorksFromInsideBypassedPart()
+  {
+    PersonPart fred = new PersonPart( "Fred" );
+    Student taStudent = new StudentPart( fred, BS );
+    TaPart ta = new TaPart( taStudent, Science );
+    assertEquals( ta.getTitledName(), ta.callTitledNameFromInsideTeacherPart() );
+  }
 }

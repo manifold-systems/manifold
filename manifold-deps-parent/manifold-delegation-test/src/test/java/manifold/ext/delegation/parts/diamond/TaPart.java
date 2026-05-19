@@ -25,19 +25,17 @@ import manifold.ext.delegation.rt.api.link;
  * TaPart shares its Student part with its Teacher part to disambiguate the delegation of the Person interface shared between
  * them.
  */
-public @part class TaPart implements TA // TA is a "diamond" interface
+public @part class TaPart implements TA // TA is a "diamond" interface with Student and Teacher converging on Person
 {
-  // Note, we can also specify specific interfaces instead of shareAll
-  //@link(share=Person.class) Student _student; // 'share=Person.class' disambiguates Person shared between TA's Student and Teacher parts
-
-  @link(shareAll=true) Student _student; // 'shareAll=true' disambiguates Person shared between TA's Student and Teacher parts
+  @link(share = Person.class) Student _student; // 'share=Person.class' disambiguate Person shared between TA's Student and Teacher parts
   @link Teacher _teacher;
 
 
   public TaPart( Student student, Department department )
   {
-    // student is shared as the Person part of the Teacher. Because Person, Student, and Teacher are all @part classes
-    // they share the same 'self' which will be the instance of this TaPart class.
+    // student is shared as the Person part of the Teacher. However, because TeacherPart only uses the student to delegate
+    // the Person interface impl, student is effectively unused in TeacherPart because Person calls route through StudentPart.
+    // In other words, polymorphic Person calls inside TeacherPart use TaPart as the receiver (self), which delegates to StudentPart.
     _student = student;
     _teacher = new TeacherPart( _student, department );
   }
@@ -46,5 +44,10 @@ public @part class TaPart implements TA // TA is a "diamond" interface
   public String getTitle()
   {
     return "TA";
+  }
+
+  public String callTitledNameFromInsideTeacherPart()
+  {
+    return ((TeacherPart)_teacher).callTitledNameFromInsideTeacherPart();
   }
 }

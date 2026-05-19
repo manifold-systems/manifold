@@ -735,6 +735,26 @@ public class ReflectUtil
       throw ManExceptionUtil.unchecked( e );
     }
   }
+  public static List<FieldRef> fields( Class<?> cls, Predicate<FieldRef> filter )
+  {
+    if( cls == null )
+    {
+      throw new NullPointerException( "receiver or cls is null" );
+    }
+
+    try
+    {
+      List<Field> fields = fields( cls );
+      return fields.stream()
+        .map( f -> field( cls, f.getName() ) )
+        .filter( lf -> filter == null || filter.test( lf ) )
+        .collect( Collectors.toList() );
+    }
+    catch( Exception e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
 
   private static List<Field> fields( Class cls )
   {
@@ -1107,6 +1127,11 @@ public class ReflectUtil
         }
         throw ManExceptionUtil.unchecked( e );
       }
+    }
+
+    public boolean isStatic()
+    {
+      return Modifier.isStatic( getField().getModifiers() );
     }
 
     public Field getField()
