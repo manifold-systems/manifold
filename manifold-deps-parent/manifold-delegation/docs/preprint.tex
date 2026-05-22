@@ -1,0 +1,905 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{array}
+\usepackage{makecell}
+\usepackage{float}
+\usepackage{parskip}
+\usepackage[hidelinks]{hyperref}
+
+%% Theorem environments
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+
+%% Inline code
+\newcommand{\code}[1]{\texttt{#1}}
+
+%% Java listings
+\definecolor{codegray}{gray}{0.45}
+\definecolor{codeblue}{rgb}{0.13,0.29,0.53}
+\definecolor{codebg}{rgb}{0.97,0.97,0.97}
+\lstdefinestyle{java}{
+  language=Java,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codegray}\itshape,
+  stringstyle=\color{codegray},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  framesep=4pt,
+  rulecolor=\color{black!15},
+  xleftmargin=6pt,
+  xrightmargin=6pt,
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  tabsize=2,
+  numbers=none,
+  morekeywords={abstract,implements,extends,interface,class,new,return,
+                public,private,protected,static,final,void,String,boolean,
+                int,Object,Override,System,out,println},
+}
+\lstset{style=java}
+
+%% Verbatim-style inline
+\newcommand{\jcode}[1]{\lstinline[style=java]{#1}}
+
+\begin{document}
+
+\title{Compositional Polymorphism:\\
+Resolving the Object Composition Trilemma}
+\author{R. Scott McKinney\\
+\textit{scott@manifold.systems}}
+\date{}
+\maketitle
+
+\begin{abstract}
+We identify a fundamental trilemma in object composition: no prior model
+satisfies runtime polymorphism, independent late-bound components, and
+static typing together. We
+present \emph{compositional polymorphism}, a composition model that satisfies
+all three properties. The model is realized as a compiler plugin for Java requiring no
+language changes, supports arbitrary DAG composition with per-interface dispatch
+roots, introduces composite-scoped encapsulation, and delivers dispatch
+performance equivalent to standard virtual dispatch.
+\end{abstract}
+
+\tableofcontents
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+%% ─────────────────────────────────────────────────────────────────────────────
+
+Object-oriented programming is built on polymorphism. We identify a fundamental
+trilemma in OO composition: every mainstream mechanism sacrifices at least one
+of three properties:
+
+\begin{enumerate}
+  \item \textbf{Runtime polymorphism} --- self-calls within a component dispatch
+        through the composite host (the \emph{Self problem}~\cite{lieberman1986,self1987}:
+        a self-call in a component should invoke the composite's override, not the
+        component's own implementation)
+  \item \textbf{Independent, late-bound components} --- components are
+        independent objects supplied at construction time, not statically inlined,
+        fused, or ordered into a linear chain; a component may simultaneously
+        carry a distinct composite identity per interface
+  \item \textbf{Static typing} --- the composition's interface contracts are
+        enforced at compile time
+\end{enumerate}
+
+Prototype-based delegation~\cite{lieberman1986,self1987} solves the Self problem
+and provides late-bound components, but without static type guarantees. Scala
+traits~\cite{odersky2005} and Rust trait impls enforce static typing and support
+polymorphism, but collapse to a single linearized type at link time---real
+components are gone. Python's MRO and Ruby's mixins linearize the chain, forfeiting independent
+component identity and, in the case of dynamic languages, static typing. Java
+interfaces with default methods provide static typing but no delegation
+semantics. Kotlin's \code{by} keyword provides forwarding, not delegation---self-calls
+do not dispatch through the composite.
+
+Even the closest prior models fall short.
+Kniesel's type-safe delegation~\cite{kniesel1999} addresses the Self problem
+under static typing but restricts each component to a single composite identity,
+precluding DAG composition.
+Ostermann's delegation layers~\cite{ostermann2002} achieve correct self-call
+dispatch and static typing, but components must be defined as virtual nested
+classes of a common enclosing family type---independently defined classes
+cannot be composed.
+
+This paper presents \textbf{compositional polymorphism}, which satisfies all
+three properties --- and does so at dispatch cost equivalent to standard virtual
+dispatch, making the model practical for production use. The
+core contributions are:
+
+\begin{itemize}
+  \item A formal model of compositional polymorphism with ten definitions and one
+        central proposition
+  \item A compiler transformation for standard Java (8--26) implementing the
+        model with O(1) dispatch
+  \item Composite-scoped encapsulation (\code{@internal}) --- component-family
+        visibility without package-scope leakage; a principled alternative to
+        \code{protected}
+  \item Abstract components with deferred linkage (\code{asLink()} factory)
+  \item A safety mechanism for cycles and premature access
+        (\code{DelegationLinkageError})
+  \item An open-source implementation supporting Java 8--26 with full IDE
+        integration (IntelliJ) and a test suite covering generics, DAG topology,
+        diamond resolution, abstract components, default methods, and
+        \code{@internal} enforcement
+\end{itemize}
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{The Model}
+%% ─────────────────────────────────────────────────────────────────────────────
+
+We define compositional polymorphism over a standard typed object model where
+classes implement interfaces and method dispatch is defined by the receiver's
+runtime type.
+
+\begin{definition}[Component]
+A \emph{component} is a class annotated \code{@part}. Components implement one
+or more interfaces. A component may contain \code{@link} fields (making it a composite).
+\end{definition}
+
+\begin{definition}[Link]
+A \emph{link} is a field annotated \code{@link} in a host class. A link field
+is \code{private} and \code{final}. The \emph{delegation surface} of a link is
+the intersection of the field's declared type and the interfaces of the
+enclosing class (or the subset specified by \code{value()}).
+\end{definition}
+
+\begin{definition}[Composite]
+A \emph{composite} is a class containing one or more \code{@link} fields. A
+composite implements the union of the delegation surfaces of all its links.
+\end{definition}
+
+\begin{definition}[Delegation surface]
+The delegation surface of a composite is the set of interfaces delegated by at
+least one link. Each interface in the surface is assigned to exactly one link;
+ambiguity (diamond overlap) is a compile error unless resolved with
+\code{share=}.
+\end{definition}
+
+\begin{definition}[Composite identity]
+When a component is wired to a composite, it receives a \emph{composite
+identity}: a reference to the composite object. Self-calls within the
+component---calls to methods in the component's interfaces---dispatch through
+the composite identity rather than \code{this}.
+\end{definition}
+
+\begin{definition}[Transitive composability]
+A composite may itself be a component. When a composite-component is wired to a
+larger composite, composite identity propagates transitively: each interface in
+the composite-component is re-rooted at the new outermost composite.
+\end{definition}
+
+\begin{definition}[Delegation surface restriction]
+An interface in a component's \code{implements} clause may be annotated
+\code{@internal} to exclude it from the component's delegation surface. An
+\code{@internal} interface participates in the component's own behavior but
+cannot be delegated by external composites.
+\end{definition}
+
+\begin{definition}[Composite-scoped method]
+An interface method annotated \code{@internal} is accessible within the
+composite family (component-to-component via link fields) but is not accessible
+through the composite's external interface. It is the compositional analog of
+\code{protected} without package-scoping.
+\end{definition}
+
+\begin{definition}[Abstract component]
+A component may be declared \code{abstract}. Abstract methods in the component
+are obligations imposed on the delegating composite. The compiler generates a
+static \code{asLink()} factory per non-private constructor; \code{asLink()}
+returns a \emph{deferred} instance whose abstract methods throw
+\code{DelegationLinkageError} until wired.
+\end{definition}
+
+\begin{definition}[Diamond resolution]
+When two links in a composite share a common interface, exactly one must declare
+\code{share=T} for the shared interface. That link is authoritative; the other
+delegates only its non-shared interfaces. Unresolved diamonds are compile
+errors.
+\end{definition}
+
+\begin{proposition}
+For any component $P$ in a delegation chain for interface $I$ rooted at
+composite $C$: a self-call \code{this.m()} within $P$ where $m \in I$
+dispatches to $C$.
+A formal proof in a small-step operational semantics is left to future work
+(Section~\ref{sec:futurework}).
+\end{proposition}
+
+The guarantee holds because wiring is completed before the composite is
+observable: at any point a self-call can occur, the dispatch slot for $I$
+already holds the outermost composite in the chain, so dispatch is correct
+by construction.
+
+\subsection*{DAG composition example}
+
+The following example requires all three trilemma properties to produce the
+correct output and exposes the limits of every prior model. It illustrates
+Definition~6 (transitive composability): \code{WorkerPart} implements both
+\code{Logger} and \code{Processor} and, when composed into \code{App} via
+\code{LoggingWorker}, carries distinct composite identities for each interface
+(Figures~\ref{fig:dag-diagram} and~\ref{fig:dag-listing}).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  cls/.style={
+    draw, rectangle, rounded corners=3pt,
+    minimum width=5.5cm, inner sep=8pt,
+    align=center, font=\small
+  },
+  lnk/.style={->, >=Stealth, semithick},
+]
+\node[cls] (wp)
+  {\textbf{WorkerPart}\\[3pt]
+   \textit{implements Logger, Processor}};
+
+\node[cls, below=2cm of wp] (lw)
+  {\textbf{LoggingWorker}\\[3pt]
+   \textit{implements Logger, Processor}};
+
+\node[cls, below=2cm of lw] (app)
+  {\textbf{App}\\[3pt]
+   \textit{implements Processor}};
+
+%% LoggingWorker @link -> WorkerPart
+\draw[lnk] ([xshift=-12pt]lw.north)
+  -- node[left,  font=\scriptsize\ttfamily] {@link Logger}
+  ([xshift=-12pt]wp.south);
+\draw[lnk] ([xshift=12pt]lw.north)
+  -- node[right, font=\scriptsize\ttfamily] {@link Processor}
+  ([xshift=12pt]wp.south);
+
+%% App @link -> LoggingWorker
+\draw[lnk] (app.north)
+  -- node[right, font=\scriptsize\ttfamily] {@link Processor}
+  (lw.south);
+
+%% Dispatch root annotations
+\node[font=\scriptsize\itshape, gray, right=0.5cm of lw, anchor=west]
+  {Logger root};
+\node[font=\scriptsize\itshape, gray, right=0.5cm of app, anchor=west]
+  {Processor root};
+\end{tikzpicture}
+\caption{DAG composition structure. Arrows show \code{@link} fields labeled
+by the delegated interface. \code{LoggingWorker} is the root for
+\code{Logger} dispatch; \code{App} is the root for \code{Processor} dispatch.}
+\label{fig:dag-diagram}
+\end{figure}
+
+\begin{figure}[H]
+\begin{lstlisting}
+interface Logger {
+    String prefix();
+    void log(String msg);
+}
+
+interface Processor {
+    String label();
+    String process(String s);
+}
+
+@part class WorkerPart implements Logger, Processor {
+  public String prefix() { return "WORKER"; }
+  public String label()  { return "worker"; }
+  public void log(String msg) { System.out.println("[" + prefix() + "] " + msg); }
+  public String process(String s) {
+    log("processing: " + s);  // Logger dispatch
+    return label() + ":" + s; // Processor dispatch
+  }
+}
+
+@part class LoggingWorker implements Logger, Processor {
+  @link Logger    logger;
+  @link Processor processor;
+  LoggingWorker(WorkerPart w) { this.logger = w; this.processor = w; }
+  @Override public String prefix() { return "LOGGED"; }
+}
+
+class App implements Processor {
+  @link Processor worker = new LoggingWorker(new WorkerPart());
+  @Override public String label() { return "APP"; }
+}
+
+new App().process("hello");
+// Logger dispatch rooted at LoggingWorker  ->  prefix() -> "LOGGED"
+// Processor dispatch rooted at App         ->  label()  -> "APP"
+// prints:  "[LOGGED] processing: hello"
+// returns: "APP:hello"
+\end{lstlisting}
+\caption{DAG composition with multiple composite roots per component.
+\code{WorkerPart} carries distinct composite identities for \code{Logger}
+(rooted at \code{LoggingWorker}) and \code{Processor} (rooted at \code{App}).}
+\label{fig:dag-listing}
+\end{figure}
+
+This example is not expressible with any prior model in Table~\ref{tab:comparison}.
+With Kotlin's \code{by}, self-calls in \code{WorkerPart} resolve within
+\code{WorkerPart} itself --- \code{prefix()} returns \code{"WORKER"} and
+\code{label()} returns \code{"worker"} regardless of the composite host, because
+\code{by} is forwarding, not delegation. With Scala traits, the composition is
+fixed at compile time: \code{WorkerPart} cannot be supplied as a runtime object,
+and a single component cannot carry distinct composite identities for distinct
+interfaces. All three trilemma properties are required to produce the observed
+output.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Implementation}
+%% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Plugin Architecture}
+
+The implementation is a \texttt{javac} plugin operating on the compiler's AST
+during two phases: \textsc{enter} (structural generation) and \textsc{analyze}
+(semantic rewriting). No bytecode manipulation is performed; all transformation
+is at the source AST level and subject to standard \texttt{javac} type
+checking.
+
+\subsection{Two-Phase Compilation}
+
+\paragraph{ENTER phase.}
+The plugin registers a \code{TaskListener} that fires on \textsc{enter} events.
+For each \code{@part} class, the plugin:
+\begin{itemize}
+  \item injects the \code{\$PartClass} marker interface (enables O(1)
+        \code{instanceof} checks);
+  \item generates the composite identity table field (\code{\$selves}) as a
+        compile-time-sized array indexed by interface ordinal;
+  \item generates the \code{\$linkPartToSelf} wiring method, which
+        propagates composite identity through the DAG.
+\end{itemize}
+
+For abstract \code{@part} classes, the plugin additionally:
+\begin{itemize}
+  \item generates the private \code{\$Impl} concrete subclass (shell at
+        \textsc{enter} start; body completed before \textsc{analyze});
+  \item generates \code{asLink()} static factories (one per non-private
+        constructor) before \textsc{analyze}.
+\end{itemize}
+
+For each composite class (any class containing \code{@link} fields), the plugin:
+\begin{itemize}
+  \item resolves the delegation surface of each \code{@link} field;
+  \item generates method declaration skeletons for each surface method not
+        already implemented by the composite (bodies completed at
+        \textsc{analyze} time).
+\end{itemize}
+
+\paragraph{ANALYZE phase.}
+After type resolution, the plugin:
+\begin{itemize}
+  \item rewrites self-calls in \code{@part} method bodies
+        (\code{this.m(args)} $\;\to\;$ \code{\$selves[IDX\_I].m(args)})
+        where \code{IDX\_I} is the compile-time ordinal for the interface
+        declaring \code{m};
+  \item in composites: rewrites \code{@link} field assignments to invoke
+        \code{\$linkPartToSelf()} recursively on the assigned component;
+  \item generates delegation method bodies for each skeleton: \code{return
+        link.m(args)} for non-\code{void} methods, \code{link.m(args)} for
+        \code{void}; the authoritative link for each method is the
+        \code{@link} field assigned to interface $I$, accounting for
+        \code{share=} declarations;
+  \item completes \code{\$Impl} inner classes: overrides all abstract methods
+        with \code{De\-le\-ga\-tion\-Link\-age\-Er\-ror} stubs;
+  \item enforces \code{@internal} visibility at call sites.
+\end{itemize}
+
+\subsection{Component Transformation}
+
+Each \code{@part} class is transformed to hold a \code{\$selves} array indexed
+by interface ordinal. The ordinals are assigned at compile time---stable across
+compilations of the same source.
+
+\begin{lstlisting}[language={},style=java]
+$selves: Object[]  (length = number of delegated interfaces)
+// initialized: $selves[i] = this  (before wiring)
+// after wiring: $selves[IDX_I] = composite identity for interface I
+\end{lstlisting}
+
+Initializing to \code{this} means an unwired component dispatches on itself;
+once wired, dispatch routes through the composite identity.
+\code{\$linkPartToSelf} updates each relevant \code{\$selves} slot to the
+composite root, then recurses through any \code{@link} fields in the component
+to propagate identity transitively through the DAG. Cycle detection is
+performed at each slot assignment.
+
+\subsection{Self-Call Rewriting}
+
+Within a \code{@part} method body, every call \code{this.m(args)} where
+\code{m} is declared in interface $I$ is rewritten to:
+
+\begin{lstlisting}
+((I) $selves[IDX_I]).m(args)
+\end{lstlisting}
+
+The cast to $I$ is required for \code{invokeinterface}. \code{IDX\_I} is a
+compile-time integer literal.
+
+More broadly, any use of \code{this} where the contextual type is a declared
+interface is rewritten to \code{\$selves[IDX\_I]}; uses where the contextual
+type is the concrete \code{@part} type are compile errors.
+
+\paragraph{Self-preservation.}
+Because the model guarantees that self-calls dispatch through the composite
+host, it must statically enforce the invariants that make that guarantee hold.
+A \code{@part} class may not reference \code{this} except as one of its
+declared interfaces: passing \code{this} as the concrete \code{@part} type or
+assigning it to a variable of the concrete type are compile errors. Field
+access via \code{this} is permitted --- a part may call back through its own
+\code{@link} fields, which serves as the compositional analog of \code{super}.
+
+\begin{lstlisting}
+@part class MyPart implements MyInterface {
+  public void method() {
+    passMyPart(this);      // compile error: this as MyPart
+    MyPart p = this;       // compile error
+    MyInterface i = this;  // rewritten: $selves[IDX_MyInterface]
+    passMyInterface(this); // rewritten: $selves[IDX_MyInterface]
+  }
+}
+\end{lstlisting}
+
+If \code{this} leaked as the concrete type, a caller could hold a direct
+reference to the component and invoke methods on it outside the composite
+dispatch path, violating Proposition~1. The restriction is the static price of
+the dispatch guarantee. Other composition models do not impose it because they
+do not make an equivalent guarantee.
+
+\paragraph{Default methods.}
+Default methods in the delegation surface receive generated override bodies
+that route dispatch through the composite identity when wired, and fall back
+to the interface default when not yet wired. Self-calls to default methods
+within \code{@part} method bodies are rewritten at the call site identically
+to other self-calls, requiring no transformation of the interface source.
+
+\subsection{Composite Class Transformation}
+
+In the composite class, each \code{@link} field assignment:
+
+\begin{lstlisting}
+this.link = expr;
+\end{lstlisting}
+
+is rewritten to:
+
+\begin{lstlisting}
+this.link = expr.$linkPartToSelf(this, linkScope);
+\end{lstlisting}
+
+\code{linkScope} identifies the delegation scope. The call is guarded by an
+\code{instanceof} \code{\$PartClass} check (O(1) marker interface test) so that
+non-\code{@part} assignments pass through unchanged. Wiring occurs once at
+construction time.
+
+\subsection{Abstract Component Support}
+
+For an abstract \code{@part} class \code{Foo}, the compiler generates:
+
+\begin{lstlisting}
+private static final class $Impl extends Foo {
+    // For each abstract method m in Foo:
+    @Override public T m(Params p) {
+        throw new DelegationLinkageError(
+            "abstract method called before linkage: Foo.m");
+    }
+}
+
+public static Foo asLink() { return new $Impl(); }
+// one factory per non-private constructor:
+public static Foo asLink(ParamType p) { return new $Impl(p); }
+\end{lstlisting}
+
+\code{asLink()} results are valid \code{Foo} references and can be passed
+freely. If an abstract method is called before the instance is wired to a
+composite, \code{DelegationLinkageError} is thrown. Once wired, the abstract
+method stubs are unreachable because self-calls dispatch through
+\code{\$selves[IDX\_I]}, which resolves to the composite.
+
+\subsection{\code{@internal} Enforcement}
+
+For \code{@internal} interfaces in a \code{@part}'s \code{implements} clause:
+\begin{itemize}
+  \item the interface is excluded from the component's delegation surface;
+  \item composite classes are prevented from declaring a \code{@link} field of
+        that interface type backed by the component;
+  \item a compile error is issued at violation sites.
+\end{itemize}
+
+For \code{@internal} methods on interfaces:
+\begin{itemize}
+  \item the method is excluded from the composite's external interface;
+  \item calls to \code{composite.internalMethod()} from outside the composite
+        family are compile errors;
+  \item calls via a \code{@link} field reference
+        (\code{this.link.internalMethod()}) from within the composite are
+        permitted.
+\end{itemize}
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Evaluation}
+%% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Dispatch Performance}
+
+The dispatch path for a self-call through a composite is:
+\begin{enumerate}
+  \item Load \code{\$selves[IDX\_I]} --- array indexed load, compile-time
+        constant index
+  \item Cast to $I$
+  \item \code{invokeinterface m} --- standard JVM virtual dispatch
+\end{enumerate}
+
+This is functionally O(1). The parallel to vtable dispatch is direct: a vtable
+call is an indexed slot load followed by an indirect call. In practice, JIT
+compilers inline trivial forwarders entirely. Composite DAGs are shallow and their call sites are monomorphic or bimorphic
+in the common case---the JIT's most aggressively inlined scenarios. Composite
+dispatch performance is therefore equivalent to direct virtual dispatch in
+practice.
+
+\subsection{Expressiveness}
+
+The model supports four composition patterns not achievable together in prior
+static OO models:
+
+\begin{enumerate}
+  \item \textbf{Independent component identity} --- components are real objects;
+        their internal state is independent
+  \item \textbf{Polymorphic self-dispatch} --- self-calls route through the
+        outermost composite in the delegation chain for the dispatched interface
+  \item \textbf{Multiple composite roots per component} --- a component wired
+        for multiple interfaces simultaneously carries distinct composite
+        identities per interface
+  \item \textbf{Composite-scoped encapsulation} --- \code{@internal} provides
+        finer-grained visibility than \code{public}/\code{protected}/\code{private}
+        for component families
+\end{enumerate}
+
+\subsection{Test Coverage}
+
+The implementation is tested against a suite covering:
+\begin{itemize}
+  \item forwarding vs.\ delegation semantics
+  \item DAG composition at depth $\geq 3$
+  \item diamond detection and resolution
+  \item abstract component / \code{asLink()} lifecycle
+  \item \code{@internal} interface and method enforcement
+  \item default method dispatch
+  \item inheritance chains in \code{@part} hierarchies
+  \item cycle detection (runtime \code{DelegationLinkageError})
+\end{itemize}
+
+\subsection{Limitations}
+
+\begin{itemize}
+  \item Using \code{@link}, \code{@part}, and \code{@internal} requires
+        configuring the \texttt{javac} plugin in the build system (Maven,
+        Gradle, or similar).
+  \item Composite dispatch semantics are not enforced under Java reflection.
+        This is by design.
+  \item The plugin relies on internal \texttt{javac} APIs for AST
+        rewriting. These APIs are not part of the official public compiler API
+        and may change across JDK versions. This is a practical constraint of
+        the \texttt{javac} plugin approach; it does not affect the model's
+        correctness or generality.
+\end{itemize}
+
+\subsection{Safety Guarantees}
+
+\paragraph{Cycle detection.}
+If a component is wired to itself directly or transitively,
+\code{De\-le\-ga\-tion\-Link\-age\-Er\-ror} is thrown at assignment time during
+the recursive \code{\$linkPartToSelf()} call.
+
+\paragraph{Deferred method access.}
+If an \code{asLink()}-produced instance has an abstract method called before
+wiring, \code{DelegationLinkageError} is thrown at the stub. This is the
+compositional analog of \code{AbstractMethodError}.
+
+\paragraph{\code{@internal} violations.}
+All \code{@internal} enforcement is at compile time; no runtime overhead.
+
+\paragraph{Self-preservation.}
+\code{@part} classes are not permitted to reference \code{this} in a context
+other than a declared interface. This statically prevents component identity
+from escaping the composite dispatch path, ensuring Proposition~1 holds for
+all reachable call sites. Field access via \code{this} is permitted.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Related Work}
+%% ─────────────────────────────────────────────────────────────────────────────
+
+\paragraph{Prototype-based delegation.}
+Lieberman~\cite{lieberman1986} introduced the delegation concept: an object may
+delegate unanswered messages to a prototype, with \emph{self} remaining the
+original receiver. Self~\cite{self1987} realized this in a working language.
+These systems solve the Self problem and support late-bound components but
+provide no static type guarantees and rely on hash-based message dispatch.
+
+\paragraph{Behavioral subtyping.}
+Liskov and Wing~\cite{liskov1994} established the substitutability principle
+underpinning interface contracts in statically-typed OO. Because self-calls
+in a component dispatch through the composite host, the composite satisfies
+the behavioral contracts of all its components---substitutability is preserved
+across every delegation boundary without special treatment.
+
+\paragraph{Mixins.}
+Bracha and Cook~\cite{bracha1990} formalized mixins as parameterized abstract
+subclasses. Mixins extend through linearization---the mixin is applied to a
+chain, not composed with independent objects. Self-calls dispatch within the
+linearized result, not through an independent component. No independent
+late-bound components result.
+
+\paragraph{Traits.}
+Sch\"arli et al.~\cite{scharli2003} proposed traits as stateless, composable
+units of behavior. Trait composition is a compile-time operation: methods are
+flattened into the target class. There are no runtime component objects, no late
+binding, and no polymorphic dispatch through an independent component's
+self-calls.
+
+\paragraph{Scala traits / abstract type members.}
+Odersky and Zenger~\cite{odersky2005} introduced statically-typed mixin
+composition with abstract type members. Scala's \code{with} clause linearizes
+traits into the target class at compile time. Late binding is limited to the
+linearized type---independent components as runtime objects are not preserved.
+
+\paragraph{Multiple inheritance.}
+Stroustrup~\cite{stroustrup1987} introduced virtual base classes and virtual
+inheritance in C++ to handle diamonds. The result is a single linearized object
+with a merged vtable. Independent component identity is lost.
+
+\paragraph{Kniesel / Lava.}
+Kniesel's ``type-safe delegation''~\cite{kniesel1999} (ECOOP 1999) addresses
+the Self problem under static typing using immutable delegation links in the
+Lava language.
+
+Key convergences with compositional polymorphism: the Self problem is solved,
+delegation links are immutable (our \code{@link} fields are \code{private
+final}), and static type safety is enforced.
+
+Key divergences: Lava's delegation model is single-rooted---a component
+cannot carry independent composite identities for distinct interfaces
+simultaneously. Compositional polymorphism supports DAG composition where
+a single component does. Lava has no equivalent of \code{@internal}. Abstract
+components with deferred linkage (\code{asLink()}) have no direct Lava
+counterpart.
+
+\paragraph{Delegation Layers.}
+Ostermann's delegation layers~\cite{ostermann2002} (ECOOP 2002) are the closest
+prior model to compositional polymorphism. Self-calls within a role dispatch
+through the composed aggregate (P1), and type safety is enforced (P3) ---
+but only within a family constraint: components must be defined as virtual
+nested classes of a common enclosing owner type. Independently defined classes
+from unrelated hierarchies cannot be composed, so P2 fails.
+Compositional polymorphism imposes no such structural constraint: any class
+implementing the target interface may serve as a component.
+
+\paragraph{Virtual classes and family polymorphism.}
+The virtual-class lineage---gbeta, CaesarJ, Object Teams/Java, and
+J\&~\cite{nystrom2006}---achieves open class composition through virtual nested
+classes within a common enclosing family type; Ernst, Ostermann, and
+Cook~\cite{ernst2006} provide the definitive formal treatment.
+Self-calls dispatch correctly within the family and static typing is enforced,
+satisfying P1 and P3. P2 fails across the entire lineage: components are
+class-level members of an enclosing family type, not independent objects wired
+at construction time. Introducing a new component combination requires defining
+a new family subtype---it is class-level inheritance, not runtime object assembly.
+
+\paragraph{Dynamic composition.}
+Newspeak~\cite{bracha2010} treats classes as first-class late-bound arguments,
+enabling runtime composition of independent module objects with correct
+self-call dispatch (P1, P2). Static type checking is absent by design (P3
+fails). This is the strongest known example of a language that deliberately
+satisfies P1 and P2 at the cost of P3.
+
+\paragraph{Kotlin \code{by}-delegation.}
+Kotlin's \code{by} keyword~\cite{kotlin} generates forwarding methods at compile
+time. The delegated object's self-calls resolve within the delegated
+object---the composite host is invisible. This is forwarding, not delegation.
+The Self problem is not addressed.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Discussion}
+%% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Language Design Implications}
+
+The model does not require language changes to Java. All three
+properties---runtime polymorphism, independent late-bound components, and
+static typing---are achieved through AST rewriting within the existing type
+system.
+
+This suggests that the trilemma is not fundamental to statically-typed OO
+languages per se; it is a consequence of how composition is currently specified
+and implemented in those languages. Extending any statically-typed OO language
+with a composition model equivalent to \code{@link}/\code{@part} would suffice.
+
+The Java specifics that make the plugin approach tractable:
+\begin{itemize}
+  \item \texttt{javac} plugins have full AST read/write access during
+        compilation;
+  \item \code{invokeinterface} in the JVM supports interface-typed dispatch
+        independently of the concrete class hierarchy;
+  \item interfaces as first-class types allow the \code{\$selves} array to be
+        typed at the interface level.
+\end{itemize}
+
+\subsection{Concurrency}
+
+The DAG structure is favorable for concurrent use. Component wiring occurs
+during construction, before the object is shared. Once wired, \code{\$selves}
+is effectively immutable---no synchronization is required for dispatch.
+Components may contain mutable state, subject to the usual Java concurrency
+rules; the dispatch mechanism adds no additional synchronization points.
+
+\subsection{Future Work}
+
+\paragraph{Intersection type syntax.}
+The natural expression of multi-interface linking---\code{@link Foo \& Bar
+fooBar;}---would eliminate the \code{value()} workaround. This requires
+syntactic extension to the Java parser within the \texttt{javac} plugin;
+feasibility is under investigation.
+
+\paragraph{Formal verification.}
+\label{sec:futurework}
+A formal soundness proof for the dispatch model (Proposition 1) in a small-step
+operational semantics would strengthen the theoretical foundation. The model
+maps cleanly to a subset of Featherweight Java; this is planned as follow-on
+work.
+
+\paragraph{Role-oriented programming.}
+The \code{@internal} mechanism partially overlaps with role-oriented programming
+models. A formal comparison is left to future work.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}
+%% ─────────────────────────────────────────────────────────────────────────────
+
+We have presented compositional polymorphism, a model that satisfies all three
+properties of the trilemma --- runtime polymorphism, independent late-bound
+components, and static typing --- realized as a compiler plugin for Java. The implementation operates at compile
+time via AST rewriting, delivers dispatch performance equivalent to standard
+virtual dispatch, and supports DAG composition to arbitrary depth,
+composite-scoped encapsulation, and abstract components with deferred linkage.
+The trilemma is not fundamental to statically-typed OO languages; it is a
+consequence of how composition has been modeled. Any statically-typed OO
+language extended with an equivalent composition model would satisfy all three
+properties.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+%% References
+%% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{thebibliography}{10}
+
+\bibitem{lieberman1986}
+H.~Lieberman.
+\newblock Using prototypical objects to implement shared behavior in
+  object-oriented systems.
+\newblock In {\em Proceedings of OOPSLA}, pages 214--223, 1986.
+
+\bibitem{liskov1994}
+B.~Liskov and J.~Wing.
+\newblock A behavioral notion of subtyping.
+\newblock {\em ACM Transactions on Programming Languages and Systems},
+  16(6):1811--1841, 1994.
+
+\bibitem{bracha1990}
+G.~Bracha and W.~Cook.
+\newblock Mixin-based inheritance.
+\newblock In {\em Proceedings of OOPSLA/ECOOP}, pages 303--311, 1990.
+
+\bibitem{scharli2003}
+N.~Sch{\"a}rli, S.~Ducasse, O.~Nierstrasz, and A.~Black.
+\newblock Traits: Composable units of behaviour.
+\newblock In {\em Proceedings of ECOOP}, LNCS 2743, pages 248--274, 2003.
+
+\bibitem{self1987}
+D.~Ungar and R.~B.~Smith.
+\newblock Self: The power of simplicity.
+\newblock In {\em Proceedings of OOPSLA}, pages 227--242, 1987.
+
+\bibitem{odersky2005}
+M.~Odersky and M.~Zenger.
+\newblock Scalable component abstractions.
+\newblock In {\em Proceedings of OOPSLA}, pages 41--57, 2005.
+
+\bibitem{stroustrup1987}
+B.~Stroustrup.
+\newblock Multiple inheritance for {C++}.
+\newblock In {\em Proceedings of the EUUG Spring Conference}, 1987.
+
+\bibitem{kniesel1999}
+G.~Kniesel.
+\newblock Type-safe delegation for run-time component adaptation.
+\newblock In {\em Proceedings of ECOOP}, LNCS 1628, pages 351--366, 1999.
+\newblock DOI: \href{https://doi.org/10.1007/3-540-48743-3_16}{10.1007/3-540-48743-3\_16}.
+
+\bibitem{ostermann2002}
+K.~Ostermann.
+\newblock Dynamically composable collaborations with delegation layers.
+\newblock In {\em Proceedings of ECOOP}, LNCS 2374, pages 89--110, 2002.
+
+\bibitem{ernst2006}
+E.~Ernst, K.~Ostermann, and W.~R.~Cook.
+\newblock A virtual class calculus.
+\newblock In {\em Conference Record of POPL}, pages 270--282, 2006.
+
+\bibitem{nystrom2006}
+N.~Nystrom, X.~Qi, and A.~C.~Myers.
+\newblock {J\&}: Nested intersection for scalable software composition.
+\newblock In {\em Proceedings of OOPSLA}, pages 347--366, 2006.
+
+\bibitem{bracha2010}
+G.~Bracha, P.~von~der~Ah{\'e}, V.~Bykov, Y.~Kashai, W.~Maddox, and E.~Miranda.
+\newblock Modules as objects in {Newspeak}.
+\newblock In {\em Proceedings of ECOOP}, LNCS 6183, pages 405--428, 2010.
+
+\bibitem{kotlin}
+JetBrains.
+\newblock Delegation --- {Kotlin} programming language.
+\newblock \url{https://kotlinlang.org/docs/delegation.html}, 2024.
+
+\bibitem{mckinney2026}
+R.~S.~McKinney.
+\newblock manifold-delegation.
+\newblock \url{https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation}, 2026.
+
+\end{thebibliography}
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\appendix
+\section{Summary Table}
+%% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccc}
+\toprule
+\textbf{Model} &
+\makecell{\textbf{Self}\\\textbf{solved}} &
+\makecell{\textbf{Independent}\\\textbf{late-bound components}} &
+\makecell{\textbf{Static}\\\textbf{typing}} \\
+\midrule
+Prototype delegation~\cite{lieberman1986,self1987}
+  & \checkmark & \checkmark & $\times$ \\
+Mixins~\cite{bracha1990}
+  & $\times$ & $\times$ & \checkmark \\
+Traits~\cite{scharli2003}
+  & $\times$ & $\times$ & \checkmark \\
+Kotlin \code{by}~\cite{kotlin}
+  & $\times$ & \checkmark & \checkmark \\
+Kniesel/Lava~\cite{kniesel1999}
+  & \checkmark & $\times$ & \checkmark \\
+Delegation Layers~\cite{ostermann2002}
+  & \checkmark & $\times$ & \checkmark \\
+Virtual classes~\cite{ernst2006,nystrom2006}
+  & \checkmark & $\times$ & \checkmark \\
+Newspeak~\cite{bracha2010}
+  & \checkmark & \checkmark & $\times$ \\
+\midrule
+\textbf{Compositional polymorphism}~\cite{mckinney2026}
+  & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}
+}% end resizebox
+\caption{Comparison of composition models across the three trilemma properties.}
+\label{tab:comparison}
+\end{table}
+
+\end{document}
