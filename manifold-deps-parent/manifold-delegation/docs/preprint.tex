@@ -118,6 +118,7 @@ one of three properties:
   \item \textbf{Static typing} --- the composition's interface contracts are
         enforced at compile time
 \end{enumerate}
+We refer to these as \textbf{P1}, \textbf{P2}, and \textbf{P3} respectively throughout the paper.
 
 Prototype-based delegation~\cite{lieberman1986,self1987} solves the Self problem
 and provides late-bound components, but without static type guarantees. Scala
@@ -432,9 +433,21 @@ delegates only its non-shared interfaces. Unresolved diamonds are compile
 errors.
 \end{definition}
 
+\paragraph{Dispatch rule.}
+Traditional object-oriented dispatch resolves a call through the receiver's
+object identity:
+\[ \text{call } m() \text{ on } o \;\longrightarrow\; \mathit{vtable}(o,\, m) \]
+Interface-scoped dispatch replaces the single object identity with a
+per-interface composite identity. A self-call in component $c$ reached
+through interface $I$ resolves through the composite identity for $I$:
+\[ \text{self-call } m() \text{ in } c \text{ reached through } I \;\longrightarrow\;
+   \$\mathit{selves}_c[I].m() \]
+The dispatch triple is \emph{(component, interface, method)} rather than the
+conventional \emph{(object, method)}.
+
 \begin{proposition}
 For any component $P$ in a delegation chain for interface $I$ rooted at
-composite $C$: a self-call \code{this.m()} within $P$ where $m \in I$
+composite $C$: a self-call \code{this.m()} within $P$ reached through $I$
 dispatches to $C$.
 A formal proof in a small-step operational semantics is left to future work
 (Section~\ref{sec:futurework}).
@@ -726,6 +739,19 @@ independently defined components cannot be composed, failing P2.
 polymorphism---assigns dispatch identity per interface rather than per object,
 breaking the assumption that makes P2 intractable. This is the structural
 change that makes all three properties simultaneously achievable.
+
+\paragraph{Relation to prior delegation models.}
+Compositional polymorphism employs delegation operationally---\code{@link}
+fields establish delegation links and self-calls route through composite
+hosts---but its contribution is semantic rather than structural. Prior
+delegation models, including Kniesel's type-safe delegation, assign each
+component a single composite identity: self-calls route through one composite
+host per component. Compositional polymorphism separates \emph{implementation
+identity} (the component object) from \emph{dispatch identity} (the composite
+host per interface). A single component may carry independent dispatch
+identities for distinct interfaces simultaneously. This is not achievable by
+extending a single-rooted model with additional delegation links; it requires
+changing what dispatch identity means, as captured by the dispatch rule above.
 
 \subsection{Language Design Implications}
 
