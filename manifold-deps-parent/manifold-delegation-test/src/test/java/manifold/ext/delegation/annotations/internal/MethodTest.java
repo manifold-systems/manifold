@@ -191,21 +191,6 @@ public class MethodTest extends TestCase
   {
     @link Foo foo = new FooPart();
 
-    public String notInternal()
-    {
-      return foo.notInternal();
-    }
-
-    public String bar()
-    {
-      return foo.bar();
-    }
-
-    public String internal()
-    {
-      return foo.internal();
-    }
-
     public String whatever()
     {
 // should produce compile error

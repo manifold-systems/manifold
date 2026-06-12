@@ -29,6 +29,7 @@
     <module>manifold-darkj</module>
     <module>manifold-darkj-test</module>
     <module>manifold-delegation</module>
+    <module>manifold-delegation-bench</module>
     <module>manifold-delegation-rt</module>
     <module>manifold-delegation-test</module>
     <module>manifold-highjump</module>
