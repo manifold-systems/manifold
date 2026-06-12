@@ -27,6 +27,7 @@ import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type.ClassType;
 import com.sun.tools.javac.code.Type.MethodType;
 import com.sun.tools.javac.comp.*;
+import com.sun.tools.javac.jvm.ClassFile;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.*;
@@ -47,11 +48,13 @@ import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.api.Structural;
 import manifold.internal.javac.*;
 import manifold.rt.api.util.Stack;
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -386,26 +389,26 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
      * </code></pre>
      * StudentPart (from the TA sample code) has a $linkPartToSelf method that looks like this:
      * <pre><code>
-     *     public void $linkPartToSelf(Object root, Class[] linkScope) {
-     *         for(Class linkIface : linkScope) {
-     *             if (Student.class == linkIface) {
-     *               if($selves[0] == root) reportCycle(this, root, Student.class);
-     *               $selves[0] = root;
-     *               continue;
-     *             }
-     *             if (Person.class == linkIface) {
-     *               if($selves[1] == root) reportCycle(this, root, Student.class);
-     *               $selves[1] = root;
-     *               continue;
-     *             }
-     *             throw new DelegationLinkageError("Unimplemented linked interface: " + linkIface);
-     *         }
-     *         // recurse through the fields of this class that are linked to `@part` classes
-     *         Class[] root_personIntersection = Internal.intersect($LINK_SCOPE__person, linkScope);
-     *         if (root_personIntersection.length != 0 && this._person instanceof .PartClass) {
-     *             ((.PartClass)this._person).$linkPartToSelf(root, root_personIntersection);
-     *         }
+     *   public void $linkPartToSelf(Object root, Class[] linkScope) {
+     *     for(Class linkIface : linkScope) {
+     *       if (Student.class == linkIface) {
+     *         if($selves[0] == root) reportCycle(this, root, Student.class);
+     *         $selves[0] = root;
+     *         continue;
+     *       }
+     *       if (Person.class == linkIface) {
+     *         if($selves[1] == root) reportCycle(this, root, Person.class);
+     *         $selves[1] = root;
+     *         continue;
+     *       }
+     *       throw new DelegationLinkageError("Unimplemented linked interface: " + linkIface);
      *     }
+     *     // recurse through the fields of this class that are linked to `@part` classes
+     *     Class[] root_personIntersection = Internal.intersect($LINK_SCOPE__person, linkScope);
+     *     if (root_personIntersection.length != 0 && this._person instanceof .PartClass) {
+     *         ((.PartClass)this._person).$linkPartToSelf(root, root_personIntersection);
+     *     }
+     *   }
      * </code></pre>
      */
     private void addLinkPartToSelfMethod()
@@ -535,7 +538,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       // foreach default interface method,
       //   override the method
       //     if( $self != null && $self links the interface of the default method to classDecl )
-      //       ReflectUtil.invokeDefault
+      //       invokedynammic $self Iface.super.method() // call default method from $self
       //     else
       //       Iface.super.method()
       java.util.List<Type> implIfaces = classDecl.implementing.stream().map( e -> e.type ).collect( Collectors.toList() );
@@ -654,41 +657,17 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       // Return type
       JCExpression resType = make.Type( mt.getReturnType() );
 
+      // NOTE!! only the direct Iface.super.method() is generated here, the callDefaultMethodWithInvokeDynamic() method
+      //        during ANALYZE will rewrite the direct call to the following:
+      //
       //     Object $self = $selves[<index of iface>]
       //     if( $self != this )
-      //       $PartClass.Internal.invokeDefault  // call default method from $self
+      //       invokedynamic $self Iface.super.method() // call default method from $self
       //     else
       //       Iface.super.method()  // call as-is
 
 
-      Symtab symtab = getSymtab();
-
-      // $self = $selves[<index of iface>]
-
       Types types = getTypes();
-      JCVariableDecl selfVar = make.VarDef( make.Modifiers( FINAL ), getNames().fromString( "$self" ), make.Type( getSymtab().objectType ),
-                                            getSelf( classDecl, classDecl, delegatedIface, false ) );
-
-      // ReflectUtil.invokeDefaultAsSelf
-
-      ArrayList<JCExpression> paramTs = parameterTypes.stream().map( t -> make.ClassLiteral( types.erasure( t ) ) ).collect( Collectors.toCollection( () -> new ArrayList<>() ) );
-      JCNewArray paramTypesArray = make.NewArray( make.Type( types.erasure( symtab.classType ) ), List.nil(), List.from( paramTs ) );
-      ArrayList<JCIdent> argIdents = params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toCollection( () -> new ArrayList<>() ) );
-      JCNewArray argsArray = make.NewArray( make.Type( symtab.objectType ), List.nil(), List.from( argIdents) );
-      List<JCExpression> theArgs = List.of( make.Ident( names.fromString( "$self" ) ), make.ClassLiteral( types.erasure( delegatedIface ) ), make.Literal( namedMt.getName().toString() ),
-        paramTypesArray, argsArray );
-      JCTree.JCMethodInvocation linkPartCall = make.Apply( List.nil(), memberAccess( make, $PartClass.Internal.class.getCanonicalName() + ".invokeDefault" ), theArgs );
-
-      JCStatement invokeDefaultAsSelfStmt;
-      if( types.isSameType( mt.getReturnType(), getSymtab().voidType ) )
-      {
-        invokeDefaultAsSelfStmt = make.Exec( linkPartCall );
-      }
-      else
-      {
-        invokeDefaultAsSelfStmt = make.Return( make.TypeCast( mt.getReturnType(), linkPartCall ) );
-      }
-
 
       // Iface.super.method()
 
@@ -710,14 +689,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         invokeSuperStmt = make.Return( forwardCall );
       }
 
-      // <iface> $self = $selves[<index of iface>]
-      // if( $self != this )
-      //   invokeDefaultAsSelfStmt
-      // else
-      //   invokeSuperStmt
-      JCIf ifStmt = make.If( make.Binary( Tag.NE, make.Ident( getNames().fromString( "$self" ) ), make.QualThis( classDecl.sym.type ) ),
-                     invokeDefaultAsSelfStmt, invokeSuperStmt );
-      JCBlock block = make.Block( 0, List.of( selfVar, ifStmt ) );
+      JCBlock block = make.Block( 0, List.of( invokeSuperStmt ) );
 
       JCMethodDecl defaultMethodForwarder = make.MethodDef( access, name, resType, typeParams, List.from( params ), thrown, block, null );
 
@@ -758,7 +730,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
-      Attribute.Compound partMirror = getAnnotationMirror( superclass.tsym, part.class );
+      Attribute.Compound partMirror = superclass.tsym == null ? null : getAnnotationMirror( superclass.tsym, part.class );
       if( isPartClass( classDecl.sym ) )
       {
         if( partMirror == null )
@@ -1878,11 +1850,13 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
             {
               result = getSelf( tree, classDecl, paramType );
             }
+            return true;
           }
-          else if( !types.isSameType( getSymtab().objectType, paramType ) )
-          {
+// escaping through Object is prohibited, force an @internal marker interface or other strategy
+//          else if( !types.isSameType( getSymtab().objectType, paramType ) )
+//          {
             reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
-          }
+//          }
           return true;
         }
       }
@@ -2159,6 +2133,9 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       NamedMethodType namedMt = new NamedMethodType( (MethodSymbol)meth.sym, meth.type );
 
+      // invoke the method using the interface of the method's declaring type so that the proper interface is used for dispatch
+      iface = meth.sym.owner.type;
+
       Type csr = namedMt.getType();
       while( csr instanceof Type.DelegatedType )
       {
@@ -2166,6 +2143,11 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       }
       MethodType mt = (MethodType)csr;
 
+      callDefaultMethodWithInvokeDynamic( superInterfaceCall, exec, mt, classDecl, iface, namedMt );
+    }
+
+    private void callDefaultMethodWithInvokeDynamic( JCMethodInvocation superInterfaceCall, boolean exec, MethodType mt, JCClassDecl classDecl, Type iface, NamedMethodType namedMt )
+    {
       TreeMaker make = getTreeMaker();
       make.pos = superInterfaceCall.pos;
 
@@ -2174,33 +2156,20 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       Types types = getTypes();
 
       // $PartClass.Internal class sym
-      Symbol.ClassSymbol internalMethodsClassSym = getRtClassSym( $PartClass.Internal.class );
+      ClassSymbol internalMethodsClassSym = getRtClassSym( $PartClass.Internal.class );
 
       // ReflectUtil.invokeDefaultAsSelf
 
       // Arg list
-      List<Type> parameterTypes = mt.getParameterTypes();
-      ArrayList<JCExpression> paramTs = parameterTypes.stream().map( t -> make.ClassLiteral( types.erasure( t ) ) )
-        .collect( Collectors.toCollection( () -> new ArrayList<>() ) );
-      JCNewArray paramTypesArray = make.NewArray(
-        make.Type( types.erasure( symtab.classType ) ), List.nil(), List.from( paramTs ) );
-      paramTypesArray.type = new Type.ArrayType( symtab.classType, symtab.arrayClass );
-      JCNewArray argsArray = make.NewArray( make.Type( symtab.objectType ), List.nil(), List.from( superInterfaceCall.args ) );
-      argsArray.type = new Type.ArrayType( symtab.objectType, symtab.arrayClass );
-      List<JCExpression> theArgs = List.of( getSelf( superInterfaceCall, classDecl, iface ), make.ClassLiteral( types.erasure( iface ) ),
-        make.Literal( namedMt.getName().toString() ), paramTypesArray, argsArray );
+      List<JCExpression> theArgs = List.of( getSelf( superInterfaceCall, classDecl, iface ) )
+        .appendList( superInterfaceCall.args );
 
       // make invokeDefault() call
-      MethodSymbol invokeDefaultMethod = resolveMethod( getContext(), getCompilationUnit(), superInterfaceCall,
-        getNames().fromString( "invokeDefault" ), internalMethodsClassSym.type,
-        List.of( symtab.objectType, symtab.classType, symtab.stringType, symtab.objectType, symtab.objectType ) );
-      JCTree.JCMethodInvocation invokeDefaultCall = make.Apply( List.nil(),
-        memberAccess( make, $PartClass.Internal.class.getCanonicalName() + ".invokeDefault" ), theArgs );
-      invokeDefaultCall.type = symtab.booleanType;
-      JCTree.JCFieldAccess mselect = (JCTree.JCFieldAccess)invokeDefaultCall.getMethodSelect();
-      mselect.sym = invokeDefaultMethod;
-      mselect.type = invokeDefaultMethod.type;
-      assignTypes( mselect.selected, internalMethodsClassSym );
+      Name bsmName = getNames().fromString( "bootstrapDefault" );
+      Type methType = superInterfaceCall.meth.type;
+      MethodType indyType = new MethodType( List.of( iface ).appendList( methType.getParameterTypes() ), methType.getReturnType(), List.nil(), symtab.methodClass );
+      JCMethodInvocation invokeDefaultCall = makeIndyCall(
+        make, superInterfaceCall, internalMethodsClassSym.type, bsmName, indyType, theArgs, ((JCFieldAccess)superInterfaceCall.meth).name );
 
       if( exec )
       {
@@ -2219,6 +2188,52 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
         result = conditional;
       }
+    }
+
+    private JCMethodInvocation makeIndyCall( TreeMaker make,
+                                             JCDiagnostic.DiagnosticPosition pos, Type site, Name bsmName,
+                                             MethodType indyType, List<JCExpression> indyArgs,
+                                             Name methName) {
+      make.at(pos);
+      Symtab syms = getSymtab();
+      List<Type> bsm_staticArgs = List.of(syms.methodHandleLookupType,
+                                          syms.stringType,
+                                          syms.methodTypeType);
+
+      MethodSymbol bsm = resolveMethod( getContext(), getCompilationUnit(), pos, bsmName, site, bsm_staticArgs );
+
+      Symbol.DynamicMethodSymbol dynSym;
+      if( JreUtil.isJava17orLater() )
+      {
+        Class<?> loadableConstantType = ReflectUtil.type( "com.sun.tools.javac.jvm.PoolConstant$LoadableConstant" );
+        Object emptyLoadableConstantArray = ReflectUtil.method( Array.class, "newInstance", Class.class, int.class ).invokeStatic( loadableConstantType, 0 );
+
+        dynSym = (Symbol.DynamicMethodSymbol)ReflectUtil.constructor( "com.sun.tools.javac.code.Symbol$DynamicMethodSymbol",
+                                                                      Name.class, Symbol.class, ReflectUtil.type( "com.sun.tools.javac.code.Symbol$MethodHandleSymbol" ),
+                                                                      Type.class, emptyLoadableConstantArray.getClass() )
+          .newInstance(
+            methName,
+            syms.noSymbol,
+            ReflectUtil.method( bsm, "asHandle" ).invoke(),
+            indyType,
+            emptyLoadableConstantArray );
+      }
+      else
+      {
+        dynSym = new Symbol.DynamicMethodSymbol( methName,
+                                                 syms.noSymbol,
+                                                 ClassFile.REF_invokeStatic,
+                                                 bsm,
+                                                 indyType,
+                                                 new Object[0] );
+      }
+      JCFieldAccess qualifier = make.Select( make.QualIdent( site.tsym ), bsmName );
+      qualifier.sym = dynSym;
+      qualifier.type = indyType;
+
+      JCMethodInvocation proxyCall = make.Apply( List.nil(), qualifier, indyArgs );
+      proxyCall.type = indyType.getReturnType();
+      return proxyCall;
     }
 
     private JCFieldAccess findSuperInterfaceSelect( JCMethodInvocation methodCall )
@@ -2265,7 +2280,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       // replace assigned expr
       //   field = <value-expr>
       // with method call expr
-      //   field = (<field-ref-expr-type>)$PartClass.Internal.linkPart( this, <field-name>, <value-expr> )
+      //   field = (<field-ref-expr-type>)$PartClass.Internal.linkPart( this, linkScope, "field-name", <value-expr> )
 
       checkAbstract( linkField, rhs );
 
@@ -2283,7 +2298,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       TreeMaker make = getTreeMaker();
       make.pos = assignmentOrVarDecl.pos;
 
-      ArrayList<ClassType> interfaces = getDelegatedInterfaces( linkField );
+      ArrayList<ClassType> interfaces = getDelegatedInterfacesForWiring( linkField );
       verifyLinkedDelegatedInterfacesAgainstDelegateType( interfaces, rhs );
       List<JCExpression> interfaceTypes = List.from( interfaces.stream().map( t -> make.ClassLiteral( t ) ).collect( Collectors.toList() ) );
       JCNewArray interfaceArray = make.NewArray( make.Type( symtab.classType ), List.nil(), interfaceTypes );
@@ -2341,7 +2356,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     }
 
     // Note, we recompute these here to include interfaces that would otherwise be bypassed by use of `share`
-    private ArrayList<ClassType> getDelegatedInterfaces( Symbol linkFieldSym )
+    private ArrayList<ClassType> getDelegatedInterfacesForWiring( Symbol linkFieldSym )
     {
       JCClassDecl classDecl = _classDeclStack.peek();
       JCVariableDecl linkField = (JCVariableDecl)classDecl.defs.stream()

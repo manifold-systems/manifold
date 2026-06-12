@@ -18,6 +18,7 @@ package manifold.util;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.*;
@@ -61,6 +62,7 @@ public class ReflectUtil
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, Field>> _fieldsByName = new ConcurrentWeakHashMap<>();
   private static final ConcurrentWeakHashMap<Class, Set<Constructor>> _constructorsByClass = new ConcurrentWeakHashMap<>();
   private static final ConcurrentWeakHashMap<Method, ConcurrentMap<Class, Method>> _structuralCall = new ConcurrentWeakHashMap<>();
+  private static final ConcurrentHashMap<Method, MethodHandle> _defaultMethodHandles = new ConcurrentHashMap<>();
   private static final LocklessLazyVar<ClassContextSecurityManager> _sm = LocklessLazyVar.make( () -> new ClassContextSecurityManager() );
   private static final String LAMBDA_METHOD = "lambda method";
   private static final Object UNHANDLED = new Object() {};
@@ -536,37 +538,63 @@ public class ReflectUtil
     return invokeDefault( receiver, method( iface, name, params ).getMethod(), args );
   }
 
-  /**
-   * Invoke a default interface method.
-   * <p/>
-   * This is useful, for example, for a proxy implementation where there is no
-   * explicit implementation of the interface on which to invoke the default method.
-   *
-   * @param receiver The receiver of the call (the proxy instance in the case of a proxy impl).
-   * @param method The default interface method to invoke on {@code receiver}.
-   * @param args The arguments to {@code method}.
-   * @return The return value of {@code method} or {@code null} if the method has a {@code void} return type.
-   */
+  public static java.lang.invoke.MethodHandle defaultMethodHandle( Method method )
+  {
+    return _defaultMethodHandles.computeIfAbsent( method, m -> {
+      try
+      {
+        Class declaringInterface = m.getDeclaringClass();
+        //noinspection ConstantConditions
+        return ((MethodHandles.Lookup)
+                  constructor( MethodHandles.Lookup.class, Class.class ).newInstance( declaringInterface ))
+          .in( declaringInterface )
+          .unreflectSpecial( m, declaringInterface );
+      }
+      catch( Throwable t ) { throw ManExceptionUtil.unchecked( t ); }
+    } );
+  }
+
   public static Object invokeDefault( Object receiver, Method method, Object... args )
   {
     try
     {
       fakeProxyStructuralArgs( method, args );
-
-      Class declaringInterface = method.getDeclaringClass();
-      //noinspection ConstantConditions
-      MethodHandles.Lookup lookup = (MethodHandles.Lookup)
-        constructor( MethodHandles.Lookup.class, Class.class ).newInstance( declaringInterface );
-      return lookup.in( declaringInterface )
-        .unreflectSpecial( method, declaringInterface )
-        .bindTo( receiver )
-        .invokeWithArguments( args );
+      return defaultMethodHandle( method ).bindTo( receiver ).invokeWithArguments( args );
     }
-    catch( Throwable t )
-    {
-      throw ManExceptionUtil.unchecked( t );
-    }
+    catch( Throwable t ) { throw ManExceptionUtil.unchecked( t ); }
   }
+
+//  /**
+//   * Invoke a default interface method.
+//   * <p/>
+//   * This is useful, for example, for a proxy implementation where there is no
+//   * explicit implementation of the interface on which to invoke the default method.
+//   *
+//   * @param receiver The receiver of the call (the proxy instance in the case of a proxy impl).
+//   * @param method The default interface method to invoke on {@code receiver}.
+//   * @param args The arguments to {@code method}.
+//   * @return The return value of {@code method} or {@code null} if the method has a {@code void} return type.
+//   */
+//  public static Object invokeDefault( Object receiver, Method method, Object... args )
+//  {
+//    try
+//    {
+//      fakeProxyStructuralArgs( method, args );
+//
+//      Class declaringInterface = method.getDeclaringClass();
+//      //noinspection ConstantConditions
+//      MethodHandles.Lookup lookup = (MethodHandles.Lookup)
+//        constructor( MethodHandles.Lookup.class, Class.class ).newInstance( declaringInterface );
+//      return lookup.in( declaringInterface )
+//        .unreflectSpecial( method, declaringInterface )
+//        .bindTo( receiver )
+//        .invokeWithArguments( args );
+//    }
+//    catch( Throwable t )
+//    {
+//      throw ManExceptionUtil.unchecked( t );
+//    }
+//  }
 
   private static void fakeProxyStructuralArgs( Method method, Object[] args )
   {

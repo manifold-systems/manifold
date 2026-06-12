@@ -335,10 +335,14 @@ interface TA extends Student, Teacher {
   }
 }
 ```
-The student is the teacher, so TaPart shares the link to student with `@link(share=Person.class)` and student is passed along to
-the Teacher constructor. Without `share=Person.class` a compiler error indicates the overlap with Person. 
+The student is the teacher, so TaPart shares the Person link with `@link(share=Person.class)` and the supplied `student`
+is passed along to the Teacher constructor. Without `share=Person.class` a compiler error indicates the overlap with Person:
+```java
+java: Interface 'Person' found in other links: '_teacher'.
+Use '@link(share=Person.class)' to share the 'Person' link with '_teacher' or implement the interface directly.
+```
 
->Note, `part` classes are _not_ required with `@link(share=...)`; it works with both forwarding and delegation.
+>Note, `part` classes are _not_ required with `@link(share=...)`; it applies to forwarding as well.
 
 # Example
 

@@ -5,7 +5,13 @@ import manifold.ext.delegation.rt.api.internal;
 import manifold.ext.rt.api.Structural;
 import manifold.util.ReflectUtil;
 
+import java.lang.invoke.CallSite;
+import java.lang.invoke.ConstantCallSite;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -105,9 +111,9 @@ public interface $PartClass
     public static void reportCycle( $PartClass part, Object root, Class<?> iface )
     {
       throw new DelegationLinkageError( "Cycle detected in delegation graph.\n" +
-                                        "Interface: " + iface.getTypeName() + "\n" +
+                                        "Interface: '" + iface.getTypeName() + "'\n" +
                                         "delegated by root: '" + root.getClass().getTypeName() + "'\n" +
-                                        "is already wired into part: `" + part.getClass().getTypeName() + "'" );
+                                        "is already wired into part: '" + part.getClass().getTypeName() + "'" );
     }
 
     // called from generated code
@@ -135,5 +141,21 @@ public interface $PartClass
     {
       return ReflectUtil.invokeDefault( receiver, iface, name, (Class<?>[])paramsArray, (Object[])argsArray );
     }
+
+    // called from generated code
+    //
+    // invokedynamic bootstrap method (BSM) for default method dispatch.
+    // Call-site type is (I, <params>)R: receiver typed as the declaring interface I,
+    // then the default method's parameters, and return type.
+    @SuppressWarnings("unused")
+    public static CallSite bootstrapDefault( MethodHandles.Lookup caller, String name, MethodType type )
+    {
+      Class<?> iface = type.parameterType( 0 ); // receiver = declaring interface
+      MethodType methodType = type.dropParameterTypes( 0, 1 );  // drop receiver
+      Method method = ReflectUtil.method( iface, name, methodType.parameterArray() ).getMethod();
+      MethodHandle mh = ReflectUtil.defaultMethodHandle( method ).asType( type );
+      return new ConstantCallSite( mh );  // JIT-foldable, inlinable
+    }
+
   }
 }
