@@ -2171,23 +2171,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       JCMethodInvocation invokeDefaultCall = makeIndyCall(
         make, superInterfaceCall, internalMethodsClassSym.type, bsmName, indyType, theArgs, ((JCFieldAccess)superInterfaceCall.meth).name );
 
-      if( exec )
-      {
-        // note, the result in this case comes from visitExec(), it's not the JCMethodInvocation, it's a JCExpressionStatement
-
-        result = make.If( hasSelf( superInterfaceCall, classDecl, iface ), make.Exec( invokeDefaultCall ), make.Exec( superInterfaceCall ) );
-      }
-      else
-      {
-        JCTypeCast castInvokeDefaultCall = make.TypeCast( mt.getReturnType(), invokeDefaultCall );
-
-        // replace superInterfaceCall with:  linksInterfaceToCall() ? invokeDefaultCall : superInterfaceCall
-
-        JCConditional conditional = make.Conditional( hasSelf( superInterfaceCall, classDecl, iface ), castInvokeDefaultCall, superInterfaceCall );
-        conditional.type = mt.getReturnType();
-
-        result = conditional;
-      }
+      result = exec ? make.Exec( invokeDefaultCall ) : invokeDefaultCall;
     }
 
     private JCMethodInvocation makeIndyCall( TreeMaker make,
