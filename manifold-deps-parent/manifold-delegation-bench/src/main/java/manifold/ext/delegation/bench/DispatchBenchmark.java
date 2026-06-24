@@ -48,6 +48,15 @@ public class DispatchBenchmark
   private Calc cp5;
   private Calc cp6;
 
+  // DP: N delegation hops + one self-call issued from an inherited interface DEFAULT method
+  // (compute() not overridden -> generated invokedynamic override routing to root).
+  private DefCalc dp1;
+  private DefCalc dp2;
+  private DefCalc dp3;
+  private DefCalc dp4;
+  private DefCalc dp5;
+  private DefCalc dp6;
+
   @Setup
   public void setup()
   {
@@ -64,6 +73,12 @@ public class DispatchBenchmark
     cp4    = new CpRoot4();
     cp5    = new CpRoot5();
     cp6    = new CpRoot6();
+    dp1    = new DpRoot1();
+    dp2    = new DpRoot2();
+    dp3    = new DpRoot3();
+    dp4    = new DpRoot4();
+    dp5    = new DpRoot5();
+    dp6    = new DpRoot6();
   }
 
   // One plain interface dispatch — unit cost baseline.
@@ -117,4 +132,28 @@ public class DispatchBenchmark
   // 6 delegation hops + self-call dispatch.
   @Benchmark
   public int cp_depth6()       { return cp6.compute( 7 ); }
+
+  // 1 delegation hop + self-call dispatch from an inherited default method (invokedynamic).
+  @Benchmark
+  public int dp_depth1()       { return dp1.compute( 7 ); }
+
+  // 2 delegation hops + default-method self-call dispatch.
+  @Benchmark
+  public int dp_depth2()       { return dp2.compute( 7 ); }
+
+  // 3 delegation hops + default-method self-call dispatch.
+  @Benchmark
+  public int dp_depth3()       { return dp3.compute( 7 ); }
+
+  // 4 delegation hops + default-method self-call dispatch.
+  @Benchmark
+  public int dp_depth4()       { return dp4.compute( 7 ); }
+
+  // 5 delegation hops + default-method self-call dispatch.
+  @Benchmark
+  public int dp_depth5()       { return dp5.compute( 7 ); }
+
+  // 6 delegation hops + default-method self-call dispatch.
+  @Benchmark
+  public int dp_depth6()       { return dp6.compute( 7 ); }
 }
