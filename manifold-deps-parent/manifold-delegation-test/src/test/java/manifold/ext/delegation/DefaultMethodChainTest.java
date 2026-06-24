@@ -182,4 +182,38 @@ public class DefaultMethodChainTest extends TestCase
     assertEquals( "<HELLO>", new DecoratorRoot().decorate( "hello" ) );
     assertEquals( "<hello>", new DecoratorPart().decorate( "hello" ) );
   }
+
+  // --- an intermediate @part forwards an inherited default to its delegate ---
+
+  interface Named
+  {
+    default String label() { return "default"; }
+    String tag();
+  }
+
+  static @part class OverridingLeaf implements Named
+  {
+    @Override public String label() { return "leaf"; }
+    @Override public String tag()   { return "leaf"; }
+  }
+
+  static @part class ForwardingMiddle implements Named
+  {
+    @link Named inner = new OverridingLeaf();
+
+    @Override public String tag() { return "middle"; }
+  }
+
+  static class NamedRoot implements Named
+  {
+    @link Named mid = new ForwardingMiddle();
+
+    @Override public String tag() { return "root"; }
+  }
+
+  public void testDelegatingPartForwardsOverriddenDefault()
+  {
+    assertEquals( "leaf", new ForwardingMiddle().label() );
+    assertEquals( "leaf", new NamedRoot().label() ); // forwards root -> middle -> leaf
+  }
 }

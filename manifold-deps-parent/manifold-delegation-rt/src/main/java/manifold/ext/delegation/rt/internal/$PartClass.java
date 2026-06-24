@@ -24,7 +24,7 @@ import static manifold.util.DebugModeUtil.isJdwpEnabled;
  * <p/>
  * This is a multipurpose interface:<br>
  * - As a performance measure it is used as a marker interface to save from using slower annotation reflection to identify `@part` classes<br>
- * - The compiler adds this interface to `@part` class' `implements` list to enable generated code to cast and call `linkPart`<br>
+ * - The compiler adds this interface to `@part` class' `implements` list to enable `Internal#linkPart` to cast and call `$linkPartToSelf`<br>
  * - It hosts the `Internal` static methods generated code uses for implementation details.<br>
  */
 public interface $PartClass
@@ -39,10 +39,10 @@ public interface $PartClass
    * @param root      A delegating class
    * @param linkScope The interfaces `root` links/delegates to this part
    */
-  @internal
-  void $linkPartToSelf( Object root, Class<?>[] linkScope );
+  @internal void $linkPartToSelf( Object root, Class<?>[] linkScope );
 
-  class Internal {
+  class Internal
+  {
     // called from generated code.
     @SuppressWarnings( "unused" )
     public static Object linkPart( Object root, Class<?>[] linkScope, String fieldName, Object delegate )
@@ -156,6 +156,5 @@ public interface $PartClass
       MethodHandle mh = ReflectUtil.defaultMethodHandle( method ).asType( type );
       return new ConstantCallSite( mh );  // JIT-foldable, inlinable
     }
-
   }
 }

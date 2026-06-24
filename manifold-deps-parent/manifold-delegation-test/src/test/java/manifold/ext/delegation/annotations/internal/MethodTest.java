@@ -153,8 +153,6 @@ public class MethodTest extends TestCase
     @Override
     public String internalDefault()
     {
-      internal();
-      this.internal();
       return Foo.super.internalDefault();
     }
 

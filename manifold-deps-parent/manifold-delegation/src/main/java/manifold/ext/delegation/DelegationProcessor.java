@@ -289,6 +289,11 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
         super.visitClassDef( classDecl );
 
+        if( isPartClass( classDecl.sym ) )
+        {
+          overrideDefaultInterfaceMethods( classDecl );
+        }
+
         postProcessPartClass();
 
         ClassInfo classInfo = _classInfoStack.peek();
@@ -537,10 +542,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     {
       // foreach default interface method,
       //   override the method
-      //     if( $self != null && $self links the interface of the default method to classDecl )
-      //       invokedynammic $self Iface.super.method() // call default method from $self
-      //     else
-      //       Iface.super.method()
+      //     invokedynammic $self Iface.super.method() // call default method from $self
       java.util.List<Type> implIfaces = classDecl.implementing.stream().map( e -> e.type ).collect( Collectors.toList() );
       sortInterfaces( implIfaces );
       for( Type implIface: implIfaces )
@@ -560,6 +562,10 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
           Set<NamedMethodType> seen = new HashSet<>();
           for( MethodSymbol m : defaultMethods )
           {
+            if( isDelegated( m ) )
+            {
+              continue;
+            }
             if( isExtensionMethod( m ) )
             {
               continue;
@@ -581,6 +587,25 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         }
       }
     }
+
+    private boolean isDelegated( MethodSymbol m )
+    {
+      Type owner = getTypes().erasure( m.owner.type );
+      for( LinkInfo li : _classInfoStack.peek().getLinks().values() )
+      {
+        for( ClassType claimed : li.getInterfaces() )
+        {
+          if( getTypes().isSubtype( getTypes().erasure( claimed ), owner ) )
+          {
+            // m is part of a delegated interface, it must be forwarded to the delegate,
+            // which is the default generated behavior for a composite
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
 
     private void findDefaultMethodsToForward( JCClassDecl classDecl, Type iface, Set<Type> seen, ArrayList<MethodSymbol> result )
     {
@@ -710,8 +735,6 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       }
 
       addSelvesField();
-
-      overrideDefaultInterfaceMethods( classDecl );
     }
 
     // enforce:
