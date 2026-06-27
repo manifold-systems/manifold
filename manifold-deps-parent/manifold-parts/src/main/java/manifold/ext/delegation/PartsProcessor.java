@@ -65,7 +65,7 @@ import static manifold.ext.delegation.DelegationIssueMsg.*;
 import static manifold.ext.delegation.Util.getAnnotation;
 import static manifold.util.JreUtil.isJava8;
 
-public class DelegationProcessor implements ICompilerComponent, TaskListener
+public class PartsProcessor implements ICompilerComponent, TaskListener
 {
   private static final String LINKED_INTERFACES_FIELD = "$LINK_SCOPE_";
   private static final String LINK_PART_TO_SELF = "$linkPartToSelf";

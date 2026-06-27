@@ -12,7 +12,7 @@ in place of Java's inheritance model, or together with it.
 
 - Use `@link` to automatically forward interface implementation through the fields of a class
 - Mark a class with `@part` to establish *true* delegation with `@link` -- your overrides apply *everywhere* (solves the [Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
-- Use constructor injection to dynamically configure compositional structure `@link` fields (think language support for DI)
+- Use constructor injection to dynamically configure compositional structure with `@link` fields (think language support for DI)
 - Safely share super interface implementations (solves the [Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
 - All of this without losing Java's dynamic-dispatch performance
 

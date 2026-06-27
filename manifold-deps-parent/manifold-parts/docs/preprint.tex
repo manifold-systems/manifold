@@ -128,9 +128,8 @@ composition is static.
 \emph{Parts} provides both. \code{@part} marks a class as a \emph{part}, an independent object supplied at construction. \code{@link} marks a field through which a composite
 delegates one or more interfaces to a part. When a composite is constructed, a
 compiler plugin wires composite identity into each part, so self-calls in
-the part dispatch through the composite. A link field may be assigned any
-implementation of its interface: a non-part object is driven exclusively by forwarding; a part does what forwarding structurally cannot---route
-its self-calls through the composite. Parts thus subsumes forwarding rather than replacing
+the part dispatch through the composite. A link field accepts all
+implementations of its interface: forwarding works with any object; part objects bring open recursion. Parts thus subsumes forwarding rather than replacing
 it. The enabling mechanism is
 \emph{interface-scoped dispatch} (ISD): assigning composite identity per
 interface rather than per object enables open recursion in all Parts compositions.
@@ -517,11 +516,10 @@ composite $C$: a self-call \code{this.m()} within $P$ where $m \in I$
 dispatches to $C$.
 \end{invariant}
 
-This invariant presumes each interface has a single composite root. That
-precondition holds for every composition the model admits except the multi-root
-contention case of Section~\ref{sec:limitations}, which is not statically
-enforced; where it is violated, $C$ is not uniquely defined and the guarantee
-does not hold.
+This invariant presumes each interface has a single composite root. The model
+maintains this precondition for every composition it admits but does not
+statically enforce it; the lone exception is treated in
+Section~\ref{sec:limitations}.
 
 The invariant is established by construction. When composite $C$ establishes
 a link to part $P$ for interface $I$, the plugin-generated
@@ -1215,7 +1213,8 @@ also fuses the component into the class: the trait's implementation is resolved
 at compile time, not supplied as an independent component at construction. A component implementation therefore cannot be chosen or replaced, and
 a single instance cannot be shared across composites. The fusion and the open recursion are inseparable: linearization is the single
 mechanism behind both, so in statically-typed languages fusing the component
-into the class became standard. Interface-scoped dispatch shows the fusion
+into the class became standard, and remains so in recent precisely-typed mixin
+systems~\cite{fanparreaux2023}. Interface-scoped dispatch shows the fusion
 was never necessary: it obtains the same open recursion without abandoning independent components.
 
 \paragraph{Prototype-based delegation.}
@@ -1359,6 +1358,12 @@ M.~Odersky and M.~Zenger.
 \newblock Scalable component abstractions.
 \newblock In {\em Proceedings of OOPSLA}, pages 41--57, 2005.
 
+\bibitem{fanparreaux2023}
+A.~Fan and L.~Parreaux.
+\newblock super-charging object-oriented programming through precise typing of open recursion.
+\newblock In {\em Proceedings of ECOOP}, LIPIcs 263, pages 11:1--11:28, 2023.
+\newblock DOI: \href{https://doi.org/10.4230/LIPIcs.ECOOP.2023.11}{10.4230/LIPIcs.ECOOP.2023.11}.
+
 \bibitem{stroustrup1987}
 B.~Stroustrup.
 \newblock Multiple inheritance for {C++}.
@@ -1437,8 +1442,8 @@ A.~Shipilev and contributors.
 
 \bibitem{mckinney2026}
 R.~S.~McKinney.
-\newblock manifold-parts.
-\newblock \url{https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts}, 2026.
+\newblock manifold-delegation.
+\newblock \url{https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation}, 2026.
 
 \end{thebibliography}
 
