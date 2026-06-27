@@ -10,13 +10,13 @@
     <version>2026.1.6-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-delegation-bench</artifactId>
-  <name>Manifold :: Delegation Benchmarks</name>
+  <artifactId>manifold-parts-bench</artifactId>
+  <name>Manifold :: Parts Benchmarks</name>
 
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-delegation-rt</artifactId>
+      <artifactId>manifold-parts-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -45,7 +45,7 @@
           <annotationProcessorPaths>
             <path>
               <groupId>systems.manifold</groupId>
-              <artifactId>manifold-delegation</artifactId>
+              <artifactId>manifold-parts</artifactId>
               <version>${project.version}</version>
             </path>
             <path>

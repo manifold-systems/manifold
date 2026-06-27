@@ -24,7 +24,7 @@ Advanced compile-time <b>metaprogramming</b> type-safely integrates any kind of 
 
 Powerful **language enhancements** improve developer productivity.
 * [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
-* [_True_ delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)
+* [_True_ delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 * [Optional parameters](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params) _**(New!)**_
 * [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
@@ -114,7 +114,7 @@ String greeting = "hello";
 greeting.myMethod(); // Add your own methods to String!
 ```
 
-### [Delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)
+### [manifold-parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
 Favor composition over inheritance. Use `@link` and `@part` for automatic interface implementation forwarding and _true_ delegation.
 > ```java
 > class MyClass implements MyInterface {
@@ -319,7 +319,7 @@ by the core framework. Each project consists of one or more **dependencies** you
 
 [Manifold : _Extensions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
 
-[Manifold : _Delegation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)<br>
+[Manifold : _Delegation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)<br>
 
 [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)<br>
 

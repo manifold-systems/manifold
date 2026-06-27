@@ -667,7 +667,7 @@ by the core. Each project represents a separate **dependency** you can easily ad
 
 [Manifold : _Extensions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
 
-[Manifold : _Delegation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)<br>
+[Manifold : _Delegation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)<br>
 
 [Manifold : _Optional parameters & named arguments_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params)<br>
 

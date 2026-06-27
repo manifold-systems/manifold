@@ -28,10 +28,6 @@
     <module>manifold-csv-test</module>
     <module>manifold-darkj</module>
     <module>manifold-darkj-test</module>
-    <module>manifold-delegation</module>
-    <module>manifold-delegation-bench</module>
-    <module>manifold-delegation-rt</module>
-    <module>manifold-delegation-test</module>
     <module>manifold-highjump</module>
     <module>manifold-highjump-test</module>
     <module>manifold-exceptions</module>
@@ -59,6 +55,10 @@
     <module>manifold-params-rt</module>
     <module>manifold-params-middle-test</module>
     <module>manifold-params-test</module>
+    <module>manifold-parts</module>
+    <module>manifold-parts-bench</module>
+    <module>manifold-parts-rt</module>
+    <module>manifold-parts-test</module>
     <module>manifold-preprocessor</module>
     <module>manifold-preprocessor-android-syms</module>
     <module>manifold-preprocessor-test</module>

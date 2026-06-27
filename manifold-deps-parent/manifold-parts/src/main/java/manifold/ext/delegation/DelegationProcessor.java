@@ -109,7 +109,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
   @Override
   public InitOrder initOrder( ICompilerComponent compilerComponent )
   {
-    // Properties must be processed before DelegationProcessor so that manifold-props is fully supported with manifold-delegation
+    // Properties must be processed before DelegationProcessor so that manifold-props is fully supported with manifold-parts
     return compilerComponent.getClass().getName().equals( "manifold.ext.props.PropertyProcessor" )
       ? InitOrder.After
       : InitOrder.NA;

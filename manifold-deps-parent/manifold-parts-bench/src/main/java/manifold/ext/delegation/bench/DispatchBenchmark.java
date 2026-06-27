@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  * If delta is constant across depths, self-call dispatch is O(1).
  * If delta ≈ baseline_depth1 (one plain interface dispatch), the cost is equivalent to vtable.
  *
- * Build:  mvn -pl :manifold-delegation-bench package   (from manifold-deps-parent)
+ * Build:  mvn -pl :manifold-parts-bench package   (from manifold-deps-parent)
  * Run:    java -jar target/benchmarks.jar
  */
 @BenchmarkMode(Mode.AverageTime)

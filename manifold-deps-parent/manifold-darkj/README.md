@@ -78,7 +78,7 @@ This basic interface factory pattern can be used anywhere late-bound compilation
 > However, Dark Java performs its magic at runtime; it uses manifold's compilation services dynamically. Although manifold
 > was originally designed to operate in either mode, static or dynamic, it is now moving away from dynamic support. As a
 > consequence, newer features are not tested for dynamic compatibility. Pure Java code as Dark Java will continue to work
-> fine, but dark code combining Java + manifold features such as manifold-delegation or manifold-tuples may not work as
+> fine, but dark code combining Java + manifold features such as manifold-parts or manifold-tuples may not work as
 > desired.
 > 
 > Be careful out there!

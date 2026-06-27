@@ -8,9 +8,9 @@
     <version>2026.1.6-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-delegation-rt</artifactId>
+  <artifactId>manifold-parts-rt</artifactId>
 
-  <name>Manifold :: Delegation Runtime</name>
+  <name>Manifold :: Parts Runtime</name>
 
   <dependencies>
     <dependency>
@@ -29,7 +29,7 @@
           <archive>
             <manifestEntries>
               <!--JPMS module name-->
-              <Automatic-Module-Name>manifold.delegation.rt</Automatic-Module-Name>
+              <Automatic-Module-Name>manifold.parts.rt</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

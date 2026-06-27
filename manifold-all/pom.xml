@@ -34,7 +34,7 @@
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-delegation</artifactId>
+      <artifactId>manifold-parts</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

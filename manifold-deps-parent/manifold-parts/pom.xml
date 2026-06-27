@@ -8,14 +8,14 @@
     <version>2026.1.6-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-delegation</artifactId>
+  <artifactId>manifold-parts</artifactId>
 
-  <name>Manifold :: Delegation</name>
+  <name>Manifold :: Parts</name>
 
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-delegation-rt</artifactId>
+      <artifactId>manifold-parts-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -35,7 +35,7 @@
           <archive>
             <manifestEntries>
               <!--JPMS module name-->
-              <Automatic-Module-Name>manifold.delegation</Automatic-Module-Name>
+              <Automatic-Module-Name>manifold.parts</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

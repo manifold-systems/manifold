@@ -7,14 +7,14 @@
     <version>2026.1.6-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-delegation-test</artifactId>
+  <artifactId>manifold-parts-test</artifactId>
 
-  <name>Manifold :: DelegationTest</name>
+  <name>Manifold :: Parts Test</name>
   
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-delegation-rt</artifactId>
+      <artifactId>manifold-parts-rt</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -51,7 +51,7 @@
           <annotationProcessorPaths>
             <path>
               <groupId>systems.manifold</groupId>
-              <artifactId>manifold-delegation</artifactId>
+              <artifactId>manifold-parts</artifactId>
               <version>${project.version}</version>
             </path>
           </annotationProcessorPaths>

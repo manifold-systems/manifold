@@ -1,21 +1,20 @@
 > **⚠ Experimental**
 
-# Delegation with links & parts
+# Parts
 
 ![latest](https://img.shields.io/badge/latest-v2026.1.6-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 
-The `manifold-delegation` project is a compiler plugin that provides language support for call forwarding and _true_ delegation.
-These features are an experimental effort toward interface composition as a practical alternative to implementation inheritance.
+*Parts* combines the advantages of object composition and implementation inheritance into one practical model. Use it
+in place of Java's inheritance model, or together with it.
 
-Use `@link` to automatically transfer calls to unimplemented interface methods through the fields of a class.
-
-* Choose between call forwarding and delegation with `@part`
-* Override linked interface methods (solves [the Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
-* Share super interface implementations (solves [the Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
-* Configure class implementation dynamically
+- Use `@link` to automatically forward interface implementation through the fields of a class
+- Mark a class with `@part` to establish *true* delegation with `@link` -- your overrides apply *everywhere* (solves the [Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
+- Use constructor injection to dynamically configure compositional structure `@link` fields (think language support for DI)
+- Safely share super interface implementations (solves the [Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
+- All of this without losing Java's dynamic-dispatch performance
 
 ## Table of Contents
 * [Basic usage](#basic-usage)
@@ -433,7 +432,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) d
 
 ## Building this project
 
-The `manifold-delegation` project is defined with Maven.  To build it install Maven and a Java 8 JDK and run the following
+The `manifold-parts` project is defined with Maven.  To build it install Maven and a Java 8 JDK and run the following
 command.
 ```
 mvn compile
@@ -441,16 +440,16 @@ mvn compile
 
 ## Using this project
 
-The `manifold-delegation` dependency works with all build tooling, including Maven and Gradle. It fully supports Java
+The `manifold-parts` dependency works with all build tooling, including Maven and Gradle. It fully supports Java
 versions 8 - 25.
 
 This project consists of two modules:
-* `manifold-delegation`
-* `manifold-delegation-rt`
+* `manifold-parts`
+* `manifold-parts-rt`
 
 For optimal performance and to work with Android and other JVM languages it is recommended to:
-* Add a dependency on `manifold-delegation-rt` (Gradle: "implementation", Maven: "compile")
-* Add `manifold-delegation` to the annotationProcessor path (Gradle: "annotationProcessor", Maven: "annotationProcessorPaths")
+* Add a dependency on `manifold-parts-rt` (Gradle: "implementation", Maven: "compile")
+* Add `manifold-parts` to the annotationProcessor path (Gradle: "annotationProcessor", Maven: "annotationProcessorPaths")
 
 ## Binaries
 
@@ -480,11 +479,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-delegation-rt:2026.1.6'
+     implementation 'systems.manifold:manifold-parts-rt:2026.1.6'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-delegation:2026.1.6'
-     testAnnotationProcessor 'systems.manifold:manifold-delegation:2026.1.6'
+     annotationProcessor 'systems.manifold:manifold-parts:2026.1.6'
+     testAnnotationProcessor 'systems.manifold:manifold-parts:2026.1.6'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -526,7 +525,7 @@ rootProject.name = 'MyProject'
     <dependencies>
         <dependency>
             <groupId>systems.manifold</groupId>
-            <artifactId>manifold-delegation-rt</artifactId>
+            <artifactId>manifold-parts-rt</artifactId>
             <version>${manifold.version}</version>
         </dependency>
     </dependencies>
@@ -550,7 +549,7 @@ rootProject.name = 'MyProject'
                     <annotationProcessorPaths>
                         <path>
                             <groupId>systems.manifold</groupId>
-                            <artifactId>manifold-delegation</artifactId>
+                            <artifactId>manifold-parts</artifactId>
                             <version>${manifold.version}</version>
                         </path>
                     </annotationProcessorPaths>
@@ -563,11 +562,11 @@ rootProject.name = 'MyProject'
 
 # Javadoc
 
-`manifold-delegation`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation/2026.1.6/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation/2026.1.6)
+`manifold-parts`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts/2026.1.6/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts/2026.1.6)
 
-`manifold-delegation-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation-rt/2026.1.6/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation-rt/2026.1.6)
+`manifold-parts-rt`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts-rt/2026.1.6/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts-rt/2026.1.6)
 
 # License
 

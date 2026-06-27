@@ -30,7 +30,7 @@
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-delegation-rt</artifactId>
+      <artifactId>manifold-parts-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- HikariCP is default db connection pool -->
@@ -90,7 +90,7 @@
           <annotationProcessorPaths>
             <path>
               <groupId>systems.manifold</groupId>
-              <artifactId>manifold-delegation</artifactId>
+              <artifactId>manifold-parts</artifactId>
               <version>${project.version}</version>
             </path>
             <path>

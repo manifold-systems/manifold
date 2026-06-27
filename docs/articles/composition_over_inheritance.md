@@ -15,7 +15,7 @@ to take a step in that direction by building composition features that existing 
                                   
 # Call forwarding and _true_ delegation
 
-The [manifold-delegation](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-delegation/README.md)
+The [manifold-parts](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-parts/README.md)
 project provides simple constructs to make composition a natural alternative to inheritance with Java.
 
 Use `@link` and `@part` for automatic interface implementation forwarding and _true_ delegation.
@@ -31,4 +31,4 @@ class MyClass implements MyInterface {
 }
 ```
 
-See [manifold-delegation](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-delegation/README.md) for details.
+See [manifold-parts](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-parts/README.md) for details.
