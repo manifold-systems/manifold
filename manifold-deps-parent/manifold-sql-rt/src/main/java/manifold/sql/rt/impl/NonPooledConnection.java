@@ -1,7 +1,7 @@
 package manifold.sql.rt.impl;
 
 import com.zaxxer.hikari.HikariDataSource;
-import manifold.ext.delegation.rt.api.link;
+import manifold.ext.parts.rt.api.link;
 
 import java.sql.Connection;
 import java.sql.SQLException;
