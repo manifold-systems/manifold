@@ -2,19 +2,22 @@
 
 # Parts
 
-![latest](https://img.shields.io/badge/latest-v2026.1.6-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2026.1.7-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 
-*Parts* combines the advantages of object composition and implementation inheritance into one practical model. Use it
-in place of Java's inheritance model, or together with it.
+*Parts* unifies composition and implementation inheritance in a single compositional model.
 
-- Use `@link` to automatically forward interface implementation through the fields of a class
-- Mark a class with `@part` to establish *true* delegation with `@link` -- your overrides apply *everywhere* (solves the [Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
-- Use constructor injection to dynamically configure compositional structure with `@link` fields (think language support for DI)
-- Safely share super interface implementations (solves the [Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
-- All of this without losing Java's dynamic-dispatch performance
+Objects are assembled from late-bound components instead of fixed inheritance hierarchies, yet behave as if they were
+defined with implementation inheritance.
+
+- Use `@link` to automatically implement interfaces through the fields of a class
+- Mark a class with `@part` so its overrides apply *everywhere* in the composed object (solves the [Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
+- Configure composition dynamically with constructor injection (think language support for DI)
+- Safely share interface implementations (solves the [Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
+- Preserve Java's dynamic-dispatch performance (see [Interface-Scoped Dispatch](./docs/preprint.pdf))
+
 
 ## Table of Contents
 * [Basic usage](#basic-usage)
@@ -544,11 +547,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-parts-rt:2026.1.6'
+     implementation 'systems.manifold:manifold-parts-rt:2026.1.7'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-parts:2026.1.6'
-     testAnnotationProcessor 'systems.manifold:manifold-parts:2026.1.6'
+     annotationProcessor 'systems.manifold:manifold-parts:2026.1.7'
+     testAnnotationProcessor 'systems.manifold:manifold-parts:2026.1.7'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -584,7 +587,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2026.1.6</manifold.version>
+        <manifold.version>2026.1.7</manifold.version>
     </properties>
     
     <dependencies>
@@ -628,10 +631,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-parts`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts/2026.1.6/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts/2026.1.6)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts/2026.1.7/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts/2026.1.7)
 
 `manifold-parts-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts-rt/2026.1.6/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts-rt/2026.1.6)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts-rt/2026.1.7/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts-rt/2026.1.7)
 
 # License
 
