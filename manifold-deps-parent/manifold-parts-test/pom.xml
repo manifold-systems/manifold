@@ -45,6 +45,7 @@
           <compilerArgs>
             <!--Add the Manifold plugin-->
             <arg>-Xplugin:Manifold</arg>
+            <arg>-Xlint:all</arg>
           </compilerArgs>
 
           <!-- Add Manifold compile-time dependencies in the processor path -->

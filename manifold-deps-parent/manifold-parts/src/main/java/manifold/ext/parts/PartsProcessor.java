@@ -61,7 +61,7 @@ import java.util.stream.Collectors;
 import static com.sun.tools.javac.code.Flags.FINAL;
 import static com.sun.tools.javac.code.Flags.SYNTHETIC;
 import static java.lang.reflect.Modifier.*;
-import static manifold.ext.parts.DelegationIssueMsg.*;
+import static manifold.ext.parts.PartsIssueMsg.*;
 import static manifold.ext.parts.Util.getAnnotation;
 import static manifold.util.JreUtil.isJava8;
 
@@ -847,7 +847,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           for( LinkInfo li : lis )
           {
             reportWarning( li.getLinkField(),
-              DelegationIssueMsg.MSG_METHOD_OVERLAP.get( mt.getName(), fieldNames ) );
+                           PartsIssueMsg.MSG_METHOD_OVERLAP.get( mt.getName(), fieldNames ) );
 
             // remove the overlap method type from the link, the delegating class must implement it directly
             li.getMethodTypes().get( mt.getName() ).remove( mt );
@@ -923,19 +923,24 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
         {
           boolean isInterfaceShared = checkSharedLinks( iface, lis );
 
+          if( autoResolveShare( lis, iface ) )
+          {
+            continue;
+          }
+
           for( LinkInfo li: lis )
           {
-            StringBuilder overlappingLinks = new StringBuilder();
-            lis.stream()
-              .filter( l -> l != li )
-              .forEach( l -> overlappingLinks.append( overlappingLinks.length() > 0 ? ", " : "" ).append( l._linkField.name ) );
-
             if( !li.shares( iface ) )
             {
               if( !isInterfaceShared )
               {
+                StringBuilder overlappingLinks = new StringBuilder();
+                lis.stream()
+                  .filter( l -> l != li )
+                  .forEach( l -> overlappingLinks.append( overlappingLinks.length() > 0 ? ", " : "" ).append( l._linkField.name ) );
+
                 reportError( li.getLinkField(),
-                  DelegationIssueMsg.MSG_INTERFACE_OVERLAP.get( iface.tsym.getSimpleName(), overlappingLinks ) );
+                             PartsIssueMsg.MSG_INTERFACE_OVERLAP.get( iface.tsym.getSimpleName(), overlappingLinks ) );
               }
 
               // remove the overlap interface from the link, only the sharing link provides it
@@ -944,6 +949,40 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           }
         }
       }
+    }
+
+    // if `iface` is directly delegated by a link in the set of `overlappingLinks` and all other links in the set delegate a sub-type of `iface`,
+    // auto resolve the share to that link
+    private boolean autoResolveShare( Set<LinkInfo> overlappingLinks, ClassType iface )
+    {
+      for( LinkInfo li: overlappingLinks )
+      {
+        if( !li.sharesTransitive( iface ) )
+        {
+          Type rawIface = getTypes().erasure( iface );
+          if( li.getInterfaces().stream().anyMatch( t -> getTypes().isSameType( t, rawIface ) ) &&
+              li.getInterfaces().stream().noneMatch( t -> !getTypes().isSameType( t, rawIface ) && getTypes().isSubtype( t, rawIface ) ) &&
+              overlappingLinks.stream()
+                .filter( l -> l != li )
+                .allMatch( l -> !l.shares( iface ) && l.getInterfaces().stream()
+                  .anyMatch( t -> getTypes().isSubtype( t, rawIface ) ) ) )
+          {
+            // automatically resolve the diamond, designating the link that directly delegates the superinterface
+            li._shared.add( iface );
+            overlappingLinks.remove( li );
+            overlappingLinks.forEach( l -> l.getInterfaces().remove( iface ) );
+
+            StringBuilder otherLinks = new StringBuilder();
+            overlappingLinks.forEach( l -> otherLinks.append( otherLinks.length() > 0 ? ", " : "" ).append( l._linkField.name ) );
+
+            reportWarning( li.getLinkField(),
+                           PartsIssueMsg.MSG_INTERFACE_OVERLAP_AUTO_RESOLVE.get(
+                           iface.tsym.getSimpleName(), otherLinks, li.getLinkField().getName() ) );
+            return true;
+          }
+        }
+      }
+      return false;
     }
 
     private boolean checkSharedLinks( ClassType iface, Set<LinkInfo> lis )
@@ -957,7 +996,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
         sharedLinks.forEach( li -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( li._linkField.name ) );
 
         sharedLinks.forEach( li -> reportError( li.getLinkField(),
-          DelegationIssueMsg.MSG_MULTIPLE_SHARING.get( iface.tsym.getSimpleName(), fieldNames ) ) );
+                                                PartsIssueMsg.MSG_MULTIPLE_SHARING.get( iface.tsym.getSimpleName(), fieldNames ) ) );
       }
       return !sharedLinks.isEmpty();
     }
@@ -2868,6 +2907,10 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
     public boolean shares( ClassType iface )
     {
       return _shared.stream().anyMatch( t -> getTypes().isSameType( t, getTypes().erasure( iface ) ) );
+    }
+    public boolean sharesTransitive( ClassType iface )
+    {
+      return _shared.stream().anyMatch( t -> getTypes().isSubtype( t, getTypes().erasure( iface ) ) );
     }
   }
 

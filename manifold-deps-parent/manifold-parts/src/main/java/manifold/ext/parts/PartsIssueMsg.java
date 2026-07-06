@@ -18,7 +18,7 @@ package manifold.ext.parts;
 
 import manifold.api.util.IssueMsg;
 
-public class DelegationIssueMsg
+public class PartsIssueMsg
 {
   public static final IssueMsg MSG_NO_INTERFACES = new IssueMsg( "'{0}' does not have interfaces in common with '{1}'" );
   public static final IssueMsg MSG_DELEGATING_CLASS_DOES_NOT_IMPLEMENT = new IssueMsg( "Delegating class '{0}' does not implement '{1}' of linked field '{2}'" );
@@ -26,6 +26,7 @@ public class DelegationIssueMsg
   public static final IssueMsg MSG_INTERNAL_ACCESS_NOT_ALLOWED_HERE = new IssueMsg( "'{0}' has internal access in '{1}'" );;
   public static final IssueMsg MSG_ONLY_INTERFACES_HERE = new IssueMsg( "Only interfaces allowed here" );
   public static final IssueMsg MSG_INTERFACE_OVERLAP = new IssueMsg( "Interface '{0}' found in other links: '{1}'. Use '@link(share={0}.class)' to share the '{0}' link with '{1}' or implement the interface directly." );
+  public static final IssueMsg MSG_INTERFACE_OVERLAP_AUTO_RESOLVE = new IssueMsg( "Interface '{0}' found in other links: '{1}', is implicitly shared through link '{2}', please add '@link(share={0}.class)' to acknowledge the this." );
   public static final IssueMsg MSG_METHOD_OVERLAP = new IssueMsg( "Method '{0}' found in multiple links '{1}', this method must be implemented directly" );
   public static final IssueMsg MSG_LINK_STATIC_FIELD = new IssueMsg( "@link is not supported on static members" );
   public static final IssueMsg MSG_MODIFIER_REDUNDANT_FOR_LINK = new IssueMsg( "Modifier '{0}' is redundant for part links" );
