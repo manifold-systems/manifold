@@ -7,17 +7,17 @@
 \usetikzlibrary{arrows.meta,positioning,calc}
 \usepackage{makecell}
 \usepackage{float}
+\setlength{\headheight}{18.48402pt} % satisfy fancyhdr's required header height (acmart)
+\addtolength{\topmargin}{-5.48402pt}
 \setlength{\emergencystretch}{3em} % absorb overfull lines from unbreakable inline code
 
 \settopmatter{printacmref=false}   % preprint: suppress the ACM reference block
 \raggedbottom                      % figure-heavy: let slack fall to page bottom,
                                    % not stretch above pinned [H] figures
 
-%% Theorem environments (acmart styles: `invariant` italic, `definition` upright)
+%% Theorem environment (acmart `acmplain` style; `invariant` italic)
 \theoremstyle{acmplain}
 \newtheorem{invariant}{Invariant}
-\theoremstyle{acmdefinition}
-\newtheorem{definition}{Definition}
 %% Inline code
 \newcommand{\code}[1]{\texttt{#1}}
 
@@ -86,16 +86,19 @@
 
 \begin{abstract}
 Object composition under static typing forces a trade: independent
-components, or self-calls through the composite. Forwarding-based constructs compose independent components, but a component's self-calls do not dispatch through the composite. Trait/mixin composition preserves self-call dispatch at the expense of independent
-components. Neither delivers both. Achieving both at the cost of ordinary
-dispatch is the open problem.
+components, or open recursion. Forwarding-based constructs compose independent components, but a component's self-calls do not dispatch through the composite. Trait/mixin composition preserves self-call dispatch at the expense of independent
+components. Approaches that combine the two surrender the components'
+independence, fusing them into the class or binding them to an enclosing family.
+Composing independent components with open recursion has remained open.
 
-We present \emph{Parts}, realized as a compiler plugin for Java~8--26.
+We present \emph{Parts}, a compositional model that unifies independent
+components and open recursion, realized as a compiler plugin
+for Java~8--26.
 A \emph{part} is an independent component, supplied as a runtime object at
 construction, whose self-calls route through the composite; the enabling
 mechanism, \emph{interface-scoped dispatch} (ISD), assigns composite identity
 per interface rather than per object. Self-calls route
-through the correct composite in arbitrary DAG compositions. The dispatch cost is O(1), empirically equivalent to a vtable call.
+through the correct composite in arbitrary compositions. The dispatch cost is O(1), empirically equivalent to a vtable call.
 \end{abstract}
 
 \maketitle
@@ -106,11 +109,11 @@ through the correct composite in arbitrary DAG compositions. The dispatch cost i
 
 Object composition is the standard prescription for avoiding implementation
 inheritance~\cite{gamma1994}. Two properties make it a genuine replacement:
-\emph{independent components} (unrestricted late-bound objects fixed at
-construction) and \emph{open recursion} (self-calls through the composite).
+\emph{independent components} (late-bound objects in arbitrary compositions) and \emph{open recursion} (self-calls through the composite).
 Static typing is what makes the two hard to combine: dynamically-typed object
-models have had both for decades, yet to our knowledge no available statically-typed
-language provides them together---and none at the cost of ordinary dispatch.
+models have had both for decades, yet to our knowledge no statically-typed model
+composes independent components with open recursion
+(Section~\ref{sec:related}).
 
 Forwarding-based composition (Kotlin \code{by}~\cite{kotlin}, Lombok
 \code{@Delegate}~\cite{lombok}) supplies independent components but does not
@@ -122,14 +125,14 @@ Trait composition (Scala \code{with}~\cite{odersky2005},
 mixins~\cite{bracha1990}) inverts the trade. Self-calls dispatch through
 \code{this} in the linearized class, so composite overrides are visible. But
 traits are fused into the class hierarchy at compile time, not supplied as
-runtime objects. Components cannot be constructed independently or supplied externally;
+late-bound objects. Components cannot be constructed independently or supplied externally;
 composition is static.
 
 \emph{Parts} provides both. \code{@part} marks a class as a \emph{part}, an independent object supplied at construction. \code{@link} marks a field through which a composite
 delegates one or more interfaces to a part. When a composite is constructed, a
 compiler plugin wires composite identity into each part, so self-calls in
 the part dispatch through the composite. A link field accepts all
-implementations of its interface: forwarding works with any object; part objects bring open recursion. Parts thus subsumes forwarding rather than replacing
+implementations of the field's declared type: forwarding works with any object; part objects bring open recursion. Parts thus subsumes forwarding rather than replacing
 it. The enabling mechanism is
 \emph{interface-scoped dispatch} (ISD): assigning composite identity per
 interface rather than per object enables open recursion in all Parts compositions.
@@ -147,7 +150,7 @@ The core contributions are:
         composite identity per interface rather than per object, enabling
         open recursion in Parts compositions, including partial
         delegation (where a composite claims a proper subset of a part's
-        interfaces) and arbitrary DAG compositions.
+        interfaces) and arbitrary compositions.
   \item \textbf{An implementation}: a compiler plugin for
         Java 8--26 realizing the model at O(1) dispatch cost, with open-source
         release~\cite{mckinney2026} and IDE integration.
@@ -259,11 +262,11 @@ Figures~\ref{fig:dag-diagram} and~\ref{fig:dag-listing} show the structure.
 \node[font=\scriptsize\itshape, text=gray, right=0.5cm of app, anchor=west]
   {Classifiable root};
 \end{tikzpicture}
-\caption{DAG composition structure. Arrows show link fields labeled
+\caption{Composition structure. Arrows show link fields labeled
 by the delegated interface. \code{Playlist} is the root for
 \code{Streamable} dispatch; \code{Library} is the root for \code{Classifiable} dispatch.}
 \label{fig:dag-diagram}
-\Description{A three-class DAG composition. Track implements Streamable and
+\Description{A three-class composition. Track implements Streamable and
 Classifiable. Playlist links both interfaces of Track and is the Streamable
 root. Library links the Classifiable interface of Playlist and is the
 Classifiable root.}
@@ -315,7 +318,7 @@ out.println(result);
 // prints:  "[mp3] indexing: Autumn Leaves"
 // returns: "jazz:Autumn Leaves"
 \end{lstlisting}
-\caption{DAG composition with multiple composite roots per part.
+\caption{Composition with multiple composite roots per part.
 \code{Track} carries distinct composite identities for \code{Streamable}
 (rooted at \code{Playlist}) and \code{Classifiable} (rooted at \code{Library}).}
 \label{fig:dag-listing}
@@ -329,65 +332,40 @@ We define Parts over a standard typed object model where
 classes implement interfaces and method dispatch is defined by the receiver's
 runtime type.
 
-\begin{definition}[Part]
-A \emph{part} is a class annotated with \code{@part}. Parts implement one
-or more interfaces. A part may also be a composite.
-\end{definition}
+A \emph{part} is a class annotated with \code{@part}; parts implement one or
+more interfaces, and a part may itself be a composite. A \emph{link} is a field
+annotated with \code{@link}, whose declared type is an interface or an abstract
+part class; a link claims the interfaces common to its field type's hierarchy
+and the enclosing composite's, and the plugin enforces \code{private} and
+\code{final} on it (explicit modifiers are redundant). A \emph{composite} is a
+class containing one or more link fields, and it implements every interface its
+links claim. The \emph{delegation surface} of a part is its interface hierarchy,
+excluding any interface marked \code{@internal} in its \code{implements} clause.
 
-\begin{definition}[Link]
-A \emph{link} is a field annotated with \code{@link}. Its declared type is an
-interface or an abstract part class. A link claims the interfaces common
-to its field type's interface hierarchy and the enclosing composite's. The
-plugin enforces \code{private} and \code{final} on link fields; explicit
-modifiers are redundant.
-\end{definition}
+When a part is wired to a composite it receives a \emph{composite identity}: a
+reference to the composite object, through which self-calls within the
+part---calls to methods on its delegation surface---dispatch rather than through
+\code{this}. The enabling mechanism is \emph{interface-scoped dispatch} (ISD):
+the receiver of a self-call is determined by the interface of the called method,
+not by \code{this}, so each interface in a part's delegation surface carries an
+independent composite identity and self-calls route through the composite for
+that interface.
 
-\begin{definition}[Composite]
-A \emph{composite} is a class containing one or more link fields. A
-composite implements all interfaces claimed by its links.
-\end{definition}
+A part may itself contain link fields, in which case composite identity
+propagates transitively. When such a part is wired to an outer composite, that
+composite becomes the dispatch root for each interface it claims throughout the
+delegation chain, while interfaces it does not claim retain the roots
+established by inner composites. This \emph{transitive propagation} traverses
+part links only: it terminates at any non-part link, a forwarding leaf whose
+self-calls remain local to the delegate. A composition may thus freely mix parts
+and non-part delegates, each part routing and each non-part forwarding, with no
+interaction between them.
 
-\begin{definition}[Delegation surface]
-The \emph{delegation surface} of a part is its interface hierarchy,
-excluding any interfaces marked \code{@internal} in its \code{implements} clause.
-\end{definition}
-
-\begin{definition}[Composite identity]
-When a part is wired to a composite, it receives a \emph{composite
-identity}: a reference to the composite object. Self-calls within the
-part (calls to methods on the part's delegation surface) dispatch through
-a composite identity rather than \code{this}.
-\end{definition}
-
-\begin{definition}[Interface-scoped dispatch]
-\label{def:isd}
-\emph{Interface-scoped dispatch} is the dispatch mechanism by which the
-receiver for a self-call is determined by the interface of the
-called method, not by \code{this}. Each
-interface in a part's delegation surface is assigned an independent
-composite identity; self-calls route through the composite for that
-interface.
-\end{definition}
-
-\begin{definition}[Transitive propagation]
-A part may itself contain link fields. When such a part is wired to
-an outer composite, composite identity propagates transitively: the outer composite
-becomes the dispatch root for each interface it claims throughout the delegation chain.
-Interfaces not claimed by the outer composite retain the dispatch roots established
-by inner composites. Propagation traverses part links only: it terminates at
-any non-part link, which is a forwarding leaf whose self-calls remain
-local to the delegate. A composition may freely mix parts and non-part delegates: each
-part routes, each non-part forwards, with no interaction between them.
-\end{definition}
-
-\begin{definition}[Diamond resolution]
-\label{def:diamond}
-When two links in a composite share a common interface, exactly one must declare
-\code{@link(share=T.class)} for the shared interface. That link is
-authoritative; the other delegates only its non-shared interfaces, and the
-shared interface is excluded from propagation when the non-authoritative link is
-wired. Unresolved diamonds are compile errors.
-\end{definition}
+Composites must also resolve \emph{diamonds}: when two links share a common
+interface, exactly one must declare \code{@link(share=T.class)} for it. That
+link is authoritative; the other delegates only its non-shared interfaces, and
+the shared interface is excluded from propagation when the non-authoritative
+link is wired. Unresolved diamonds are compile errors.
 
 Two practical extensions, composite-scoped encapsulation (\code{@internal})
 and abstract parts with deferred linkage (\code{asLink()}), are defined
@@ -617,9 +595,12 @@ R m(args) { return link.m(args); }
 
 When two links share an interface, the forwarders for the
 shared methods route through the authoritative link
-(Definition~\ref{def:diamond}). Wiring corresponding with the authoritative
-link is established by sharing the link's part instance between the links
-sharing the interface.
+(Section~\ref{sec:model}). The non-authoritative link's part need not hold
+the authoritative instance: its \code{\$selves} slot for the shared interface
+points at the composite, so the shared methods dispatch through the composite
+to the authoritative link. Where a part implements the shared interface
+directly, that implementation is overridden by delegation, with no instance
+shared.
 
 In composite classes, each link field assignment \code{this.link = expr}
 is rewritten to invoke \code{\$linkPartToSelf}, propagating the composite
@@ -725,6 +706,10 @@ leave is therefore interface-typed, and the reference that crosses is the
 it, which may be the part itself. A client receiving it reaches the
 composite's overrides; recovering some other interface by reflection or
 downcast can still reach a lower root (Section~\ref{sec:limitations}).
+B\"uchi and Weck's generic wrappers~\cite{buchi2000} give the identity-escape
+hazard this constraint prevents a formal, soundness-proven treatment---the
+closest prior analysis---though they decline the disciplines Parts adopts here as
+too restrictive for arbitrary legacy objects.
 
 %% ─────────────────────────────────────────────────────────────────────────────
 \section{Evaluation}
@@ -771,9 +756,10 @@ The delta is measured against Parts's own forwarding path, which is the right
 baseline: that path is semantically equivalent to Kotlin \code{by} and Lombok
 \code{@Delegate} (Section~\ref{sec:related}), so the delta prices exactly the
 self-call routing those mechanisms cannot express, against their own dispatch
-cost. To our knowledge no other model satisfies all three criteria with a
-runnable implementation, so there is no cross-system benchmark to run; that
-comparison is analytic (Section~\ref{sec:related}).
+cost. To our knowledge no other runnable implementation provides open recursion
+over independently supplied components under static typing, so there is no
+cross-system benchmark to run; that comparison is analytic
+(Section~\ref{sec:related}).
 
 \begin{table}[htbp]
 \centering
@@ -846,8 +832,8 @@ self-call.
 
 \subsection{Example: Teaching Assistant}
 
-The following example exercises DAG composition, diamond dispatch resolution,
-and self-call routing through the composite. A teaching assistant is both
+The following example exercises diamond dispatch resolution and self-call
+routing through the composite. A teaching assistant is both
 a student and a teacher; both roles share a common \code{Person} base.
 
 \begin{lstlisting}
@@ -1091,7 +1077,7 @@ gives \code{Track} separate roots for \code{Streamable} and
 
 \subsection{Language Design Implications}
 
-Parts resolves each known deficiency of implementation inheritance:
+Parts resolves the principal deficiencies of implementation inheritance:
 
 \begin{itemize}
   \item \textbf{Fragile base class}~\cite{mikhajlov1998}: a composite's dependency surface is
@@ -1189,20 +1175,10 @@ and clarify where the compositional model offers the most advantage.
 Static typing is the baseline requirement; models without it are included where relevant.
 
 \paragraph{Forwarding.}
-Kotlin's \code{by} keyword~\cite{kotlin} generates forwarding methods at compile
-time; Lombok's \code{@Delegate}~\cite{lombok} does the same in Java; Scala~3's
-\code{export} keyword~\cite{scala3export} generates forwarding methods for
-delegated members.
-In all cases, a component's self-calls resolve within the component; the composite
-host is invisible. The mechanism is forwarding, not delegation. Scala
-provides both mechanisms in the same language: \code{export}
-for forwarding with independent components, and traits for correct self-call
-dispatch. Yet no combination of the two satisfies both requirements.
-B\"uchi and Weck's generic wrappers~\cite{buchi2000} give the same forwarding
-choice a formal, soundness-proven treatment, and are the closest prior analysis of
-the identity-escape hazard our self-preservation constraint prevents
-(Section~\ref{sec:impl}), though they decline the disciplines we adopt as too
-restrictive for arbitrary legacy objects.
+Kotlin's \code{by} keyword~\cite{kotlin}, Lombok's \code{@Delegate}~\cite{lombok},
+Scala~3's \code{export} keyword~\cite{scala3export}, and Go's struct
+embedding~\cite{go} forward to a supplied component. In all cases, self-calls
+resolve in the component's scope alone; they do not dispatch to the composite.
 
 \paragraph{Scala traits / abstract type members.}
 Odersky and Zenger~\cite{odersky2005} introduced statically-typed mixin
@@ -1217,14 +1193,6 @@ into the class became standard, and remains so in recent precisely-typed mixin
 systems~\cite{fanparreaux2023}. Interface-scoped dispatch shows the fusion
 was never necessary: it obtains the same open recursion without abandoning independent components.
 
-\paragraph{Prototype-based delegation.}
-Lieberman~\cite{lieberman1986} introduced \emph{open delegation}: an object may
-delegate unanswered messages to a prototype, with \emph{self} remaining the
-original receiver throughout the chain. Self~\cite{self1987} realized this in a
-working language. These systems support open recursion with late-bound
-components in arbitrary delegation graphs. Static type guarantees are absent by
-design.
-
 \paragraph{Mixins.}
 Bracha and Cook~\cite{bracha1990} formalized mixins as parameterized abstract
 subclasses. Mixins extend through linearization: the mixin is applied to a chain at class
@@ -1237,56 +1205,60 @@ units of behavior. Trait composition is a compile-time operation: methods are
 flattened into the target class, not supplied as independent components at
 construction. Self-calls dispatch through \code{this} in the composed class.
 
+\paragraph{Typed self-recursion calculi.}
+Chugh's ISOLATE~\cite{chugh2015} is a statically-typed calculus of functional
+objects that types a pattern of mixin composition with open recursion through
+self, without an explicit fixpoint. Its units of composition are
+\emph{premethods}---functions defined apart from a host object and later mixed
+into it---so a method may be ``defined independently of its host object,'' but
+the object itself is still assembled by fusion rather than supplied as an
+independent late-bound component. ISOLATE thus sits on the mixin side of the
+trade: open recursion without independent components, as in recent
+precisely-typed mixin systems~\cite{fanparreaux2023}.
+
 \paragraph{Multiple inheritance.}
 Stroustrup~\cite{stroustrup1987} introduced virtual base classes and virtual
 inheritance in C++ to handle diamonds. The result is a single linearized object
-with a merged vtable; components are not preserved as independent objects.
+with a merged vtable; components are not late-bound objects.
 
-\paragraph{Kniesel / Lava.}
-Kniesel's ``type-safe delegation''~\cite{kniesel1999,kniesel2000} is the closest
-predecessor and frames the problem this paper inherits: components are real
-runtime objects supplied at construction, types are statically enforced, and
-DARWIN binds \texttt{self} to the original receiver so self-calls route through
-the composite rather than staying in the component. The difference from Parts is
-not in capability but in practice. DARWIN routes each self-call through forwarding adapters and a reflective walk
-up the parent-pointer chain (\code{Lava.parentCast}); that walk is a search, not
-a constant-time step. The typical configuration \code{@link} targets is an abstract or interface
-parent with a concrete-subtype instance. For exactly that case, Kniesel's own
-analysis is candid that dispatch ``can be slowed down
-significantly''~\cite[\S7.4.2]{kniesel2000}. The component is never
-present in the composition as itself---widened to \code{Object} or
-adapter-wrapped---where Parts holds it directly and dispatches through an array
-index. He explored mitigations, leaving their evaluation
-open~\cite[\S7.5.5]{kniesel2000}; the system was realized in Lava, a research
-language. Kniesel also weighed the static
-alternative of storing the composite identity in the component, and his objections
-to it are sound: ``sharing of one parent by multiple delegating children
-cannot be expressed at all,'' and recursive delegation could be simulated only
-``with significant run-time and software maintenance costs''~\cite{kniesel1999}.
-Each objection holds for a single per-object identity wired at run time.
-Interface-scoped dispatch answers them with two mechanisms:
-indexing the stored identity by interface lets multiple composites claiming disjoint
-interfaces of a shared part each hold their own root, and transitive propagation
-wires recursive delegation chains at construction, so dispatch stays constant-time
-and the chain adds no per-call cost or maintenance burden.
+\paragraph{Dynamic single inheritance.}
+Kniesel's DARWIN~\cite{kniesel1999,kniesel2000} is a statically typed
+delegation-based model of single implementation inheritance: a base object is
+supplied at run-time through a \code{delegatee} field, its self-calls routing
+through the inheriting subtype. Being single inheritance, it admits at most one
+delegating (or forwarding) field per class~\cite[\S6.5]{kniesel2000}; multiple
+delegation is \emph{deliberately} excluded~\cite[\S6.5.1]{kniesel2000}, and a
+single receiver typed at one interface admits no multi-root
+composition~\cite[\S5.5.4]{kniesel2000}. DARWIN thus achieves open recursion,
+but only over a single inherited base, not across arbitrary compositions;
+interface-scoped dispatch supplies both, by rooting identity in the interface
+rather than the object.
+
+\paragraph{Family polymorphism.}
+gbeta~\cite{ernst2001} (formalized by
+Ernst, Ostermann, and Cook~\cite{ernst2006}), CaesarJ~\cite{aracic2006},
+Object Teams/Java~\cite{herrmann2002}, and J\&~\cite{nystrom2006} target extensible class families,
+not independent components. Here, self-calls dispatch correctly within a
+family, but the object structure is defined statically by the family type, its
+members instantiated internally and not supplied independently: open recursion
+without independent components.
 
 \paragraph{Delegation Layers.}
-Ostermann's delegation layers~\cite{ostermann2002} (ECOOP 2002) combine
-delegation with virtual classes to compose collaborations dynamically at
-runtime; self-calls route correctly within a composed collaboration. The unit
-composed is the collaboration (a layer of virtual nested classes bound to a
-common enclosing type), not the individual object; participants are members of
-that collaboration.
+Ostermann's delegation layers~\cite{ostermann2002} scale delegation from single
+objects to whole collaborations, composed at runtime, with operations routing to
+the composite collaboration rather than a single layer (``composition
+consistency''). But the composed unit is a collaboration, not an individual
+object, and its participants are nested classes redirected through the enclosing
+instance, not independently supplied: open recursion at collaboration
+granularity, without independent components.
 
-\paragraph{Virtual classes and family polymorphism.}
-The virtual-class lineage (gbeta~\cite{ernst2001}, CaesarJ~\cite{aracic2006},
-Object Teams/Java~\cite{herrmann2002}, and J\&~\cite{nystrom2006}) achieves open class composition through virtual nested
-classes within a common enclosing family type; Ernst, Ostermann, and
-Cook~\cite{ernst2006} provide the definitive formal treatment.
-Components are runtime instances of virtual classes, but they are bound to an
-enclosing family type and cannot be independently supplied from outside.
-Self-calls dispatch correctly within the family. The dispatch scope is the
-enclosing family.
+\paragraph{Prototype-based delegation.}
+Lieberman~\cite{lieberman1986} introduced \emph{open delegation}: an object may
+delegate unanswered messages to a prototype, with \emph{self} remaining the
+original receiver throughout the chain. Self~\cite{self1987} realized this in a
+working language. These systems support open recursion with late-bound
+components in arbitrary delegation graphs. Static type guarantees are absent by
+design.
 
 \paragraph{Dynamic composition.}
 Newspeak~\cite{bracha2010} treats classes as first-class late-bound arguments,
@@ -1301,9 +1273,8 @@ In static typing, the \emph{self} problem with independent components is a
 large part of why object composition never displaced implementation inheritance:
 a self-call that reaches the composite's overrides is the one capability that
 made inheritance necessary rather than merely convenient. Parts resolves this by grounding identity in the interface rather than the
-object, recovering open recursion across independent components at ordinary
-dispatch cost---the two properties are not inherently in conflict, only
-unreconciled by prior models.
+object, recovering open recursion across independent components---the two
+properties are not inherently in conflict, only unreconciled by prior models.
 
 
 %% ─────────────────────────────────────────────────────────────────────────────
@@ -1363,6 +1334,12 @@ A.~Fan and L.~Parreaux.
 \newblock super-charging object-oriented programming through precise typing of open recursion.
 \newblock In {\em Proceedings of ECOOP}, LIPIcs 263, pages 11:1--11:28, 2023.
 \newblock DOI: \href{https://doi.org/10.4230/LIPIcs.ECOOP.2023.11}{10.4230/LIPIcs.ECOOP.2023.11}.
+
+\bibitem{chugh2015}
+R.~Chugh.
+\newblock {ISOLATE}: A type system for self-recursion.
+\newblock In {\em Proceedings of ESOP}, LNCS 9032, pages 257--282, 2015.
+\newblock DOI: \href{https://doi.org/10.1007/978-3-662-46669-8_11}{10.1007/978-3-662-46669-8\_11}.
 
 \bibitem{stroustrup1987}
 B.~Stroustrup.
@@ -1435,6 +1412,11 @@ Project Lombok.
 \newblock \texttt{@Delegate} --- {Lombok} features.
 \newblock \url{https://projectlombok.org/features/Delegate}, 2024.
 
+\bibitem{go}
+The Go Authors.
+\newblock Embedding --- Effective {Go}.
+\newblock \url{https://go.dev/doc/effective_go#embedding}, 2024.
+
 \bibitem{jmh}
 A.~Shipilev and contributors.
 \newblock {JMH}: Java Microbenchmark Harness.
@@ -1442,8 +1424,8 @@ A.~Shipilev and contributors.
 
 \bibitem{mckinney2026}
 R.~S.~McKinney.
-\newblock manifold-delegation.
-\newblock \url{https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation}, 2026.
+\newblock manifold-parts.
+\newblock \url{https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts}, 2026.
 
 \end{thebibliography}
 
