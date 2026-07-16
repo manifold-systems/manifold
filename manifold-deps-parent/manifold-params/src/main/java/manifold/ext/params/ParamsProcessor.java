@@ -1082,10 +1082,15 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         ReflectUtil.method( MemberEnter.instance( getContext() ), "annotateLater", List.class, Env.class, Symbol.class, JCDiagnostic.DiagnosticPosition.class )
           .invoke( targetMethod.mods.annotations, localEnv, targetMethod.sym, targetMethod.pos() );
       }
-      else if( JreUtil.isJava25orLater() ) // 25+
+      else if( JreUtil.isJava25() ) // 25
       {
         ReflectUtil.method( Annotate.instance( getContext() ), "annotateLater", List.class, Env.class, Symbol.class, JCTree.class )
           .invoke( targetMethod.mods.annotations, localEnv, targetMethod.sym, targetMethod );
+      }
+      else if( JreUtil.isJava26orLater() ) // 26+
+      {
+        ReflectUtil.method( Annotate.instance( getContext() ), "annotateLater", List.class, Env.class, Symbol.class )
+          .invoke( targetMethod.mods.annotations, localEnv, targetMethod.sym );
       }
       else // 9 - 24
       {

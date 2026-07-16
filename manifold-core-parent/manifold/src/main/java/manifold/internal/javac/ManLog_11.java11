@@ -14,13 +14,13 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.DiagnosticSource;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
-import com.sun.tools.javac.util.MandatoryWarningHandler;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import manifold.api.type.ICompilerComponent;
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 import manifold.rt.api.util.Stack;
 import manifold.util.concurrent.LocklessLazyVar;
@@ -39,19 +39,19 @@ public class ManLog_11 extends Log
     {
       ctx.put( logKey, (Log)null );
       //noinspection unchecked
-      log = new ManLog_11( ctx,
-        (DiagnosticHandler)ReflectUtil.field( log, "diagnosticHandler" ).get(),
-        log.currentSource(),
-        (Map<WriterKind, PrintWriter>)ReflectUtil.field( log, "writers" ).get() );
+      log = new ManLog_11( ctx, log );
     }
 
     return log;
   }
 
-  private ManLog_11( Context ctx, DiagnosticHandler diagnosticHandler, DiagnosticSource source,
-                    Map<WriterKind, PrintWriter> writers )
+  private ManLog_11( Context ctx, Log oldLog )
   {
     super( ctx );
+
+    DiagnosticHandler diagnosticHandler = (DiagnosticHandler)ReflectUtil.field( oldLog, "diagnosticHandler" ).get();
+    DiagnosticSource source = oldLog.currentSource();
+    Map<WriterKind, PrintWriter> writers = (Map<WriterKind, PrintWriter>)ReflectUtil.field( oldLog, "writers" ).get();
     ReflectUtil.field( this, "diagnosticHandler" ).set( diagnosticHandler );
     ensureDiagnosticHandlersEnclosingClassIsThis( diagnosticHandler );
     ReflectUtil.field( this, "source" ).set( source );
@@ -82,8 +82,6 @@ public class ManLog_11 extends Log
       Gen.instance( ctx ),
       Infer.instance( ctx ),
       JavaCompiler.instance( ctx ),
-      ReflectUtil.field( JavaCompiler.instance( ctx ), "preview" ).get(),
-      ReflectUtil.field( ReflectUtil.field( JavaCompiler.instance( ctx ), "preview" ).get(), "previewHandler" ).get(),
       JavacProcessingEnvironment.instance( ctx ),
       JavacProcessingEnvironment.instance( ctx ).getMessager(),
       JavacTrees.instance( ctx ),
@@ -98,33 +96,46 @@ public class ManLog_11 extends Log
       TransTypes.instance( ctx ),
       TypeAnnotations.instance( ctx ),
     };
+    setLogField( earlyAttrHolders );
+
+    // Reassign Log fields
+    // Note this is only relevant when compiling with annotation processors
+    if( !JreUtil.isJava26orLater() )
+    {
+      Object[] previewHolders = {
+        ReflectUtil.field( JavaCompiler.instance( ctx ), "preview" ).get(),
+        ReflectUtil.field( ReflectUtil.field( JavaCompiler.instance( ctx ), "preview" ).get(), "previewHandler" ).get()
+      };
+      setLogField( previewHolders );
+
+      // Also reassign the 'log' fields in Check's various MandatoryWarningHandlers...
+      for( Field f : Check.class.getDeclaredFields() )
+      {
+        if( ReflectUtil.type( "com.sun.tools.javac.util.MandatoryWarningHandler" ).isAssignableFrom( f.getType() ) )
+        {
+          f.setAccessible( true );
+          try
+          {
+            Object mwh = f.get( Check.instance( ctx ) );
+            ReflectUtil.field( mwh, "log" ).set( this );
+          }
+          catch( IllegalAccessException e )
+          {
+            throw new RuntimeException( e );
+          }
+        }
+      }
+    }
+  }
+
+  private void setLogField( Object[] earlyAttrHolders )
+  {
     for( Object instance: earlyAttrHolders )
     {
       ReflectUtil.LiveFieldRef l = ReflectUtil.WithNull.field( instance, "log" );
       if( l != null )
       {
         l.set( this );
-      }
-    }
-
-    // Reassign Log fields
-    // Note this is only relevant when compiling with annotation processors
-
-    // Also reassign the 'log' fields in Check's various MandatoryWarningHandlers...
-    for( Field f: Check.class.getDeclaredFields() )
-    {
-      if( MandatoryWarningHandler.class.isAssignableFrom( f.getType() ) )
-      {
-        f.setAccessible( true );
-        try
-        {
-          Object mwh = f.get( Check.instance( ctx ) );
-          ReflectUtil.field( mwh, "log" ).set( this );
-        }
-        catch( IllegalAccessException e )
-        {
-          throw new RuntimeException( e );
-        }
       }
     }
   }

@@ -397,10 +397,14 @@ public interface ManAttr
 
   default Log.DiagnosticHandler makeMyDiagnosticHandler()
   {
-    Log.DiagnosticHandler diagHandler = JreUtil.isJava25orLater()
+    Log.DiagnosticHandler diagHandler =
+      JreUtil.isJava26orLater()
       ? (Log.DiagnosticHandler)ReflectUtil.method(
-          ReflectUtil.constructor( "manifold.internal.javac.MyDiagnosticHandler_25" ).newInstance(), "make", Log.class ).invoke( getLogger() )
-      : (Log.DiagnosticHandler)ReflectUtil.constructor( "manifold.internal.javac.MyDiagnosticHandler_8", Log.class ).newInstance( getLogger() );
+          ReflectUtil.constructor( "manifold.internal.javac.MyDiagnosticHandler_26" ).newInstance(), "make", Log.class ).invoke( getLogger() )
+      : JreUtil.isJava25orLater()
+        ? (Log.DiagnosticHandler)ReflectUtil.method(
+            ReflectUtil.constructor( "manifold.internal.javac.MyDiagnosticHandler_25" ).newInstance(), "make", Log.class ).invoke( getLogger() )
+        : (Log.DiagnosticHandler)ReflectUtil.constructor( "manifold.internal.javac.MyDiagnosticHandler_8", Log.class ).newInstance( getLogger() );
     return diagHandler;
   }
 

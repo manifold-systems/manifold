@@ -1063,7 +1063,15 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       {
         if( def instanceof JCMethodDecl && ((JCMethodDecl)def).sym.isConstructor() )
         {
-          classDecl.sym.members().remove( ((JCMethodDecl)def).sym );
+          if( JreUtil.isJava8() )
+          {
+            classDecl.sym.members().remove( ((JCMethodDecl)def).sym );
+          }
+          else
+          {
+            Object scope = ReflectUtil.method( classDecl.sym, "members" ).invoke();
+            ReflectUtil.method( scope, "remove", Symbol.class ).invoke( ((JCMethodDecl)def).sym );
+          }
         }
       }
       classDecl.defs = List.from( classDecl.defs.stream()
@@ -2078,7 +2086,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
         return false;
       }
 
-      Pair<JCClassDecl, Type> enclClass_Iface = findInterfaceOfEnclosingTypeThatSymImplements( methSym );
+      Pair<JCClassDecl, Type> enclClass_Iface = findInterfaceOfEnclosingTypeThatSymImplements( tree.meth, methSym );
       if( enclClass_Iface == null || !isPartClass( enclClass_Iface.fst.sym ) )
       {
         return false;
@@ -2128,7 +2136,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       return null;
     }
 
-    private Pair<JCClassDecl, Type> findInterfaceOfEnclosingTypeThatSymImplements( MethodSymbol sym )
+    private Pair<JCClassDecl, Type> findInterfaceOfEnclosingTypeThatSymImplements( JCExpression meth, MethodSymbol sym )
     {
       for( int i = _classDeclStack.size()-1; i >= 0; i-- )
       {
@@ -2137,15 +2145,25 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
         {
           ArrayList<ClassType> interfaces = new ArrayList<>();
           findAllInterfaces( classDecl.sym.type, new HashSet<>(), interfaces );
+          List<ClassType> matches = List.nil();
           for( ClassType iface : interfaces )
           {
             for( Symbol mm : IDynamicJdk.instance().getMembersByName( (ClassSymbol)iface.tsym, sym.name ) )
             {
               if( sym.overrides( mm, iface.tsym, getTypes(), false ) )
               {
-                return new Pair<>( classDecl, iface );
+                matches = matches.append( iface );
               }
             }
+          }
+          if( !matches.isEmpty() )
+          {
+            if( matches.size() > 1 )
+            {
+              String ifaceList = matches.stream().map( e -> e.tsym.getSimpleName() ).collect( Collectors.joining( ", " ) );
+              reportError( meth, MSG_AMBIGUOUS_RECEIVER.get( sym.toString(), ifaceList ) );
+            }
+            return Pair.of( classDecl, matches.head );
           }
         }
       }
@@ -2677,6 +2695,12 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
 
   static Attribute.Compound getAnnotationMirror( Symbol sym, Class<? extends Annotation> annoClass )
   {
+    if( sym == null )
+    {
+      // anon class?
+      return null;
+    }
+
     for( Attribute.Compound anno : sym.getAnnotationMirrors() )
     {
       if( annoClass.getTypeName().equals( anno.type.tsym.getQualifiedName().toString() ) )
@@ -2790,6 +2814,12 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
 
   private static boolean isInPartClass( Symbol sym )
   {
+    if( sym == null )
+    {
+      // anon class
+      return false;
+    }
+
     Attribute.Compound partAnno = getAnnotationMirror( sym, part.class );
     if( partAnno != null )
     {

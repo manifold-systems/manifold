@@ -56,14 +56,15 @@ public class ManCheck_11 extends Check
     ReflectUtil.field( Gen.instance( ctx ), CHECK_FIELD ).set( this );
   }
 
-  @Override
+//  @Override
   public void reportDeferredDiagnostics()
   {
     // compile manifold types that were not referenced directly or indirectly from explicitly compiled Java files
     StaticCompiler.instance().compileRemainingTypes_ByFile();
     StaticCompiler.instance().compileRemainingTypes_ByTypeNameRegexes();
 
-    super.reportDeferredDiagnostics();
+    // calling super.reportDeferredDiagnostics() reflectively bc the method was removed in JDK 26, this method is not called there
+    ReflectUtil.method( this, "reportDeferredDiagnostics" ).invokeSuper();
   }
 
   @Override

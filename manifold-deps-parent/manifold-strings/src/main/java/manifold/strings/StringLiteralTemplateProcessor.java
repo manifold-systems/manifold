@@ -101,12 +101,16 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
     }
 
     // Install the handler so we can filter the 'illegal escape character' errors for \$
-    _manDiagnosticHandler = JreUtil.isJava25orLater()
+    _manDiagnosticHandler = JreUtil.isJava26orLater()
                             ? (StringTemplateDiagnosticHandler)ReflectUtil.method(
-                                ReflectUtil.constructor( "manifold.internal.javac.ManDiagnosticHandler_25" ).newInstance(), "make", Context.class )
+                                ReflectUtil.constructor( "manifold.internal.javac.ManDiagnosticHandler_26" ).newInstance(), "make", Context.class )
                                  .invoke( _javacTask.getContext() )
-                            : (StringTemplateDiagnosticHandler)ReflectUtil.constructor( "manifold.internal.javac.ManDiagnosticHandler_8", Context.class )
-                                .newInstance( _javacTask.getContext() );
+                            : JreUtil.isJava25orLater()
+                              ? (StringTemplateDiagnosticHandler)ReflectUtil.method(
+                                  ReflectUtil.constructor( "manifold.internal.javac.ManDiagnosticHandler_25" ).newInstance(), "make", Context.class )
+                                   .invoke( _javacTask.getContext() )
+                              : (StringTemplateDiagnosticHandler)ReflectUtil.constructor( "manifold.internal.javac.ManDiagnosticHandler_8", Context.class )
+                                  .newInstance( _javacTask.getContext() );
   }
 
   @Override

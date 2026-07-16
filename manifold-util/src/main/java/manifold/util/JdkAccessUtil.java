@@ -99,26 +99,23 @@ public class JdkAccessUtil
 
     try
     {
-      Class<?> classModule = ReflectUtil.type( "java.lang.Module" );
-      ReflectUtil.MethodRef addExportsOrOpens = ReflectUtil.method( classModule, "implAddExportsOrOpens", String.class, classModule, boolean.class, boolean.class );
-
       //
       // Module: manifold jars
       //
       Object /*Module*/ thisModule = ReflectUtil.method( Class.class, "getModule" ).invoke( JdkAccessUtil.class );
       Object /*Module*/ javaBase = ReflectUtil.method( Class.class, "getModule" ).invoke( String.class );
-      addExportsOrOpens.invoke( javaBase, "jdk.internal.misc", thisModule, true, true );
-      addExportsOrOpens.invoke( javaBase, "java.lang", thisModule, true, true );
+      addExportsOrOpens( javaBase, "jdk.internal.misc", thisModule, true, true );
+      addExportsOrOpens( javaBase, "java.lang", thisModule, true, true );
 
       Object /*Module*/ everyoneModule = ReflectUtil.field( "java.lang.Module", "EVERYONE_MODULE" ).getStatic();
 
       // Open select packages in java.base module for reflective access
-      openRuntimeModules( addExportsOrOpens, everyoneModule );
+      openRuntimeModules( everyoneModule );
 
       if( fullJdk )
       {
         // Open select packages in jdk.compiler for reflective access
-        openCompilerModules( addExportsOrOpens, everyoneModule );
+        openCompilerModules( everyoneModule );
       }
     }
     catch( Throwable e )
@@ -127,27 +124,27 @@ public class JdkAccessUtil
     }
   }
 
-  private static void openRuntimeModules( ReflectUtil.MethodRef addExportsOrOpens, Object manifoldModule )
+  private static void openRuntimeModules( Object manifoldModule )
   {
     //
     // Module: java.base
     //
     Object /*Module*/ javaBaseModule = ReflectUtil.method( Class.class, "getModule" ).invoke( String.class );
-//    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.misc", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.module", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm.annotation", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( javaBaseModule, "java.lang", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( javaBaseModule, "java.lang.invoke", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( javaBaseModule, "java.lang.module", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( javaBaseModule, "java.lang.reflect", manifoldModule, true, true ); // for jailbreak
-//    addExportsOrOpens.invoke( javaBaseModule, "java.net", manifoldModule, true, true );
+//    addExportsOrOpens( javaBaseModule, "jdk.internal.loader", manifoldModule, true, true );
+//    addExportsOrOpens( javaBaseModule, "jdk.internal.misc", manifoldModule, true, true );
+//    addExportsOrOpens( javaBaseModule, "jdk.internal.module", manifoldModule, true, true );
+//    addExportsOrOpens( javaBaseModule, "jdk.internal.vm", manifoldModule, true, true );
+//    addExportsOrOpens( javaBaseModule, "jdk.internal.vm.annotation", manifoldModule, true, true );
+//    addExportsOrOpens( javaBaseModule, "java.lang", manifoldModule, true, true );
+//    addExportsOrOpens( javaBaseModule, "java.lang.invoke", manifoldModule, true, true );
+//    addExportsOrOpens( javaBaseModule, "java.lang.module", manifoldModule, true, true );
+//    addExportsOrOpens( javaBaseModule, "java.lang.reflect", manifoldModule, true, true ); // for jailbreak
+//    addExportsOrOpens( javaBaseModule, "java.net", manifoldModule, true, true );
     //noinspection unchecked
     Set<String> packages = (Set<String>)ReflectUtil.method( javaBaseModule, "getPackages" ).invoke();
     for( String pkg : packages )
     {
-      addExportsOrOpens.invoke( javaBaseModule, pkg, manifoldModule, true, true );
+      addExportsOrOpens( javaBaseModule, pkg, manifoldModule, true, true );
     }
 
     //
@@ -161,34 +158,34 @@ public class JdkAccessUtil
       return;
     }
     Object /*Module*/ javaDesktop = ReflectUtil.method( Class.class, "getModule" ).invoke( Desktop );
-    addExportsOrOpens.invoke( javaDesktop, "sun.awt", manifoldModule, true, true );
+    addExportsOrOpens( javaDesktop, "sun.awt", manifoldModule, true, true );
   }
 
-  private static void openCompilerModules( ReflectUtil.MethodRef addExportsOrOpens, Object manifoldModule )
+  private static void openCompilerModules( Object manifoldModule )
   {
     //
     // Module: jdk.compiler
     //
     Object /*Module*/ jdkCompilerModule = ReflectUtil.method( Class.class, "getModule" )
       .invoke( ReflectUtil.type( "com.sun.tools.javac.code.Symbol", true ) );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.api", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.code", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.comp", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.file", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.jvm", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.main", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.model", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.parser", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.platform", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.processing", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.resources", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.tree", manifoldModule, true, true );
-//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.util", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.api", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.code", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.comp", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.file", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.jvm", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.main", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.model", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.parser", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.platform", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.processing", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.resources", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.tree", manifoldModule, true, true );
+//    addExportsOrOpens( jdkCompilerModule, "com.sun.tools.javac.util", manifoldModule, true, true );
     //noinspection unchecked
     Set<String> packages = (Set<String>)ReflectUtil.method( jdkCompilerModule, "getPackages" ).invoke();
     for( String pkg : packages )
     {
-      addExportsOrOpens.invoke( jdkCompilerModule, pkg, manifoldModule, true, true );
+      addExportsOrOpens( jdkCompilerModule, pkg, manifoldModule, true, true );
     }
 
     //
@@ -202,13 +199,28 @@ public class JdkAccessUtil
       return;
     }
     Object /*Module*/ jdkJavadoc = ReflectUtil.method( Class.class, "getModule" ).invoke( HtmlDoclet );
-    addExportsOrOpens.invoke( jdkJavadoc, "jdk.javadoc.internal.doclets.formats.html", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkJavadoc, "jdk.javadoc.internal.tool", manifoldModule, true, true );
+    addExportsOrOpens( jdkJavadoc, "jdk.javadoc.internal.doclets.formats.html", manifoldModule, true, true );
+    addExportsOrOpens( jdkJavadoc, "jdk.javadoc.internal.tool", manifoldModule, true, true );
     if( !JreUtil.isJava13orLater() )
     {
       // `com.sun.tools.doclets.standard.Standard` and `com.sun.tools.javadoc.main.Main` are removed in JDK 13
-      addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.javadoc.main", manifoldModule, true, true );
-      addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.doclets.standard", manifoldModule, true, true );
+      addExportsOrOpens( jdkJavadoc, "com.sun.tools.javadoc.main", manifoldModule, true, true );
+      addExportsOrOpens( jdkJavadoc, "com.sun.tools.doclets.standard", manifoldModule, true, true );
+    }
+  }
+
+  private static void addExportsOrOpens( Object module, String pn, Object otherModule, boolean open, boolean reflectively )
+  {
+    Class<?> classModule = ReflectUtil.type( "java.lang.Module" );
+    if( JreUtil.isJava26orLater() )
+    {
+      ReflectUtil.MethodRef addExportsOrOpens = ReflectUtil.method( classModule, "implAddExportsOrOpens", String.class, classModule, boolean.class, boolean.class, boolean.class );
+      addExportsOrOpens.invoke( module, pn, otherModule, open, reflectively, true );
+    }
+    else
+    {
+      ReflectUtil.MethodRef addExportsOrOpens = ReflectUtil.method( classModule, "implAddExportsOrOpens", String.class, classModule, boolean.class, boolean.class );
+      addExportsOrOpens.invoke( module, pn, otherModule, open, reflectively );
     }
   }
 

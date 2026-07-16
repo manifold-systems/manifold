@@ -76,9 +76,13 @@ public class ManJavacParser extends JavacParser
   private static Method method_peekToken = null;
   private static Method method_unannotatedType = null;
   private static Method method_parsePattern = null;
+  private static Method method_toP = null;
+  private static Method method_to = null;
+  private static int JAVA_VERSION = getJavaVersion();
   private static int java_ver = 0;
   static
   {
+    //todo: all of the following should be in *reverse* order, any one of these fields/methods could be removed in a future parser
     try
     {
       field_mode = JavacParser.class.getDeclaredField( "mode" );
@@ -177,10 +181,39 @@ public class ManJavacParser extends JavacParser
       method_parsePattern.setAccessible( true );
 
       java_ver = 21;
+
+      // Java 26+
+      method_toP = JavacParser.class.getDeclaredMethod( "toP", JCTree.class );
+      method_toP.setAccessible( true );
+      method_to = JavacParser.class.getDeclaredMethod( "to", JCTree.class );
+      method_to.setAccessible( true );
+
+      java_ver = 26;
     }
     catch( Exception ignore )
     {
     }
+  }
+
+  private static int getJavaVersion()
+  {
+    String version = System.getProperty( "java.version" );
+    StringBuilder sb = new StringBuilder();
+    for( int i = 0; i < version.length(); i++ )
+    {
+      char c = version.charAt( i );
+      if( Character.isDigit( c ) )
+      {
+        sb.append( c );
+      }
+      else
+      {
+        break;
+      }
+    }
+    int major = Integer.parseInt( sb.toString() );
+    // note, android's major is 0, but is really 8 (ish)
+    return major <= 1 ? 8 : major;
   }
 
   private final Names _names;
@@ -304,12 +337,12 @@ public class ManJavacParser extends JavacParser
                 }
                 else if( java_ver >= 17 )
                 {
-                  JCVariableDecl var = toP(F.at(token.pos).VarDef(mods, ident(), type, null));
-                  pattern = toP( (JCTree)method_BindingPattern_16.invoke( F.at( token.pos ), var ) );
+                  JCVariableDecl var = _toP( F.at( token.pos).VarDef( mods, ident(), type, null));
+                  pattern = _toP( (JCTree)method_BindingPattern_16.invoke( F.at( token.pos ), var ) );
                 }
                 else
                 {
-                  pattern = toP( (JCTree)method_BindingPattern_15.invoke( F.at( token.pos ), ident(), pattern ) );
+                  pattern = _toP( (JCTree)method_BindingPattern_15.invoke( F.at( token.pos ), ident(), pattern ) );
                 }
               } catch( Exception ignore ) {
                 // a Java release prior to BindingPattern will have a compile error from the extra identifier
@@ -439,13 +472,13 @@ public class ManJavacParser extends JavacParser
     {
       set_mode( EXPR );
       JCExpression t = literal( _names.empty );
-      return toP( t );
+      return _toP( t );
     }
 
     if( token.kind == IDENTIFIER )
     {
-      JCExpression t = toP( F.at( token.pos ).Ident( ident() ) );
-      return toP( t );
+      JCExpression t = _toP( F.at( token.pos ).Ident( ident() ) );
+      return _toP( t );
     }
 
     return illegal();
@@ -558,7 +591,7 @@ public class ManJavacParser extends JavacParser
         result = args.get( 0 );
       }
       accept( RPAREN );
-      JCExpression expr = toP( F.at( pos ).Parens( result ) );
+      JCExpression expr = _toP( F.at( pos ).Parens( result ) );
       return term3Rest( expr, null );
     }
     return null;
@@ -739,11 +772,27 @@ public class ManJavacParser extends JavacParser
     }
   }
 
-  protected <T extends JCTree> T to( T t ) {
-    return _endPosTable.to(t);
+  private <T extends JCTree> T _to( T t )
+  {
+    try
+    {
+      return JAVA_VERSION >= 26 ? (T)method_toP.invoke( this, t ) : _endPosTable.to(t);
+    }
+    catch( Throwable e )
+    {
+      throw new RuntimeException( e );
+    }
   }
-  protected <T extends JCTree> T toP( T t ) {
-    return _endPosTable.toP(t);
+  private <T extends JCTree> T _toP( T t )
+  {
+    try
+    {
+      return JAVA_VERSION >= 26 ? (T)method_toP.invoke( this, t ) : _endPosTable.toP(t);
+    }
+    catch( Throwable e )
+    {
+      throw new RuntimeException( e );
+    }
   }
 
   private JCExpression[] newOdStack() {
@@ -839,7 +888,7 @@ public class ManJavacParser extends JavacParser
       nextToken();
       JCExpression init = variableInitializer();
       varDecl.init = init;
-      toP( init );
+      _toP( init );
     }
   }
 
@@ -891,7 +940,7 @@ public class ManJavacParser extends JavacParser
       ident.pos = lastArg.pos;
       JCExpression result = F.Apply( List.nil(), ident, arguments );
       result.pos = lastArg.pos;
-      return List.of( toP( F.at( args.first().pos ).Parens( result ) ) );
+      return List.of( _toP( F.at( args.first().pos ).Parens( result ) ) );
     }
     return args.toList();
   }
@@ -933,7 +982,7 @@ public class ManJavacParser extends JavacParser
     {
       result = parseTupleExprWithoutParens();
     }
-    JCTree.JCReturn t = to( F.at( pos ).Return( result ) );
+    JCTree.JCReturn t = _to( F.at( pos ).Return( result ) );
     accept( SEMI );
     return t;
   }
@@ -971,7 +1020,7 @@ public class ManJavacParser extends JavacParser
       ident.pos = lastArg.pos;
       result = F.Apply( List.nil(), ident, args );
       result.pos = lastArg.pos;
-      return toP( F.at( pos ).Parens( result ) );
+      return _toP( F.at( pos ).Parens( result ) );
     }
     else
     {

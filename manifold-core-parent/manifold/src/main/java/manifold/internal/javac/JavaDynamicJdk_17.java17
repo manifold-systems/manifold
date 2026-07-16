@@ -11,6 +11,7 @@ import com.sun.tools.javac.resources.CompilerProperties;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.*;
 import manifold.rt.api.util.Stack;
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 import javax.tools.Diagnostic;
@@ -19,6 +20,7 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import static manifold.internal.javac.ManifoldJavaFileManager.MODULE_CTX;
@@ -42,7 +44,10 @@ public class JavaDynamicJdk_17 implements IDynamicJdk
           issueLogger.warning( new IssueReporter.Position( diagnostic ), CompilerProperties.Warnings.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
           break;
         case MANDATORY_WARNING:
-          issueLogger.mandatoryWarning( new IssueReporter.Position( diagnostic ), CompilerProperties.Warnings.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
+          // todo: make JavaDynamicJdk_26 and prepend an DiagnosticFlag.MANDATORY arg, and then use mandatorWarning for this file
+          issueLogger.warning( new IssueReporter.Position( diagnostic ), CompilerProperties.Warnings.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
+//jdk26          issueLogger.warning( JCDiagnostic.DiagnosticFlag.MANDATORY, new IssueReporter.Position( diagnostic ), CompilerProperties.Warnings.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
+//jdk17          issueLogger.mandatoryWarning( new IssueReporter.Position( diagnostic ), CompilerProperties.Warnings.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
           break;
         case NOTE:
         case OTHER:
@@ -197,12 +202,33 @@ public class JavaDynamicJdk_17 implements IDynamicJdk
   @Override
   public void logError( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... args )
   {
-    logger.error( pos, new JCDiagnostic.Error( "compiler", key, args ) );
+    //todo: make a JavaDynamicJdk_26 so these can be direct calls, not reflective
+    if( JreUtil.isJava26orLater() )
+    {
+      ReflectUtil.ConstructorRef ctor = ReflectUtil.constructor( JCDiagnostic.Error.class, String.class, String.class, Object[].class );
+      logger.error( pos, (JCDiagnostic.Error)ctor.newInstance( null, "compiler", key, args ) );
+    }
+    else
+    {
+      ReflectUtil.ConstructorRef ctor = ReflectUtil.constructor( JCDiagnostic.Error.class, Set.class, String.class, String.class, Object[].class );
+      logger.error( pos, (JCDiagnostic.Error)ctor.newInstance( "compiler", key, args ) );
+    }
   }
 
   @Override
   public void logWarning( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... args )
   {
-    logger.warning( pos, new JCDiagnostic.Warning( "compiler", key, args ) );
+    //todo: make a JavaDynamicJdk_26 so these can be direct calls, not reflective
+    if( JreUtil.isJava26orLater() )
+    {
+      ReflectUtil.ConstructorRef ctor = ReflectUtil.constructor( JCDiagnostic.Warning.class, String.class, String.class, Object[].class );
+      logger.warning( pos, (JCDiagnostic.Warning)ctor.newInstance( null, "compiler", key, args ) );
+    }
+    else
+    {
+      ReflectUtil.ConstructorRef ctor = ReflectUtil.constructor( JCDiagnostic.Warning.class, Set.class, String.class, String.class, Object[].class );
+      logger.warning( pos, (JCDiagnostic.Warning)ctor.newInstance( "compiler", key, args ) );
+    }
+
   }
 }
