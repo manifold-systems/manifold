@@ -1,6 +1,6 @@
 <br>
 
-<img width="500" align="top" src="./docs/images/intergallacticmanifold2.png">
+# The _**Manifold**_ Project
 
 ![latest](https://img.shields.io/badge/latest-v2026.1.4-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
