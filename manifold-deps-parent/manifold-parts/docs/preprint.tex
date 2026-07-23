@@ -110,9 +110,8 @@ through the correct composite in arbitrary compositions. The dispatch cost is O(
 Object composition is the standard prescription for avoiding implementation
 inheritance~\cite{gamma1994}. Two properties make it a genuine replacement:
 \emph{independent components} (late-bound objects in arbitrary compositions) and \emph{open recursion} (self-calls through the composite).
-Static typing is what makes the two hard to combine: dynamically-typed object
-models have had both for decades, yet to our knowledge no statically-typed model
-composes independent components with open recursion
+Static typing is what makes the two hard to combine: to our knowledge no
+statically-typed model composes independent components with open recursion
 (Section~\ref{sec:related}).
 
 Forwarding-based composition (Kotlin \code{by}~\cite{kotlin}, Lombok
@@ -1019,12 +1018,6 @@ modification.
   \item Using \code{@link}, \code{@part}, and \code{@internal} requires
         configuring the \texttt{javac} plugin in the build system (Maven,
         Gradle, or similar).
-  \item Composite dispatch semantics are not enforced against runtime
-        introspection that reaches past a reference's supplied static type. A
-        client that reflects on an escaped reference, or downcasts it to an
-        interface it was not handed, can invoke that interface below its
-        composite root, bypassing the overrides above it; type-directed
-        clients, which use the interface they were handed, are unaffected.
   \item A part instance carries one composite root per interface
         (Section~\ref{sec:discussion}). Linking the same instance into two
         composites that each claim the \emph{same} interface, with neither
@@ -1048,6 +1041,7 @@ modification.
 %% ─────────────────────────────────────────────────────────────────────────────
 
 \subsection{Implementation Identity and Dispatch Identity}
+\label{subsec:identity}
 
 A composition model that supports independent components must handle two
 structural scenarios:
@@ -1256,14 +1250,27 @@ granularity, without independent components.
 Lieberman~\cite{lieberman1986} introduced \emph{open delegation}: an object may
 delegate unanswered messages to a prototype, with \emph{self} remaining the
 original receiver throughout the chain. Self~\cite{self1987} realized this in a
-working language. These systems support open recursion with late-bound
-components in arbitrary delegation graphs. Static type guarantees are absent by
-design.
+working language. These systems provide open recursion with late-bound
+components, but delegation is total and object-granular: a prototype supplies
+all behavior the delegating object does not, and cannot be scoped to a subset
+of interfaces, so neither partial delegation nor the multi-root dispatch it
+induces (\S\ref{subsec:identity}) is expressible. Static type guarantees are
+absent by design. Cecil~\cite{chambers1993} is the statically-typed point in
+this space. A classless (prototype) language whose type system separates
+subtyping from code inheritance, it ``does not incorporate dynamic inheritance,
+one of the most interesting features of Self,'' offering predicate objects as a
+``more structured but more restricted alternative'' and attaching behavior only
+to statically-named objects rather than the run-time-supplied components at
+issue here.
 
 \paragraph{Dynamic composition.}
-Newspeak~\cite{bracha2010} treats classes as first-class late-bound arguments,
-enabling runtime composition of first-class module objects with open
-recursion. Static type checking is absent by design.
+Newspeak~\cite{bracha2010} makes all names late-bound and injects classes as
+first-class constructor arguments, enabling runtime reconfiguration and wiring
+of module objects. Its open recursion is that of mixin inheritance~\cite{bracha1990}: every
+class is a mixin applied to a superclass, fused into a single object; composed
+module objects are held by reference and reached by ordinary message send, so
+self-calls do not route across the composition. Static type checking is absent
+by design.
 
 %% ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion}
@@ -1323,6 +1330,11 @@ N.~Sch{\"a}rli, S.~Ducasse, O.~Nierstrasz, and A.~Black.
 D.~Ungar and R.~B.~Smith.
 \newblock Self: The power of simplicity.
 \newblock In {\em Proceedings of OOPSLA}, pages 227--242, 1987.
+
+\bibitem{chambers1993}
+C.~Chambers.
+\newblock The {Cecil} language: Specification and rationale.
+\newblock Technical Report UW-CSE-93-03-05, University of Washington, 1993.
 
 \bibitem{odersky2005}
 M.~Odersky and M.~Zenger.

@@ -4,6 +4,7 @@
 
 ![latest](https://img.shields.io/badge/latest-v2026.1.8-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21514973.svg)](https://doi.org/10.5281/zenodo.21514973)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 
@@ -18,24 +19,34 @@ defined with implementation inheritance.
 - Safely share interface implementations (solves the [Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
 - Preserve Java's dynamic-dispatch performance (see [Interface-Scoped Dispatch](./docs/preprint.pdf))
 
-
-## Table of Contents
+ <!-- TOC -->
+* [Parts](#parts)
 * [Basic usage](#basic-usage)
+  * [`@link`](#link)
+  * [`@part`](#part)
 * [Forwarding](#forwarding)
-  * [A one-way flight](#a-one-way-flight)
+    * [A one-way flight](#a-one-way-flight)
 * [Delegation](#delegation)
-  * [Self-preservation](#self-preservation) 
-  * [Inheritance](#inheritance) 
-  * [Default methods](#default-methods)
+    * [Self-preservation](#self-preservation)
+    * [Inheritance](#inheritance)
+    * [Default methods](#default-methods)
 * [Diamonds](#diamonds)
 * [Example](#example)
 * [IDE Support](#ide-support)
+  * [Install](#install)
 * [Setup](#setup)
+  * [Building this project](#building-this-project)
+  * [Using this project](#using-this-project)
+  * [Binaries](#binaries)
+  * [Gradle](#gradle)
+  * [Maven](#maven)
 * [Javadoc](#javadoc)
+* [Paper](#paper)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
-    
+<!-- TOC -->
+
 
 # Basic usage
 
@@ -635,6 +646,13 @@ rootProject.name = 'MyProject'
 
 `manifold-parts-rt`:<br>
 [![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts-rt/2026.1.8/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts-rt/2026.1.8)
+
+# Paper
+
+The dispatch model, its correctness argument, and benchmarks are written up here:
+[*Interface-Scoped Dispatch: Independent Components with O(1) Self-Calls*](https://doi.org/10.5281/zenodo.21514973)
+
+To cite Parts, use that DOI.
 
 # License
 
