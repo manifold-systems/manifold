@@ -17,7 +17,7 @@ defined with implementation inheritance.
 - Mark a class with `@part` so its overrides apply *everywhere* in the composed object (solves the [Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
 - Configure composition dynamically with constructor injection (think language support for DI)
 - Safely share interface implementations (solves the [Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
-- Preserve Java's dynamic-dispatch performance (see [Interface-Scoped Dispatch](./docs/preprint.pdf))
+- Preserve Java's dynamic-dispatch performance (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
 
  <!-- TOC -->
 * [Parts](#parts)
