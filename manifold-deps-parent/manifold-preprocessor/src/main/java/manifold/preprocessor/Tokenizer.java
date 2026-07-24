@@ -161,6 +161,26 @@ public class Tokenizer
       _expr = new ExpressionParser( _buffer, offset, _bufferEndOffset ).parse();
       _tokenEndOffset = _expr.getEndOffset();
     }
+    else if( match( TokenType.Ifdef.getDirective(), offset ) )
+    {
+      offset += TokenType.Ifdef.getDirective().length();
+      _tokenType = TokenType.Ifdef;
+
+      offset = skipWhitespace( offset, false );
+      _expr = new ExpressionParser( _buffer, offset, _bufferEndOffset ).parse();
+
+      _tokenEndOffset = _expr.getEndOffset();
+    }
+    else if( match( TokenType.Ifndef.getDirective(), offset ) )
+    {
+      offset += TokenType.Ifndef.getDirective().length();
+      _tokenType = TokenType.Ifndef;
+
+      offset = skipWhitespace( offset, false );
+      _expr = new ExpressionParser( _buffer, offset, _bufferEndOffset ).parse();
+
+      _tokenEndOffset = _expr.getEndOffset();
+    }
     else if( match( TokenType.Elif.getDirective(), offset ) )
     {
       offset += TokenType.Elif.getDirective().length();
