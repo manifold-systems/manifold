@@ -36,7 +36,7 @@ Powerful **language enhancements** improve developer productivity.
 
 Each feature is available as a separate dependency. Simply add the Manifold dependencies of your choosing to your existing project and begin taking advantage of them.
 
-All fully supported in JDK LTS releases 8 - 26 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
+All fully supported in JDK LTS releases 8 - 25 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
 
 ># _**What's New...**_
 > 
