@@ -32,7 +32,7 @@ to your gradle or maven build. See [Step 1. Add Manifold SQL to your build](#ste
 - Pluggable architecture with simple dependency injection<br>
 - Tested with popular JDBC database drivers and SQL dialects<br>
 - Comprehensive IDE support (IntelliJ IDEA, Android Studio)
-- Supports Java 8 - 25 (LTS releases)
+- Supports Java 8 - 26 (LTS releases)
 
 # Examples
 
@@ -206,7 +206,7 @@ Sample build files for Gradle and Maven follow.
 >**ⓘ** if you are using **Kotlin**, please see the [Kotlin](http://manifold.systems/kotlin.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 25), the script takes care of the rest.
+version (8 - 26), the script takes care of the rest.
 ```groovy
 plugins {
     id 'java'

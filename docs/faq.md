@@ -8,15 +8,15 @@ layout: default
 
 # Common Questions
 
-#### Q: Does Manifold support Java 21? 17? 8?
-Yes -- Manifold fully supports all LTS versions since JDK 8, including 8, 11, 17, and 21. Each release keeps pace with
-the JDK, targeting the latest version--LTS or not--and is on track for JDK 25 and beyond.
+#### Q: Does Manifold support Java 25? 17? 8?
+Yes, Manifold fully supports all LTS versions since JDK 8, including 8, 11, 17, 21, and 25. Each release keeps pace with
+the JDK, targeting the latest version, LTS or not.
 
 #### Q: Manifold relies on internal compiler APIs. Could this cause it to break in a future version of Java?
 Highly improbable. Manifold consistently adapts ahead of JDK releases, having tracked 14 major Java versions since its
-debut--always well ahead of Oracle’s official releases.
+debut, always well ahead of Oracle’s official releases.
 
-This kind of access isn’t unique to Manifold--many essential tools and frameworks, including IntelliJ and Spring, rely
+This kind of access isn’t unique to Manifold, many essential tools and frameworks, including IntelliJ and Spring, rely
 on it as well. It’s therefore extremely unlikely that Oracle would introduce drastic changes that would actively block
 such widespread usage.
 
@@ -96,7 +96,7 @@ directly in IntelliJ’s UI. For detailed setup instructions, refer to the [Mave
 and [Gradle](http://manifold.systems/docs.html#gradle) sections in the [Setup](https://github.com/manifold-systems/manifold#projects)
 documentation for the specific subprojects you are using.
 
-If you're still having trouble, feel free to [reach out](https://discord.gg/9x2pCPAASn)--there's a good chance someone
+If you're still having trouble, feel free to [reach out](https://discord.gg/9x2pCPAASn), there's a good chance someone
 else has encountered the same issue, and help will be on the way!
 
 #### Q: I defined some useful *extension methods*, but they aren't showing up in my other project. How can I share them as a dependency?
