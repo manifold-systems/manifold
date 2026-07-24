@@ -19,7 +19,7 @@ defined with implementation inheritance.
 - Safely share interface implementations (solves the [Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
 - Preserve Java's dynamic-dispatch performance (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
 
- <!-- TOC -->
+<!-- TOC -->
 * [Parts](#parts)
 * [Basic usage](#basic-usage)
   * [`@link`](#link)
@@ -28,6 +28,11 @@ defined with implementation inheritance.
     * [A one-way flight](#a-one-way-flight)
 * [Delegation](#delegation)
     * [Self-preservation](#self-preservation)
+    * [Interface encapsulation](#interface-encapsulation)
+      * [Usage on interface types (`implements` clause)](#usage-on-interface-types-implements-clause)
+      * [Usage on methods](#usage-on-methods)
+      * [Additionally:](#additionally)
+    * [Abstract parts](#abstract-parts)
     * [Inheritance](#inheritance)
     * [Default methods](#default-methods)
 * [Diamonds](#diamonds)
@@ -46,7 +51,6 @@ defined with implementation inheritance.
 * [Versioning](#versioning)
 * [Author](#author)
 <!-- TOC -->
-
 
 # Basic usage
 
@@ -257,6 +261,73 @@ Invalid `this` usages in `part` classes result in compile error: `Part class 'th
 ```
 Note, `@part` classes are not confined to usage as linked objects. They can be used anywhere for any purpose. 
 
+### Interface encapsulation
+
+Use the `@internal` annotation
+
+The `@internal` interface marks an interface in an implements clause or an interface method as internal to a composition graph.
+`@internal` is the protected modifier for the world of composition. It provides the same encapsulation benefits as protected
+but without the legacy "leakiness" of `package-private` access. 
+
+#### Usage on interface types (`implements` clause)
+
+When applied to an interface in a delegate class's `implements` clause, it prevents that interface from being "inherited"
+by delegators. The interface becomes a private capability of the delegate, often for internal implementation details.
+```java
+class FooPart implements Foo, @internal Bar { ... }
+
+class MyRoot implements Foo, Bar {
+  // ERROR: Bar is internal to FooPart. It cannot be delegated to MyRoot.
+  @link Bar bar = new FooPart();
+
+  // OK: Foo is not internal to FooPart.
+  @link Foo foo = new FooPart();
+
+  // OK: Bar must be provided by another delegate or implemented directly.
+  @link Bar bar = new BarPart();
+}
+```
+
+#### Usage on methods
+
+When applied to an interface method, it restricts access to the compositional scope. The method is part of the internal
+contract shared between a composite and its delegates, but is hidden from external consumers. It is visible only to:
+- The Interface: Default methods within the same interface.
+- Implementors: Any class that implements the interface can override or call the method. Calls are limited to "self" calls:
+calls that dereference this or the `@link` field that provides the interface implementation.
+
+#### Additionally:
+
+- Inherited: Implementors automatically inherit `@internal` status for overridden methods; it does not need to be reapplied.
+- Compiler Enforced: Parts produces compile errors for `@internal` access violations.
+
+### Abstract parts
+
+To use an abstract `@part` class, it must be constructed an `asLink()` method. These are static methods match the signatures
+of the part's constructors.
+
+```java
+interface GameCharacter {
+  void takeTurn();
+  void attack();
+}
+
+@part abstract class BaseCharacter implements GameCharacter {
+  public void takTurn() {
+    System.out.println("Taking a turn...");
+    attack();
+  }
+  // attack() must be implemented by the composite class
+}
+
+class Wizard implements GameCharacter {
+  @link BaseCharacter base = BaseCharacter.asLink();
+  public void attack() {
+    System.out.println("Casting a spell...");
+  }
+}
+```
+ 
 ### Inheritance
 
 `@part` classes support implementation inheritance. But to maintain polymorphic calls within linked parts, superclasses
