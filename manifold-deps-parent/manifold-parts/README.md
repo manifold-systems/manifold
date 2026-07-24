@@ -282,16 +282,36 @@ class MyRoot implements Foo, Bar {
 
   // OK: Foo is not internal to FooPart.
   @link Foo foo = new FooPart();
-
-  // OK: Bar must be provided by another delegate or implemented directly.
-  @link Bar bar = new BarPart();
 }
 ```
 
 #### Usage on methods
+                                  
+```java
+interface Protocol {
+  String result();
+  @internal String step();
+}
+
+abstract @part class ProtocolPart implements Protocol {
+  public String result() { return step() + "-done"; }
+}
+
+class ProtocolRoot implements Protocol {
+  @link Protocol proto = ProtocolPart.asLink();
+
+  public String step() { return "step"; }
+}
+
+public void testLinkFieldAccessToInternal() {
+  ProtocolRoot root = new ProtocolRoot();
+  root.result();
+  root.step(); // compile error: step() is internal
+}
+```
 
 When applied to an interface method, it restricts access to the compositional scope. The method is part of the internal
-contract shared between a composite and its delegates, but is hidden from external consumers. It is visible only to:
+contract shared between a composite and its links, but is hidden from external consumers. It is visible only to:
 - The Interface: Default methods within the same interface.
 - Implementors: Any class that implements the interface can override or call the method. Calls are limited to "self" calls:
 calls that dereference this or the `@link` field that provides the interface implementation.
