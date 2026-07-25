@@ -92,7 +92,7 @@ polymorphism across a linked part is the fundamental capability that Parts adds.
 
 # Basic usage
 
-## `@link`
+# `@link`
 Use `@link` to implement one or more interfaces through a field. 
 ```java
 class MyClass implements MyInterface {
@@ -137,7 +137,7 @@ Unimplemented interface calls transfer through the link to the assigned value of
 how the calls are transferred. If the type is annotated with [`@part`](#part), calls are transferred using [delegation](#delegation).
 Otherwise, they are transferred using call [forwarding](#forwarding).
  
-## `@part`
+# `@part`
 Use `@part` to enable delegation with `@link`.
 
 Generally, a link establishes a "part-of" relationship between the linking object and the linked `part`. Both objects form
