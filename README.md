@@ -1,6 +1,6 @@
 <br>
 
-![manifold-diamond.png](docs/images/manifold-diamond.png)
+![manifold-diamond.png](docs/images/manifold-diamond2.png)
 
 ![latest](https://img.shields.io/badge/latest-v2026.1.4-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
