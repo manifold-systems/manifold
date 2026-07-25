@@ -8,16 +8,54 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 
-*Parts* unifies composition and implementation inheritance in a single compositional model.
+*Parts* lets you assemble a class from independent, swappable objects.
 
-Objects are assembled from late-bound components instead of fixed inheritance hierarchies, yet behave as if they were
-defined with implementation inheritance.
+It's the first model for Java to offer both: ***the flexibility of composition and the polymorphism of inheritance***, at
+the cost of an ordinary virtual call. Use it in place of inheritance, or alongside it.
 
-- Use `@link` to automatically implement interfaces through the fields of a class
-- Mark a class with `@part` so its overrides apply *everywhere* in the composed object (solves the [Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
-- Configure composition dynamically with constructor injection (think language support for DI)
-- Safely share interface implementations (solves the [Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
-- Preserve Java's dynamic-dispatch performance (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
+- `@link` implements an interface through a field, forwarding the calls automatically
+- `@part` turns that link into *true* delegation: your overrides apply *everywhere*, even inside the part (solves the [Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
+- Each part is a plain object supplied at construction, so composition is configured at runtime (language-level DI)
+- `@link(share=...)` safely shares an interface across parts (solves the [Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
+- All at Java's normal dynamic-dispatch speed (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
+
+```java
+interface Hero {
+  void performTurn();
+  void attack();
+}
+
+@part class BaseHero implements Hero {
+  public void performTurn() {
+    attack();
+  }
+
+  public void attack() {
+    out.println("Swinging a club!");
+  }
+}
+
+class Wizard implements Hero {
+  @link BaseHero base = new BaseHero();
+
+  public void attack() {
+    out.println("Casting a spell!");
+  }
+}
+
+Wizard wizard = new Wizard();
+wizard.performTurn();
+```
+`BaseHero.performTurn()` calls `attack()` on itself (a self-call). Because `BaseHero` is a `@part` linked into `Wizard`, that
+self-call dispatches to `Wizard.attack()`, so the output is:
+
+```
+Casting a spell!
+```
+
+With ordinary composition, `BaseHero`'s own `attack()` implementation ("Swinging a club!") would run instead. This internal
+polymorphism across a linked part is the fundamental capability that Parts adds. The rest of this section explains how
+`@link` and `@part` make this possible.
 
 <!-- TOC -->
 * [Parts](#parts)
@@ -106,37 +144,37 @@ Generally, a link establishes a "part-of" relationship between the linking objec
 a single, composite object in terms of the interfaces defined in the link. 
 
 ```java
-interface Doubler {
-  int getDown();
-  int doubleDown();
+interface Hero {
+  void performTurn();
+  void attack();
 }
 
-@part class DoublerPart implements Doubler {
-  public int getDown() {return 0;}
-  
-  // call to getDown() is polymorphic when used with @link
-  public int doubleDown() {return getDown() * 2;}
+@part class BaseHero implements Hero {
+  public void performTurn() {
+    attack();
+  }
+
+  public void attack() {
+    out.println("Swinging a club!");
+  }
 }
 
-class MyClass implements Doubler {
-  @link Doubler doubler = new DoublerPart();
-  
-  // overrides doubler's getDown()
-  @Override public int getDown() {return 8;}
+class Wizard implements Hero {
+  @link BaseHero base = new BaseHero();
+
+  public void attack() {
+    out.println("Casting a spell!");
+  }
 }
 
-Doubler doubler = new MyClass();
-out.println(doubler.doubleDown());
+Wizard wizard = new Wizard();
+wizard.performTurn();
 ```
 Output:
-```text
-    16
 ```
-DoublerPart's `@part` annotation enables true delegation in MyClass's link.
-
-The takeaway from this example is DoublerPart's call to `getDown()` calls MyClass's `getDown()`, indicating linked interfaces
-are polymorphic wrt `part` classes, thus fulfilling the _true_ qualifier in "true delegation". The [Delegation](#delegation) section
-covers more about the what and how of `@part`.
+Casting a spell!
+```
+BaseHero's `@part` annotation enables inheritance's polymorphism with respect to Wizards's link.
 
 # Forwarding
 Forwarding uses a separate object to handle unimplemented interface calls. A class implements an interface simply by invoking
