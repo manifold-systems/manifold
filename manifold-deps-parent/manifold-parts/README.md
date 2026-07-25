@@ -10,8 +10,8 @@
 
 *Parts* lets you assemble a class from independent, swappable objects.
 
-It's the first model for Java to offer both: ***the flexibility of composition and the polymorphism of inheritance***, at
-the cost of an ordinary virtual call. Use it in place of inheritance, or alongside it.
+It's the first model for Java to offer both: ***the flexibility of composition and the polymorphism of inheritance***.
+Use it in place of inheritance, or alongside it.
 
 - `@link` implements an interface through a field, forwarding the calls automatically
 - `@part` turns that link into *true* delegation: your overrides apply *everywhere*, even inside the part (solves the [Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
