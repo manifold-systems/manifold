@@ -27,54 +27,49 @@ interface Hero {
 
 @part class BaseHero implements Hero {
   public void performTurn() {
-    attack();
+    attack();          // <--- self-call: plain delegation/forwarding can't do this
   }
 
-  public void attack() {
-    out.println("Swinging a club!");
-  }
+  public void attack() {out.println("Swing club!");}
 }
 
 class Wizard implements Hero {
-  @link BaseHero base = new BaseHero();
+  @link Hero base; // <--- @link delegates Hero impl to `base` part
+  
+  Wizard(Hero base) {this.base = base;}
 
-  public void attack() {
-    out.println("Casting a spell!");
-  }
+  public void attack() {out.println("Cast spell!");}
 }
 
-Wizard wizard = new Wizard();
-wizard.performTurn();
+Wizard wiz = new Wizard(new BaseHero()); // <--- base injected, inheritance can't do this
+wiz.performTurn();
 ```
-`BaseHero.performTurn()` calls `attack()` on itself (a self-call). Because `BaseHero` is a `@part` linked into `Wizard`, that
-self-call dispatches to `Wizard.attack()`, so the output is:
-
+`BaseHero.performTurn()` calls `attack()` on itself (a self-call). Because `BaseHero` is a linked part of the `Wizard` composite,
+that self-call dispatches to `Wizard.attack()`, so the output is:
 ```
-Casting a spell!
+Cast spell!
 ```
-
-With ordinary composition, `BaseHero`'s own `attack()` implementation ("Swinging a club!") would run instead. This internal
-polymorphism across a linked part is the fundamental capability that Parts adds. The rest of this section explains how
+With ordinary composition, `BaseHero`'s own `attack()` implementation ("Swing club!") would run instead. This internal
+polymorphism across an injected, linked part is the fundamental capability that Parts adds. The rest of this section explains how
 `@link` and `@part` make this possible.
 
 <!-- TOC -->
 * [Parts](#parts)
 * [Basic usage](#basic-usage)
-  * [`@link`](#link)
-  * [`@part`](#part)
+* [`@link`](#link)
+* [`@part`](#part)
 * [Forwarding](#forwarding)
     * [A one-way flight](#a-one-way-flight)
 * [Delegation](#delegation)
-    * [Self-preservation](#self-preservation)
-    * [Interface encapsulation](#interface-encapsulation)
-      * [Usage on interface types (`implements` clause)](#usage-on-interface-types-implements-clause)
-      * [Usage on methods](#usage-on-methods)
-      * [Additionally:](#additionally)
-    * [Abstract parts](#abstract-parts)
-    * [Inheritance](#inheritance)
-    * [Default methods](#default-methods)
+  * [Self-preservation](#self-preservation)
+  * [Interface encapsulation](#interface-encapsulation)
+    * [Usage on interface types (`implements` clause)](#usage-on-interface-types-implements-clause)
+    * [Usage on methods](#usage-on-methods)
+    * [Additionally:](#additionally)
+  * [Abstract parts](#abstract-parts)
+  * [Inheritance](#inheritance)
+  * [Default methods](#default-methods)
 * [Diamonds](#diamonds)
-* [Example](#example)
 * [IDE Support](#ide-support)
   * [Install](#install)
 * [Setup](#setup)
@@ -155,29 +150,31 @@ interface Hero {
   }
 
   public void attack() {
-    out.println("Swinging a club!");
+    out.println("Swing club!");
   }
 }
 
 class Wizard implements Hero {
-  @link BaseHero base = new BaseHero();
-
+  @link Hero base = new BaseHero();
+  
+  Wizard(Hero base) {this.base = base;}
+  
   public void attack() {
-    out.println("Casting a spell!");
+    out.println("Cast spell!");
   }
 }
 
-Wizard wizard = new Wizard();
+Wizard wizard = new Wizard(new BaseHero());
 wizard.performTurn();
 ```
 Output:
 ```
-Casting a spell!
+Cast spell!
 ```
-BaseHero's `@part` annotation enables inheritance's polymorphism with respect to Wizards's link.
+BaseHero's `@part` annotation extends Java's dynamic dispatch across the Wizard composite, preserving polymorphic self-calls.
 
 # Forwarding
-Forwarding uses a separate object to handle unimplemented interface calls. A class implements an interface simply by invoking
+Forwarding (sometimes incorrectly called *delegation*) uses a separate object to handle unimplemented interface calls. A class implements an interface simply by invoking
 the methods on another object that implements the interface.
 
 With `@link` this process is handled automatically.
@@ -196,77 +193,62 @@ interface is exposed. `@link` performs the grunt work of forwarding unimplemente
                                                                                                     
 ### A one-way flight
 
-Here, StudentPart uses `@link` to automatically transfer calls to unimplemented Person methods to the `person` field.
-But PersonPart does something interesting, its implementation of `getTitledName()` calls other Person methods. 
-
+With forwarding the object receiving the forwarded calls knows nothing about the forwarding object. Using the Hero example: 
 ```java
-interface Student extends Person {
-  String getMajor();
-}
-interface Person {
-  String getName();
-  String getTitle();
-  String getTitledName();
-}
-
-class StudentPart implements Student {
-  @link Person person;
-  private final String major;
-  
-  public StudentPart(Person person, String major) {
-    this.person = person;
-    this.major = major;
+@part class BaseHero implements Hero {
+  public void performTurn() {
+    attack();
   }
 
-  public String getTitle() {return "Student";}
-  public String getMajor() {return major;}
+  public void attack() {
+    out.println("Swing club!");
+  }
 }
 
-class PersonPart implements Person {
-  private final String name;
+class Wizard implements Hero {
+  @link Hero base;
 
-  public PersonPart(String name) {this.name = name;}
-  
-  public String getName() {return name;}
-  public String getTitle() {return "Person";}
-  public String getTitledName() {return getTitle() + " " + getName();}
+  Wizard(Hero base) {this.base = base;}
+
+  public void attack() {
+    out.println("Cast spell!");
+  }
 }
 
-PersonPart person = new PersonPart("Milton");
-StudentPart student = new StudentPart(person, "Metallurgy");
-out.println(student.getTitledName());
+Wizard wizard = new Wizard(new BaseHero());
+wizard.performTurn();
 ```
 Output:
-```text
-    Person Milton
 ```
-With forwarding, the object handling the calls is unaware of the link defined in the forwarding object. As a consequence,
-forwarded calls are one-way flights. The call to `getTitle()` from `PersonPart#getTitledName()` is invoked _statically_,
-StudentPart's override is ignored.
+Swing club!
+```
 
-Generally, linked interface calls within forwarded objects are not polymorphic. This behavior is often referred to as
-_the Self problem_.
+Without the `@part` annotation BaseHero is not wired to the linking object, Wizard. Forwarded calls are one-way flights.
+The call to `attack()` from `performTurn()` is dispatched _statically_ -- Wizard's override is ignored.
+
+Generally, linked interface calls within forwarded objects lose the *internal* polymorphism of inheritance. This behavior
+is often referred to as _the Self problem_.
 
 
 # Delegation
 
-If PersonPart is annotated with `@part`, Person methods are called using _delegation_.
+If HeroBase is annotated with `@part`, Hero methods are called using _delegation_.
 
 Delegation is more rigorous. It enables polymorphic calls from linked parts where StudentPart can override Person methods
 so that the implementation of Person defers to StudentPart.
 ```java
-@part class PersonPart implements Person {
+@part class BaseHero implements Hero {
   . . .
 }
 ```
-With `@part` the call to `student.getTitledName()` results in:
+With `@part` the call to `wizard.performTurn()` results in:
 ```text
-    Student Milton
+    Cast spell!
 ```
-Inside PersonPart `this` refers to StudentPart in terms of the Person interface. Thus, the call to `getTitle()` dispatches
+Inside PersonPart `this` refers to Wizard in terms of the Hero interface. Thus, the call to `attack()` dispatches
 _dynamically_. This "true" form of delegation solves _the Self problem_.
 
-### Self-preservation
+## Self-preservation
 
 Delegation involves composite objects each consisting of a root object and its graph of linked `part` objects. Within a
 composite object, linked interface calls are initially dispatched from the root object, never from linked parts; `this`
@@ -299,7 +281,7 @@ Invalid `this` usages in `part` classes result in compile error: `Part class 'th
 ```
 Note, `@part` classes are not confined to usage as linked objects. They can be used anywhere for any purpose. 
 
-### Interface encapsulation
+## Interface encapsulation
 
 Use the `@internal` annotation
 
@@ -307,7 +289,7 @@ The `@internal` interface marks an interface in an implements clause or an inter
 `@internal` is the protected modifier for the world of composition. It provides the same encapsulation benefits as protected
 but without the legacy "leakiness" of `package-private` access. 
 
-#### Usage on interface types (`implements` clause)
+### Usage on interface types (`implements` clause)
 
 When applied to an interface in a delegate class's `implements` clause, it prevents that interface from being "inherited"
 by delegators. The interface becomes a private capability of the delegate, often for internal implementation details.
@@ -323,7 +305,7 @@ class MyRoot implements Foo, Bar {
 }
 ```
 
-#### Usage on methods
+### Usage on methods
                                   
 ```java
 interface Protocol {
@@ -354,39 +336,37 @@ contract shared between a composite and its links, but is hidden from external c
 - Implementors: Any class that implements the interface can override or call the method. Calls are limited to "self" calls:
 calls that dereference this or the `@link` field that provides the interface implementation.
 
-#### Additionally:
+### Additionally:
 
 - Inherited: Implementors automatically inherit `@internal` status for overridden methods; it does not need to be reapplied.
 - Compiler Enforced: Parts produces compile errors for `@internal` access violations.
 
-### Abstract parts
+## Abstract parts
 
 To use an abstract `@part` class, it must be constructed an `asLink()` method. These are static methods match the signatures
 of the part's constructors.
 
 ```java
-interface GameCharacter {
-  void takeTurn();
+interface Hero {
+  void performTurn();
   void attack();
 }
 
-@part abstract class BaseCharacter implements GameCharacter {
-  public void takTurn() {
-    System.out.println("Taking a turn...");
-    attack();
+@part abstract class BaseHero implements Hero {
+  public void performTurn() {
+    attack();  
   }
-  // attack() must be implemented by the composite class
+  // attack() is abstract
 }
 
-class Wizard implements GameCharacter {
-  @link BaseCharacter base = BaseCharacter.asLink();
-  public void attack() {
-    System.out.println("Casting a spell...");
-  }
+class Wizard implements Hero {
+  @link BaseHero base = BaseHero.asLink(); // <--- requires override for attack()
+
+  public void attack() {out.println("Cast spell!");}
 }
 ```
  
-### Inheritance
+## Inheritance
 
 `@part` classes support implementation inheritance. But to maintain polymorphic calls within linked parts, superclasses
 associated with links must also be `part` classes.
@@ -417,22 +397,21 @@ Output:
     x_y_z
 ```
 
-### Default methods
+## Default methods
 
-Consider `getTitledName()` as a default method in Person instead of an implementation in PersonPart.
+Consider `performTurn()` as a default method in Hero instead of an implementation in BaseHero.
 ```java
-interface Person {
-  String getName();
-  String getTitle();
-  default String getTitledName() {return getTitle() + " " + getName();}
+interface Hero {
+  default void performTurn() { attack(); }
+  void attack();
 }
 ```  
 Calls must behave identically regardless of where the method is implemented; polymorphism must be preserved when using `part`
-classes. As such, the call to `student.getTitledName()` dispatches dynamically as before:
+classes: the call to `wizard.performTurn()` dispatches dynamically as before:
 ```text
-    Student Milton
+    Cast spell!
 ```    
-Inside the Person interface `this` refers to StudentPart even when called from PersonPart.
+Inside the Hero interface `this` refers to Wizard even when called from BaseHero.
  
 
 # Diamonds
@@ -448,181 +427,65 @@ When super interfaces overlap, a "diamond" relationship results. This is known a
            TA
 ```
 Should TA use Student's Person or Teacher's? Use `@link(share=Person.class)` to resolve the ambiguity.
+
 ```java
-interface Teacher extends Person {
-  String getDepartment();
+interface Person  {
+  String getName();
+  String getTitle();
+  String getTitledName();
 }
+interface Teacher extends Person {}
+interface Student extends Person {}
+interface TA extends Student, Teacher {}
 
-interface TA extends Student, Teacher {
-}
-
-@part class TeacherPart implements Teacher {
-  @link Person person;
-  private final String department;
-
-  public TeacherPart(Person person, String department) {
-    this.person = person;
-    this.department = department;
+@part class PersonPart implements Person {
+  private final String name;
+  public PersonPart(String name) {this.name = name;}
+  public String getName() {return name;}
+  public String getTitle() {return "Person";}
+  public String getTitledName() {
+    return getTitle() + " " + getName();
   }
+}
+
+static @part class TeacherPart implements Teacher {
+  @link Person person;
+  public TeacherPart(Person person) {this.person = person;}
   public String getTitle() {return "Teacher";}
 }
 
-@part class TaPart implements TA {
-  @link(share=Person.class) Student student; // use student as the person
+static @part class StudentPart implements Student {
+  @link Person person;
+  public StudentPart(Person person) {this.person = person;}
+  public String getTitle() {return "Student";}
+}
+
+static @part class TaPart implements TA {
+  @link(share = Person.class) Student student;
   @link Teacher teacher;
 
   public TaPart(Student student) {
     this.student = student;
-    this.teacher = new TeacherPart(student, "Math"); // the student is the teacher
+    this.teacher = new TeacherPart(student);
   }
+
+  public String getTitle() {return "TA";}
 }
-```
-The student is the teacher, so TaPart shares the Person link with `@link(share=Person.class)` and the supplied `student`
-is passed along to the Teacher constructor. Without `share=Person.class` a compiler error indicates the overlap with Person:
-```java
-java: Interface 'Person' found in other links: '_teacher'.
-Use '@link(share=Person.class)' to share the 'Person' link with '_teacher' or implement the interface directly.
-```
 
->Note, `part` classes are _not_ required with `@link(share=...)`; it applies to forwarding as well.
-
-# Example
-
-Here is the Student/Teacher example in one code sample for easier readability.
-
-```java
-import manifold.ext.parts.rt.api.link;
-import manifold.ext.parts.rt.api.part;
-
-public class DelegationExample
-{
-  interface Person
-  {
-    String getName();
-
-    String getTitle();
-
-    String getTitledName();
-  }
-
-  interface Teacher extends Person
-  {
-    String getDept();
-  }
-
-  interface Student extends Person
-  {
-    String getMajor();
-  }
-
-  interface TA extends Student, Teacher
-  {
-  }
-
-  static @part class PersonPart implements Person
-  {
-    private final String name;
-
-    public PersonPart( String name )
-    {
-      this.name = name;
-    }
-
-    public String getName()
-    {
-      return name;
-    }
-
-    public String getTitle()
-    {
-      return "Person";
-    }
-
-    public String getTitledName()
-    {
-      return getTitle() + " " + getName();
-    }
-  }
-
-  static @part class TeacherPart implements Teacher
-  {
-    @link
-    Person person;
-    private final String dept;
-
-    public TeacherPart( Person person, String dept )
-    {
-      this.person = person;
-      this.dept = dept;
-    }
-
-    public String getTitle()
-    {
-      return "Teacher";
-    }
-
-    public String getDept()
-    {
-      return dept;
-    }
-  }
-
-  static @part class StudentPart implements Student
-  {
-    @link
-    Person person;
-    private final String major;
-
-    public StudentPart( Person person, String major )
-    {
-      this.person = person;
-      this.major = major;
-    }
-
-    public String getTitle()
-    {
-      return "Student";
-    }
-
-    public String getMajor()
-    {
-      return major;
-    }
-  }
-
-  static @part class TaPart implements TA
-  {
-    @link(share = Person.class)
-    Student student;
-    @link
-    Teacher teacher;
-
-    public TaPart( Student student )
-    {
-      this.student = student;
-      this.teacher = new TeacherPart( student, "Math" );
-    }
-
-    public String getTitle()
-    {
-      return "TA";
-    }
-  }
-
-  public static void main( String[] args )
-  {
-    Person person = new PersonPart( "Milton" );
-    Student student = new StudentPart( person, "CS" );
-    TA ta = new TaPart( student );
-    String titledName = ta.getTitledName();
-    System.out.println( titledName );
-  }
-}
+Person person = new PersonPart("Milton");
+Student student = new StudentPart(person);
+TA ta = new TaPart(student);
+out.println(ta.getTitledName());
 ```
 Output:
 ```text
     TA Milton
 ```
+The TA's Student and Teacher roles share the same underlying Person identity: `@link(share=Person.class)` explicitly declares
+that the overlapping Person interface is supplied by the shared Student link. Without `share=Person.class` a compiler error
+indicates the overlap with Person.
+
+>Note, `@part` classes are _not_ required with `@link(share=...)`; `share` applies to forwarding as well.
 
 # IDE Support
 
