@@ -21,12 +21,12 @@ Use it in place of inheritance, or alongside it.
 
 ```java
 interface Hero {
-  void performTurn();
+  void takeAction();
   void attack();
 }
 
 @part class BaseHero implements Hero {
-  public void performTurn() {
+  public void takeAction() {
     attack();          // <--- self-call: plain delegation/forwarding can't do this
   }
 
@@ -34,7 +34,7 @@ interface Hero {
 }
 
 class Wizard implements Hero {
-  @link Hero base; // <--- @link delegates Hero impl to `base` part
+  @link Hero base;     // <--- @link delegates Hero impl to `base` part
   
   Wizard(Hero base) {this.base = base;}
 
@@ -42,9 +42,9 @@ class Wizard implements Hero {
 }
 
 Wizard wiz = new Wizard(new BaseHero()); // <--- base injected, inheritance can't do this
-wiz.performTurn();
+wiz.takeAction();
 ```
-`BaseHero.performTurn()` calls `attack()` on itself (a self-call). Because `BaseHero` is a linked part of the `Wizard` composite,
+`BaseHero.takeAction()` calls `attack()` on itself (a self-call). Because `BaseHero` is a linked part of the `Wizard` composite,
 that self-call dispatches to `Wizard.attack()`, so the output is:
 ```
 Cast spell!
@@ -140,12 +140,12 @@ a single, composite object in terms of the interfaces defined in the link.
 
 ```java
 interface Hero {
-  void performTurn();
+  void takeAction();
   void attack();
 }
 
 @part class BaseHero implements Hero {
-  public void performTurn() {
+  public void takeAction() {
     attack();
   }
 
@@ -165,7 +165,7 @@ class Wizard implements Hero {
 }
 
 Wizard wizard = new Wizard(new BaseHero());
-wizard.performTurn();
+wizard.takeAction();
 ```
 Output:
 ```
@@ -196,7 +196,7 @@ interface is exposed. `@link` performs the grunt work of forwarding unimplemente
 With forwarding the object receiving the forwarded calls knows nothing about the forwarding object. Using the Hero example: 
 ```java
 @part class BaseHero implements Hero {
-  public void performTurn() {
+  public void takeAction() {
     attack();
   }
 
@@ -216,7 +216,7 @@ class Wizard implements Hero {
 }
 
 Wizard wizard = new Wizard(new BaseHero());
-wizard.performTurn();
+wizard.takeAction();
 ```
 Output:
 ```
@@ -224,7 +224,7 @@ Swing club!
 ```
 
 Without the `@part` annotation BaseHero is not wired to the linking object, Wizard. Forwarded calls are one-way flights.
-The call to `attack()` from `performTurn()` is dispatched _statically_ -- Wizard's override is ignored.
+The call to `attack()` from `takeAction()` is dispatched _statically_ -- Wizard's override is ignored.
 
 Generally, linked interface calls within forwarded objects lose the *internal* polymorphism of inheritance. This behavior
 is often referred to as _the Self problem_.
@@ -234,18 +234,18 @@ is often referred to as _the Self problem_.
 
 If HeroBase is annotated with `@part`, Hero methods are called using _delegation_.
 
-Delegation is more rigorous. It enables polymorphic calls from linked parts where StudentPart can override Person methods
-so that the implementation of Person defers to StudentPart.
+Delegation is more rigorous. It enables polymorphic calls from linked parts where Wizard can override Hero methods
+so that the implementation of Hero defers to Wizard.
 ```java
 @part class BaseHero implements Hero {
   . . .
 }
 ```
-With `@part` the call to `wizard.performTurn()` results in:
+With `@part` the call to `wizard.takeAction()` results in:
 ```text
     Cast spell!
 ```
-Inside PersonPart `this` refers to Wizard in terms of the Hero interface. Thus, the call to `attack()` dispatches
+Inside BaseHero `this` refers to Wizard in terms of the Hero interface. Thus, the call to `attack()` dispatches
 _dynamically_. This "true" form of delegation solves _the Self problem_.
 
 ## Self-preservation
@@ -348,12 +348,12 @@ of the part's constructors.
 
 ```java
 interface Hero {
-  void performTurn();
+  void takeAction();
   void attack();
 }
 
 @part abstract class BaseHero implements Hero {
-  public void performTurn() {
+  public void takeAction() {
     attack();  
   }
   // attack() is abstract
@@ -399,15 +399,15 @@ Output:
 
 ## Default methods
 
-Consider `performTurn()` as a default method in Hero instead of an implementation in BaseHero.
+Consider `takeAction()` as a default method in Hero instead of an implementation in BaseHero.
 ```java
 interface Hero {
-  default void performTurn() { attack(); }
+  default void takeAction() { attack(); }
   void attack();
 }
 ```  
 Calls must behave identically regardless of where the method is implemented; polymorphism must be preserved when using `part`
-classes: the call to `wizard.performTurn()` dispatches dynamically as before:
+classes: the call to `wizard.takeAction()` dispatches dynamically as before:
 ```text
     Cast spell!
 ```    
