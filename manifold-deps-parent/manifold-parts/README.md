@@ -35,9 +35,7 @@ interface Hero {
 
 class Wizard implements Hero {
   @link Hero base;     // <--- @link delegates Hero impl to `base` part
-  
   Wizard(Hero base) {this.base = base;}
-
   public void attack() {out.println("Cast spell!");}
 }
 
