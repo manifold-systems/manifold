@@ -10,7 +10,7 @@
 
 *Parts* lets you assemble a class from independent, swappable objects.
 
-It's the first model for Java to offer both: ***the flexibility of composition and the polymorphism of inheritance***.
+It's the first model for the JVM to offer both: ***the flexibility of composition and the polymorphism of inheritance***.
 Use it in place of inheritance, or alongside it.
 
 - `@link` implements an interface through a field, forwarding the calls automatically
@@ -45,7 +45,7 @@ Wizard wiz = new Wizard(new BaseHero()); // <--- base injected, inheritance can'
 wiz.takeAction();
 ```
 `BaseHero.takeAction()` calls `attack()` on itself (a self-call). Because `BaseHero` is a linked part of the `Wizard` composite,
-that self-call dispatches to `Wizard.attack()`, so the output is:
+the self-call dispatches to `Wizard.attack()`, so the output is:
 ```
 Cast spell!
 ```
@@ -133,7 +133,7 @@ how the calls are transferred. If the type is annotated with [`@part`](#part), c
 Otherwise, they are transferred using call [forwarding](#forwarding).
  
 # `@part`
-Use `@part` to enable delegation with `@link`.
+Use `@part` to enable *true* delegation with `@link`.
 
 Generally, a link establishes a "part-of" relationship between the linking object and the linked `part`. Both objects form
 a single, composite object in terms of the interfaces defined in the link. 
@@ -174,8 +174,8 @@ Cast spell!
 BaseHero's `@part` annotation extends Java's dynamic dispatch across the Wizard composite, preserving polymorphic self-calls.
 
 # Forwarding
-Forwarding (sometimes incorrectly called *delegation*) uses a separate object to handle unimplemented interface calls. A class implements an interface simply by invoking
-the methods on another object that implements the interface.
+Forwarding (sometimes confused with *delegation* in the OOP world) handles a class's unimplemented interface calls by transferring
+(forwarding) the calls to another object, often one that fully implements the interface.
 
 With `@link` this process is handled automatically.
 
@@ -188,8 +188,9 @@ public class StringMap<E> implements Map<String, E> {
   public int hashCode() {return map.hashCode();}
 }
 ``` 
-The advantage over implementation inheritance is that the implementation of StringMap is decoupled from HashMap; only the Map
-interface is exposed. `@link` performs the grunt work of forwarding unimplemented Map calls.
+The advantage over implementation inheritance is that the implementation of StringMap is decoupled from HashMap: only the
+Map interface is exposed through StringMap; HashMap is an encapsulated implementation detail, which avoids the fragile base
+class problem when subclassing with inheritance. `@link` performs the grunt work of forwarding unimplemented Map calls.
                                                                                                     
 ### A one-way flight
 
@@ -223,8 +224,8 @@ Output:
 Swing club!
 ```
 
-Without the `@part` annotation BaseHero is not wired to the linking object, Wizard. Forwarded calls are one-way flights.
-The call to `attack()` from `takeAction()` is dispatched _statically_ -- Wizard's override is ignored.
+Without the `@part` annotation BaseHero is not wired to the linking object, Wizard. Forwarded calls are *one-way flights*.
+The call to `attack()` from `takeAction()` is dispatched _statically_ -- *Wizard's override is ignored*.
 
 Generally, linked interface calls within forwarded objects lose the *internal* polymorphism of inheritance. This behavior
 is often referred to as _the Self problem_.
