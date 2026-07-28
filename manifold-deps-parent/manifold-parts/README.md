@@ -8,10 +8,10 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 
-*Parts* lets you assemble a class from independent, swappable objects.
+*Parts* lets you assemble a class from independent, dynamically configured objects.
 
-It's the first model for the JVM to offer both: ***the flexibility of composition and the polymorphism of inheritance***.
-Use it in place of inheritance, or alongside it.
+It offers both: ***the flexibility of runtime composition and the polymorphism of inheritance***, to fill a longstanding
+gap in object-oriented programming. Use it in place of inheritance, or alongside it.
 
 - `@link` implements an interface through a field, forwarding the calls automatically
 - `@part` turns that link into *true* delegation: your overrides apply *everywhere*, even inside the part (solves the [Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
@@ -27,7 +27,7 @@ interface Hero {
 
 @part class BaseHero implements Hero {
   public void takeAction() {
-    attack();          // <--- self-call: plain delegation/forwarding can't do this
+    attack();          // <--- self-call: ordinary composition can't do this
   }
 
   public void attack() {out.println("Swing club!");}
@@ -39,7 +39,7 @@ class Wizard implements Hero {
   public void attack() {out.println("Cast spell!");}
 }
 
-Wizard wiz = new Wizard(new BaseHero()); // <--- base injected, inheritance can't do this
+Wizard wiz = new Wizard(new BaseHero()); // <--- supplied at runtime, inheritance can't do this
 wiz.takeAction();
 ```
 `BaseHero.takeAction()` calls `attack()` on itself (a self-call). Because `BaseHero` is a linked part of the `Wizard` composite,
@@ -48,8 +48,7 @@ the self-call dispatches to `Wizard.attack()`, so the output is:
 Cast spell!
 ```
 With ordinary composition, `BaseHero`'s own `attack()` implementation ("Swing club!") would run instead. This internal
-polymorphism across an injected, linked part is the fundamental capability that Parts adds. The rest of this section explains how
-`@link` and `@part` make this possible.
+polymorphism across a runtime-injected part is the fundamental capability that Parts adds. 
 
 <!-- TOC -->
 * [Parts](#parts)
