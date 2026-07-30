@@ -1,6 +1,6 @@
 > **⚠ Experimental**
 
-# Parts
+# _Parts_
 
 ![latest](https://img.shields.io/badge/latest-v2026.1.8-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
@@ -8,16 +8,25 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 
-*Parts* lets you assemble a class from independent, dynamically configured objects.
+OOP offers two fundamental ways to reuse implementation.
 
-It offers both: ***the flexibility of runtime composition and the polymorphism of inheritance***, to fill a longstanding
-gap in object-oriented programming. Use it in place of inheritance, or alongside it.
+* **Implementation inheritance** naturally supports polymorphism. A call from one inherited method to another behaves exactly
+as expected because every method executes as part of the same object. The tradeoff: the implementation structure is fixed
+at compile time, and inherited behavior is merged into a single runtime object.
+* **Composition** solves the flexibility problem. Independent objects can be assembled dynamically, implementations can
+be injected, and behavior can vary at runtime. But composition loses one important property of inheritance: internal polymorphism.
+Once execution enters a composed object, self-calls remain inside that object.
 
-- `@link` implements an interface through a field, forwarding the calls automatically
-- `@part` turns that link into *true* delegation: your overrides apply *everywhere*, even inside the part (solves the [Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
-- Each part is a plain object supplied at construction, so composition is configured at runtime (language-level DI)
-- `@link(share=...)` safely shares an interface across parts (solves the [Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
-- All at Java's normal dynamic-dispatch speed (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
+Combining these two features in arbitrary compositions has remained an open problem in OO models for decades.
+
+*Parts* delivers both: ***the flexibility of runtime composition and the polymorphism of inheritance***. It lets you assemble
+classes from independent, runtime-configured objects. Use it in place of inheritance, or alongside it.
+
+* `@part` provides **composite-aware dispatch**: self-calls reach overrides in the composite
+* Each part is a plain object **supplied at construction**, so composition is configured at runtime
+* `@link` implements an interface through a field, providing automatic forwarding
+* Parts delivers compositional dynamic dispatch at **vtable speed** (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
+
 
 ```java
 interface Hero {
@@ -47,25 +56,27 @@ the self-call dispatches to `Wizard.attack()`, so the output is:
 ```
 Cast spell!
 ```
-With ordinary composition, `BaseHero`'s own `attack()` implementation ("Swing club!") would run instead. This internal
+With ordinary composition, `BaseHero`'s own `attack()` implementation `Swing club!` would result instead. This internal
 polymorphism across a runtime-injected part is the fundamental capability that Parts adds. 
 
+By supplying BaseHero as a runtime component instead of fusing it into Wizard's hierarchy, Wizard depends only on the Hero
+contract, not on BaseHero's implementation structure. Parts delegates the interface implementation while preserving the
+polymorphic behavior normally associated with inheritance.
+
+---
+
 <!-- TOC -->
-* [Parts](#parts)
-* [Basic usage](#basic-usage)
-* [`@link`](#link)
+* [_Parts_](#_parts_)
 * [`@part`](#part)
-* [Forwarding](#forwarding)
-    * [A one-way flight](#a-one-way-flight)
-* [Delegation](#delegation)
-  * [Self-preservation](#self-preservation)
-  * [Interface encapsulation](#interface-encapsulation)
+* [`@link`](#link)
+* [The Self problem](#the-self-problem)
+* [Abstract parts](#abstract-parts)
+* [Inheritance](#inheritance)
+* [Default methods](#default-methods)
+* [Interface encapsulation](#interface-encapsulation)
     * [Usage on interface types (`implements` clause)](#usage-on-interface-types-implements-clause)
     * [Usage on methods](#usage-on-methods)
     * [Additionally:](#additionally)
-  * [Abstract parts](#abstract-parts)
-  * [Inheritance](#inheritance)
-  * [Default methods](#default-methods)
 * [Diamonds](#diamonds)
 * [IDE Support](#ide-support)
   * [Install](#install)
@@ -82,58 +93,14 @@ polymorphism across a runtime-injected part is the fundamental capability that P
 * [Author](#author)
 <!-- TOC -->
 
-# Basic usage
+---
 
-# `@link`
-Use `@link` to implement one or more interfaces through a field. 
-```java
-class MyClass implements MyInterface {
-  @link MyInterface myInterface; // transfers calls on MyInterface to myInterface
-
-  public MyClass(MyInterface myInterface) {
-    this.myInterface = myInterface; // dynamically configure behavior
-  }
-  
-  // No need to implement MyInterface here, but you can override myInterface as needed
-}
-```
-The interfaces used in a link are the intersection of the type[s] specified in the linked field and the interfaces of the
-enclosing class.
-
-```java
-interface A {. . .}
-interface B {. . .}
-public class Sample implements A, B {. . .}
-```
-If the field's type is an interface, the intersection of that interface and the interfaces of the enclosing class define
-the link.
-```java
-public class MyClass implements A, B {
-  @link A foo; // links A to foo
-  . . .
-}
-```
-If the field's type is a class, the intersection of the interfaces of the class and the interfaces of the enclosing class
-define the link.
-```java
-  @link Sample foo; // links A and B to foo
-```
-If interfaces are specified in `@link`, the intersection of those interfaces and the interfaces of the enclosing class define
-the link.
-```java
-  @link(A.class) Sample foo; // links A to foo
-```
-Note, `@link` fields are `private` and `final` by default.
-
-Unimplemented interface calls transfer through the link to the assigned value of the field. The value's type determines
-how the calls are transferred. If the type is annotated with [`@part`](#part), calls are transferred using [delegation](#delegation).
-Otherwise, they are transferred using call [forwarding](#forwarding).
- 
 # `@part`
-Use `@part` to enable *true* delegation with `@link`.
+
+Use `@part` to define a class designed to be composed with `@link`.
 
 Generally, a link establishes a "part-of" relationship between the linking object and the linked `part`. Both objects form
-a single, composite object in terms of the interfaces defined in the link. 
+a *composite* object in terms of the interfaces defined in the link.
 
 ```java
 interface Hero {
@@ -170,30 +137,47 @@ Cast spell!
 ```
 BaseHero's `@part` annotation extends Java's dynamic dispatch across the Wizard composite, preserving polymorphic self-calls.
 
-# Forwarding
-Forwarding (sometimes confused with *delegation* in the OOP world) handles a class's unimplemented interface calls by transferring
-(forwarding) the calls to another object, often one that fully implements the interface.
+---
 
-With `@link` this process is handled automatically.
+# `@link`
 
-A simple example demonstrating interface composition via forwarding with a map.
+Use `@link` to implement one or more interfaces through a field.
+
+The interfaces used in a link are the intersection of the type of the linked field and the interfaces of the enclosing class.
+
+If the field's type is an interface, the intersection of that interface and the interfaces of the enclosing class define
+the link.
 ```java
-public class StringMap<E> implements Map<String, E> {
-  @link Map<String, E> map = new HashMap<>();
-
-  public boolean equals(Object o) {return map.equals(o);}
-  public int hashCode() {return map.hashCode();}
+public class MyClass implements A, B {
+  @link A foo; // links A to foo
+  . . .
 }
-``` 
-The advantage over implementation inheritance is that the implementation of StringMap is decoupled from HashMap: only the
-Map interface is exposed through StringMap; HashMap is an encapsulated implementation detail, which avoids the fragile base
-class problem when subclassing with inheritance. `@link` performs the grunt work of forwarding unimplemented Map calls.
-                                                                                                    
-### A one-way flight
-
-With forwarding the object receiving the forwarded calls knows nothing about the forwarding object. Using the Hero example: 
+```
+If the field's type is a class, the intersection of the interfaces of the class and the interfaces of the enclosing class
+define the link.
 ```java
-@part class BaseHero implements Hero {
+public class Sample implements A, B {. . .}
+
+@link Sample foo; // links A and B to foo
+```
+If interfaces are specified in `@link`, the intersection of those interfaces and the interfaces of the enclosing class define
+the link.
+```java
+  @link(A.class) Sample foo; // links just A to foo
+```
+Note, `@link` fields are `private` and `final` by default.
+
+Unimplemented interface calls forward through the link to the value of the field. If the field's value is a `@part` class,
+internal polymorphism is preserved.
+ 
+---
+
+# The Self problem
+
+Consider the `Hero` example without `@part`:
+
+```java
+/*@part*/ class BaseHero implements Hero {
   public void takeAction() {
     attack();
   }
@@ -206,7 +190,7 @@ With forwarding the object receiving the forwarded calls knows nothing about the
 class Wizard implements Hero {
   @link Hero base;
 
-  Wizard(Hero base) {this.base = base;}
+  Wizard(Hero base) { this.base = base; }
 
   public void attack() {
     out.println("Cast spell!");
@@ -216,76 +200,108 @@ class Wizard implements Hero {
 Wizard wizard = new Wizard(new BaseHero());
 wizard.takeAction();
 ```
-Output:
-```
+The output is:
+```text
 Swing club!
 ```
 
-Without the `@part` annotation BaseHero is not wired to the linking object, Wizard. Forwarded calls are *one-way flights*.
-The call to `attack()` from `takeAction()` is dispatched _statically_ -- *Wizard's override is ignored*.
+Although `takeAction()` is invoked on `wizard`, it executes inside BaseHero. The call to `attack()` therefore dispatches
+on the BaseHero instance, not on the composite. Wizard's override is never reached.
 
-Generally, linked interface calls within forwarded objects lose the *internal* polymorphism of inheritance. This behavior
-is often referred to as _the Self problem_.
+This is the fundamental limitation of ordinary composition. It preserves external polymorphism, but internal self-calls remain
+trapped within the delegated object. This limitation is known as the **Self problem**.
 
+---
 
-# Delegation
+# Abstract parts
 
-If HeroBase is annotated with `@part`, Hero methods are called using _delegation_.
+To use an abstract `@part` class, it must be constructed using an `asLink()` static method. These are compile-time generated
+static methods that match the signatures of the part's constructors.
 
-Delegation is more rigorous. It enables polymorphic calls from linked parts where Wizard can override Hero methods
-so that the implementation of Hero defers to Wizard.
 ```java
-@part class BaseHero implements Hero {
-  . . .
+interface Hero {
+  void takeAction();
+  void attack();
+}
+
+@part abstract class BaseHero implements Hero {
+  public void takeAction() {
+    attack();  
+  }
+  // attack() is abstract
+}
+
+class Wizard implements Hero {
+  @link BaseHero base = BaseHero.asLink(); // <--- use abstract parts via asLink()
+
+  public void attack() {out.println("Cast spell!");} // <--- must implement attack()
 }
 ```
-With `@part` the call to `wizard.takeAction()` results in:
+---
+
+# Inheritance
+
+`@part` classes support implementation inheritance. To maintain internal polymorphism within a linked part, its superclass
+must also be a `@part` class.
+```java
+interface A {
+  String a(String a);
+  String b(String b);
+}
+
+@part class AImpl implements A {
+  public String a(String a) {return a + b(a);}
+  public String b(String b) {return b;}
+}
+
+@part class SubAImpl extends AImpl {}
+
+class MyA implements A {
+  @link A a = new SubAImpl();
+
+  public String b(String b) {return "y_z";}
+}
+
+MyA myA = new MyA();
+out.println(myA.a( "x_" )); 
+```
+Output:
 ```text
-    Cast spell!
+    x_y_z
 ```
-Inside BaseHero `this` refers to Wizard in terms of the Hero interface. Thus, the call to `attack()` dispatches
-_dynamically_. This "true" form of delegation solves _the Self problem_.
 
-## Self-preservation
+---
 
-Delegation involves composite objects each consisting of a root object and its graph of linked `part` objects. Within a
-composite object, linked interface calls are initially dispatched from the root object, never from linked parts; `this`
-always refers to the root in terms of the interfaces defined by the links. Otherwise, if any of the linked parts are allowed
-to directly refer to a non-root part, delegation is broken.
+# Default methods
 
-Essentially, polymorphic calls are compromised when a direct reference to a part bypasses the root. Therefore, `part` classes
-are not permitted to reference `this` in a context other than a declared interface.
+`@part` classes preserve internal polymorphism even when behavior is defined in interface default methods.
 
-Invalid `this` usages in `part` classes result in compile error: `Part class 'this' must be used as an interface here`. 
+Suppose `takeAction()` is moved from `BaseHero` into the `Hero` interface:
 ```java
-@part class MyPart implements MyInterface {
-    @override public void interfaceMethod() {
-      privateMethod(this); // compile error
-      privateMethod(new MyPart()); // ok
-      MyPart w = this; // compile error
-      MyInterface x = this; // ok
-      Object y = (Object)this; // compile error
-      Object z = (MyInterface)this; // ok
-    }
-    
-    private MyPart privateMethod(MyPart a) {
-        return this; // compile error
-    }
+interface Hero {
+  default void takeAction() {
+    attack();
+  }
 
-    private MyInterface otherMethod(MyPart a) {
-        return this; // ok
-    }
+  void attack();
 }
 ```
-Note, `@part` classes are not confined to usage as linked objects. They can be used anywhere for any purpose. 
+The behavior is unchanged. Calling `wizard.takeAction()` still produces:
+```text
+Cast spell!
+```
 
-## Interface encapsulation
+Although `takeAction()` executes from the interface, its call to `attack()` dispatches to `Wizard` exactly as it would if
+`takeAction()` were implemented in a part. Within the default method, `this` refers to the composite's `Hero` identity,
+not an individual component.
 
-Use the `@internal` annotation
+---
+
+# Interface encapsulation
 
 The `@internal` interface marks an interface in an implements clause or an interface method as internal to a composition graph.
-`@internal` is the protected modifier for the world of composition. It provides the same encapsulation benefits as protected
-but without the legacy "leakiness" of `package-private` access. 
+`@internal` is the `protected` modifier analog for the world of composition. It provides the same encapsulation benefits as `protected`
+but without the legacy "leakiness" of `package-private` access.
 
 ### Usage on interface types (`implements` clause)
 
@@ -304,7 +320,7 @@ class MyRoot implements Foo, Bar {
 ```
 
 ### Usage on methods
-                                  
+
 ```java
 interface Protocol {
   String result();
@@ -321,96 +337,26 @@ class ProtocolRoot implements Protocol {
   public String step() { return "step"; }
 }
 
-public void testLinkFieldAccessToInternal() {
-  ProtocolRoot root = new ProtocolRoot();
-  root.result();
-  root.step(); // compile error: step() is internal
+class MyTestClass {
+  public void testLinkFieldAccessToInternal() {
+    ProtocolRoot root = new ProtocolRoot();
+    root.result();
+    root.step(); // compile error: step() is internal
+  }
 }
 ```
-
 When applied to an interface method, it restricts access to the compositional scope. The method is part of the internal
 contract shared between a composite and its links, but is hidden from external consumers. It is visible only to:
 - The Interface: Default methods within the same interface.
 - Implementors: Any class that implements the interface can override or call the method. Calls are limited to "self" calls:
-calls that dereference this or the `@link` field that provides the interface implementation.
+  calls that dereference this or the `@link` field that provides the interface implementation.
 
 ### Additionally:
 
 - Inherited: Implementors automatically inherit `@internal` status for overridden methods; it does not need to be reapplied.
 - Compiler Enforced: Parts produces compile errors for `@internal` access violations.
 
-## Abstract parts
-
-To use an abstract `@part` class, it must be constructed an `asLink()` method. These are static methods match the signatures
-of the part's constructors.
-
-```java
-interface Hero {
-  void takeAction();
-  void attack();
-}
-
-@part abstract class BaseHero implements Hero {
-  public void takeAction() {
-    attack();  
-  }
-  // attack() is abstract
-}
-
-class Wizard implements Hero {
-  @link BaseHero base = BaseHero.asLink(); // <--- requires override for attack()
-
-  public void attack() {out.println("Cast spell!");}
-}
-```
- 
-## Inheritance
-
-`@part` classes support implementation inheritance. But to maintain polymorphic calls within linked parts, superclasses
-associated with links must also be `part` classes.
-```java
-interface A {
-  String a(String a);
-  String b(String b);
-}
-
-@part class AImpl implements A {
-  public String a(String a) {return a + b(a);}
-  public String b(String b) {return b;}
-}
-
-@part class SubAImpl extends AImpl {}
-
-class MyA implements A {
-  @link A a = new SubAImpl();
-
-  public String b(String b) {"y_z";}
-}
-
-MyA a = new MyA();
-out.println(a.a( "x_" )); 
-```
-Output:
-```text
-    x_y_z
-```
-
-## Default methods
-
-Consider `takeAction()` as a default method in Hero instead of an implementation in BaseHero.
-```java
-interface Hero {
-  default void takeAction() { attack(); }
-  void attack();
-}
-```  
-Calls must behave identically regardless of where the method is implemented; polymorphism must be preserved when using `part`
-classes: the call to `wizard.takeAction()` dispatches dynamically as before:
-```text
-    Cast spell!
-```    
-Inside the Hero interface `this` refers to Wizard even when called from BaseHero.
- 
+---
 
 # Diamonds
 
@@ -485,9 +431,13 @@ indicates the overlap with Person.
 
 >Note, `@part` classes are _not_ required with `@link(share=...)`; `share` applies to forwarding as well.
 
+---
+
 # IDE Support
 
 Delegation with links & parts is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
+
+---
 
 ## Install
 
@@ -496,6 +446,8 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) d
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
 <p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%"/></p>
+
+---
 
 # Setup
 
@@ -629,6 +581,8 @@ rootProject.name = 'MyProject'
 </project>
 ```
 
+---
+
 # Javadoc
 
 `manifold-parts`:<br>
@@ -637,6 +591,8 @@ rootProject.name = 'MyProject'
 `manifold-parts-rt`:<br>
 [![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts-rt/2026.1.8/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts-rt/2026.1.8)
 
+---
+
 # Paper
 
 The dispatch model, its correctness argument, and benchmarks are written up here:
@@ -644,13 +600,19 @@ The dispatch model, its correctness argument, and benchmarks are written up here
 
 To cite Parts, use that DOI.
 
+---
+
 # License
 
 Open source Manifold is free and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.
 
+---
+
 # Versioning
 
 For the versions available, see the [tags on this repository](https://github.com/manifold-systems/manifold/tags).
+
+---
 
 # Author
 
