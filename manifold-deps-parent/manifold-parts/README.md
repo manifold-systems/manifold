@@ -472,14 +472,13 @@ indicates the overlap with Person.
 
 # Performance
 
-The difficult performance problem in compositional models is not delegation itself, but polymorphism within the composition
+The challenging performance problem in compositional models is not delegation itself, but polymorphism within the composition
 graph. A part must be able to call its own methods while allowing that call to resolve to an implementation supplied by
-its composite. Prior attempts to independent components with internal polymorphism have generally paid for this with additional
-dispatch machinery.
+its composite. The conventional assumption has been that this requires additional dispatch machinery.
 
-Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). Composition establishes
-the component associated with each interface, allowing a self-call to resolve directly to the composite's implementation
-for that interface. The resulting dispatch is O(1) and reduces to the JVM's ordinary invokeinterface instruction.
+Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). Compositions wire
+the component associated with each linked interface, allowing a self-call to resolve directly to the composite's implementation
+per interface. The resulting dispatch is O(1), performance equivalent to a conventional virtual call.
 
 ---
 
