@@ -74,6 +74,7 @@ Parts gives you both:**
 | Trait/mixin composition (flattening)  |          —          |           ✓           |
 | Ordinary composition (forwarding)     |          ✓          |           —           |
 | **Parts**                             |        **✓**        |         **✓**         |
+
 <sub>*Runtime composition*: components are independent objects, assembled and
 configured at construction.<br>*Internal polymorphism*: a component's self-calls
 reach overrides supplied by the composite.</sub>
