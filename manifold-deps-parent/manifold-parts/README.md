@@ -81,15 +81,17 @@ reach overrides supplied by the composite.</sub>
                                               
 ### Isn't this just...
 
-> <sub>**Isn't this traits?** Traits give internal polymorphism too, but at the price
+> *Isn't this traits?*<br>
+ Traits give internal polymorphism too, but at the price
  of getting it from inheritance's single-object model: like a superclass, a
  trait is baked into the class at compile time and flattened into the single runtime instance,
  never a separate component supplied at construction. Internal polymorphism, but
- not independent components.</sub>
+ not independent components.
 
-> <sub>**Doesn't Kotlin's `by` do this?** `by`, Lombok's `@Delegate`, and Scala's `export`
+> *Doesn't Kotlin do this?*<br>
+ Kotlin's `by`, Lombok's `@Delegate`, and Scala's `export`
  are all examples of ordinary *object composition*. That gets you independent components (the first column),
- but not internal polymorphism: ordinary composition results in the "Swing club!" result above.</sub>
+ but not internal polymorphism: ordinary composition results in the "Swing club!" result above.
  
 ---
 
