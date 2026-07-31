@@ -15,7 +15,7 @@ as expected because every method executes as part of the same object. The tradeo
 at compile time, and inherited behavior is merged into a single runtime object.
 * **Composition** solves the flexibility problem. Independent objects can be linked dynamically into a composite, allowing
 implementations and behavior to be configured at runtime. But composition sacrifices an important property of inheritance:
-*internal* polymorphism. A component's calls to its own methods cannot reach overrides supplied by the composite.
+*internal* polymorphism. A component's calls to its own methods (*self-calls*) cannot reach overrides supplied by the composite.
 
 Combining these two features in arbitrary compositions has remained an open problem in OO models for decades.
 
@@ -25,7 +25,7 @@ classes from independent, runtime-configured objects. Use it in place of inherit
 * `@part` provides **composite-aware dispatch**: calls from a part can reach overrides in the composite
 * Each part is a plain object **supplied at construction**, so composition is configured at runtime
 * `@link` implements an interface through a field, providing automatic forwarding
-* Parts preserves internal polymorphism with vtable-equivalent performance (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
+* Parts preserves internal polymorphism with **vtable-equivalent performance** (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
 
 
 ```java
@@ -36,19 +36,19 @@ interface Hero {
 
 @part class BaseHero implements Hero {
   public void takeAction() {
-    attack();          // <--- self-call: ordinary object composition can't do this
+    attack();               // self-call is dynamically dispatched through the composite
   }
 
   public void attack() {out.println("Swing club!");}
 }
 
 class Wizard implements Hero {
-  @link Hero base;     // <--- @link delegates Hero impl to `base` part
+  @link Hero base;          // dynamically links an independent Hero object
   Wizard(Hero base) {this.base = base;}
   public void attack() {out.println("Cast spell!");}
 }
 
-Wizard wiz = new Wizard(new BaseHero()); // <--- supplied at runtime, inheritance can't do this
+Wizard wiz = new Wizard(createHero()); // independent Hero supplied at runtime (factory, DI, etc.)
 wiz.takeAction();
 ```
 `BaseHero.takeAction()` calls `attack()` on itself (a self-call). Because `BaseHero` is a linked part of the `Wizard` composite,
@@ -82,16 +82,14 @@ reach overrides supplied by the composite.</sub>
 ### Isn't this just...
 
 > *Isn't this traits?*<br>
- Traits give internal polymorphism too, but at the price
- of getting it from inheritance's single-object model: like a superclass, a
- trait is baked into the class at compile time and flattened into the single runtime instance,
- never a separate component supplied at construction. Internal polymorphism, but
- not independent components.
+ Traits provide internal polymorphism, but at the price of adopting inheritance's single-object model. Composition with
+ traits is limited to compile-time configuration, where they are folded into the hosting class, sacrificing independent
+ runtime identity. Internal polymorphism, but not independent components.
 
 > *Doesn't Kotlin do this?*<br>
- Kotlin's `by`, Lombok's `@Delegate`, and Scala's `export`
- are all examples of ordinary *object composition*. That gets you independent components (the first column),
- but not internal polymorphism: ordinary composition results in the "Swing club!" result above.
+ Kotlin's `by`, Lombok's `@Delegate`, and Scala's `export` are all examples of ordinary *object composition*. They provide
+ independent components (the first column), but not internal polymorphism: ordinary composition results in the "Swing club!"
+ result above.
  
 ---
 
@@ -151,7 +149,7 @@ class Wizard implements Hero {
   }
 }
 
-Wizard wizard = new Wizard(new BaseHero());
+Wizard wizard = new Wizard(createHero());
 wizard.takeAction();
 ```
 The output is:
@@ -191,8 +189,7 @@ interface Hero {
 }
 
 class Wizard implements Hero {
-  @link Hero base = new BaseHero();
-  
+  @link Hero base;
   Wizard(Hero base) {this.base = base;}
   
   public void attack() {
@@ -200,7 +197,7 @@ class Wizard implements Hero {
   }
 }
 
-Wizard wizard = new Wizard(new BaseHero());
+Wizard wizard = new Wizard(createHero());
 wizard.takeAction();
 ```
 Output:
