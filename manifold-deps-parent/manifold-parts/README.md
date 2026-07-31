@@ -13,19 +13,19 @@ OOP offers two fundamental ways to reuse implementation.
 * **Implementation inheritance** naturally supports polymorphism. A call from one inherited method to another behaves exactly
 as expected because every method executes as part of the same object. The tradeoff: the implementation structure is fixed
 at compile time, and inherited behavior is merged into a single runtime object.
-* **Composition** solves the flexibility problem. Independent objects can be assembled dynamically, implementations can
-be injected, and behavior can vary at runtime. But composition loses one important property of inheritance: internal polymorphism.
-Once execution enters a composed object, self-calls remain inside that object.
+* **Composition** solves the flexibility problem. Independent objects can be linked dynamically into a composite, allowing
+implementations and behavior to be configured at runtime. But composition sacrifices an important property of inheritance:
+*internal* polymorphism. A component's calls to its own methods cannot reach overrides supplied by the composite.
 
 Combining these two features in arbitrary compositions has remained an open problem in OO models for decades.
 
 *Parts* delivers both: ***the flexibility of runtime composition and the polymorphism of inheritance***. It lets you assemble
 classes from independent, runtime-configured objects. Use it in place of inheritance, or alongside it.
 
-* `@part` provides **composite-aware dispatch**: self-calls reach overrides in the composite
+* `@part` provides **composite-aware dispatch**: calls from a part can reach overrides in the composite
 * Each part is a plain object **supplied at construction**, so composition is configured at runtime
 * `@link` implements an interface through a field, providing automatic forwarding
-* Parts delivers compositional dynamic dispatch at **vtable speed** (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
+* Parts preserves internal polymorphism with vtable-equivalent performance (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
 
 
 ```java
@@ -65,19 +65,41 @@ polymorphic behavior normally associated with inheritance.
 
 ---
 
+**Every existing way to reuse behavior gives you one of these two properties,<br> 
+Parts gives you both:**
+
+|                                       | Runtime composition | Internal polymorphism |
+| :------------------------------------ | :-----------------: | :-------------------: |
+| Implementation inheritance            |          —          |           ✓           |
+| Trait/mixin composition (flattening)  |          —          |           ✓           |
+| Ordinary composition (forwarding)     |          ✓          |           —           |
+| **Parts**                             |        **✓**        |         **✓**         |
+<sub>*Runtime composition*: components are independent objects, assembled and
+configured at construction.<br>*Internal polymorphism*: a component's self-calls
+reach overrides supplied by the composite.</sub>
+
+> **Wait, isn't this traits?** Traits give internal polymorphism too, but at the price
+> of getting it from inheritance's single-object model: like a superclass, a
+> trait is baked into the class at compile time and flattened into the instance,
+> never a separate component supplied at construction. Internal polymorphism, but
+> not runtime composition.
+
+---
+
 <!-- TOC -->
 * [_Parts_](#_parts_)
+* [The Self problem](#the-self-problem)
 * [`@part`](#part)
 * [`@link`](#link)
-* [The Self problem](#the-self-problem)
+* [Default methods](#default-methods)
 * [Abstract parts](#abstract-parts)
 * [Inheritance](#inheritance)
-* [Default methods](#default-methods)
 * [Interface encapsulation](#interface-encapsulation)
     * [Usage on interface types (`implements` clause)](#usage-on-interface-types-implements-clause)
     * [Usage on methods](#usage-on-methods)
     * [Additionally:](#additionally)
 * [Diamonds](#diamonds)
+* [Performance](#performance)
 * [IDE Support](#ide-support)
   * [Install](#install)
 * [Setup](#setup)
@@ -92,6 +114,47 @@ polymorphic behavior normally associated with inheritance.
 * [Versioning](#versioning)
 * [Author](#author)
 <!-- TOC -->
+
+---
+
+# The Self problem
+
+Consider the `Hero` example without `@part`:
+
+```java
+/*@part*/ class BaseHero implements Hero {
+  public void takeAction() {
+    attack();
+  }
+
+  public void attack() {
+    out.println("Swing club!");
+  }
+}
+
+class Wizard implements Hero {
+  @link Hero base;
+
+  Wizard(Hero base) { this.base = base; }
+
+  public void attack() {
+    out.println("Cast spell!");
+  }
+}
+
+Wizard wizard = new Wizard(new BaseHero());
+wizard.takeAction();
+```
+The output is:
+```text
+Swing club!
+```
+
+Although `takeAction()` is invoked on `wizard`, it executes inside BaseHero. The call to `attack()` therefore dispatches
+on the BaseHero instance, not on the composite. Wizard's override is never reached.
+
+This is the fundamental limitation of ordinary composition. It preserves external polymorphism, but internal self-calls remain
+trapped within the delegated object. This limitation is known as the **Self problem**.
 
 ---
 
@@ -172,44 +235,28 @@ internal polymorphism is preserved.
  
 ---
 
-# The Self problem
+# Default methods
 
-Consider the `Hero` example without `@part`:
+`@part` classes preserve internal polymorphism even when behavior is defined in interface default methods.
 
+Suppose `takeAction()` is moved from `BaseHero` into the `Hero` interface:
 ```java
-/*@part*/ class BaseHero implements Hero {
-  public void takeAction() {
+interface Hero {
+  default void takeAction() {
     attack();
   }
 
-  public void attack() {
-    out.println("Swing club!");
-  }
+  void attack();
 }
-
-class Wizard implements Hero {
-  @link Hero base;
-
-  Wizard(Hero base) { this.base = base; }
-
-  public void attack() {
-    out.println("Cast spell!");
-  }
-}
-
-Wizard wizard = new Wizard(new BaseHero());
-wizard.takeAction();
 ```
-The output is:
+The behavior is unchanged. Calling `wizard.takeAction()` still produces:
 ```text
-Swing club!
+Cast spell!
 ```
 
-Although `takeAction()` is invoked on `wizard`, it executes inside BaseHero. The call to `attack()` therefore dispatches
-on the BaseHero instance, not on the composite. Wizard's override is never reached.
-
-This is the fundamental limitation of ordinary composition. It preserves external polymorphism, but internal self-calls remain
-trapped within the delegated object. This limitation is known as the **Self problem**.
+Although `takeAction()` executes from the interface, its call to `attack()` dispatches to Wizard exactly as it would if
+`takeAction()` were implemented in a part. Within the default method, `this` refers to the composite's Hero identity:
+the composite that claims Hero.
 
 ---
 
@@ -239,10 +286,13 @@ class Wizard implements Hero {
 ```
 ---
 
+As with inheritance the compiler checks that the abstract Hero methods in BaseHero are implemented in Wizard or that Wizard
+is declared `abstract`.
+
 # Inheritance
 
-`@part` classes support implementation inheritance. To maintain internal polymorphism within a linked part, its superclass
-must also be a `@part` class.
+`@part` classes support implementation inheritance. To maintain internal polymorphism within a linked part, the superclass
+chain must consist of `@part` classes.
 ```java
 interface A {
   String a(String a);
@@ -254,7 +304,9 @@ interface A {
   public String b(String b) {return b;}
 }
 
-@part class SubAImpl extends AImpl {}
+@part class SubAImpl extends AImpl {
+  . . .
+}
 
 class MyA implements A {
   @link A a = new SubAImpl();
@@ -272,31 +324,6 @@ Output:
 
 ---
 
-# Default methods
-
-`@part` classes preserve internal polymorphism even when behavior is defined in interface default methods.
-
-Suppose `takeAction()` is moved from `BaseHero` into the `Hero` interface:
-```java
-interface Hero {
-  default void takeAction() {
-    attack();
-  }
-
-  void attack();
-}
-```
-The behavior is unchanged. Calling `wizard.takeAction()` still produces:
-```text
-Cast spell!
-```
-
-Although `takeAction()` executes from the interface, its call to `attack()` dispatches to `Wizard` exactly as it would if
-`takeAction()` were implemented in a part. Within the default method, `this` refers to the composite's `Hero` identity,
-not an individual component.
-
----
-
 # Interface encapsulation
 
 The `@internal` interface marks an interface in an implements clause or an interface method as internal to a composition graph.
@@ -305,8 +332,8 @@ but without the legacy "leakiness" of `package-private` access.
 
 ### Usage on interface types (`implements` clause)
 
-When applied to an interface in a delegate class's `implements` clause, it prevents that interface from being "inherited"
-by delegators. The interface becomes a private capability of the delegate, often for internal implementation details.
+When applied to an interface in a class's `implements` clause, it prevents that interface from being delegated to by a composite.
+The interface becomes an internal capability within the class, often for implementation details.
 ```java
 class FooPart implements Foo, @internal Bar { ... }
 
@@ -318,8 +345,12 @@ class MyRoot implements Foo, Bar {
   @link Foo foo = new FooPart();
 }
 ```
+Note, here `@internal` applies to the delegation surface of FooPart, not to the methods of Bar: Bar methods are still
+*accessible* through FooPart.
 
 ### Usage on methods
+
+When applied to an interface method, `@internal` restricts access to the compositional scope.
 
 ```java
 interface Protocol {
@@ -345,10 +376,10 @@ class MyTestClass {
   }
 }
 ```
-When applied to an interface method, it restricts access to the compositional scope. The method is part of the internal
-contract shared between a composite and its links, but is hidden from external consumers. It is visible only to:
-- The Interface: Default methods within the same interface.
-- Implementors: Any class that implements the interface can override or call the method. Calls are limited to "self" calls:
+The method is part of the internal contract shared between a composite and its links, but is hidden from external consumers.
+It is visible only to:
+- *The Interface*: Default methods within the same interface.
+- *Implementors*: Any class that implements the interface can override or call the method. Calls are limited to "self" calls:
   calls that dereference this or the `@link` field that provides the interface implementation.
 
 ### Additionally:
@@ -430,6 +461,19 @@ that the overlapping Person interface is supplied by the shared Student link. Wi
 indicates the overlap with Person.
 
 >Note, `@part` classes are _not_ required with `@link(share=...)`; `share` applies to forwarding as well.
+
+---
+
+# Performance
+
+The difficult performance problem in compositional models is not delegation itself, but polymorphism within the composition
+graph. A part must be able to call its own methods while allowing that call to resolve to an implementation supplied by
+its composite. Prior attempts to independent components with internal polymorphism have generally paid for this with additional
+dispatch machinery.
+
+Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). Composition establishes
+the component associated with each interface, allowing a self-call to resolve directly to the composite's implementation
+for that interface. The resulting dispatch is O(1) and reduces to the JVM's ordinary invokeinterface instruction.
 
 ---
 
