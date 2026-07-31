@@ -36,7 +36,7 @@ interface Hero {
 
 @part class BaseHero implements Hero {
   public void takeAction() {
-    attack();          // <--- self-call: ordinary composition can't do this
+    attack();          // <--- self-call: ordinary object composition can't do this
   }
 
   public void attack() {out.println("Swing club!");}
@@ -56,7 +56,7 @@ the self-call dispatches to `Wizard.attack()`, so the output is:
 ```
 Cast spell!
 ```
-With ordinary composition, `BaseHero`'s own `attack()` implementation `Swing club!` would result instead. This internal
+With ordinary object composition, `BaseHero`'s own `attack()` implementation `Swing club!` would result instead. This internal
 polymorphism across a runtime-injected part is the fundamental capability that Parts adds. 
 
 By supplying BaseHero as a runtime component instead of fusing it into Wizard's hierarchy, Wizard depends only on the Hero
@@ -65,26 +65,32 @@ polymorphic behavior normally associated with inheritance.
 
 ---
 
-**Every existing way to reuse behavior gives you one of these two properties,<br> 
+**Other mainstream ways to reuse behavior give you one of these two properties,<br> 
 Parts gives you both:**
 
-|                                       | Runtime composition | Internal polymorphism |
-| :------------------------------------ | :-----------------: | :-------------------: |
-| Implementation inheritance            |          —          |           ✓           |
-| Trait/mixin composition (flattening)  |          —          |           ✓           |
-| Ordinary composition (forwarding)     |          ✓          |           —           |
-| **Parts**                             |        **✓**        |         **✓**         |
+|                                      | Independent components | Internal polymorphism |
+|:-------------------------------------|:----------------------:| :-------------------: |
+| Implementation inheritance           |           —            |           ✓           |
+| Trait/mixin composition (flattening) |           —            |           ✓           |
+| Object composition (forwarding)      |           ✓            |           —           |
+| **Parts**                            |         **✓**          |         **✓**         |
 
-<sub>*Runtime composition*: components are independent objects, assembled and
+<sub>*Independent components*: composition consists of separate runtime objects, assembled and
 configured at construction.<br>*Internal polymorphism*: a component's self-calls
 reach overrides supplied by the composite.</sub>
+                                              
+### Isn't this just...
 
-> **Wait, isn't this traits?** Traits give internal polymorphism too, but at the price
-> of getting it from inheritance's single-object model: like a superclass, a
-> trait is baked into the class at compile time and flattened into the instance,
-> never a separate component supplied at construction. Internal polymorphism, but
-> not runtime composition.
+> <sub>**Isn't this traits?** Traits give internal polymorphism too, but at the price
+ of getting it from inheritance's single-object model: like a superclass, a
+ trait is baked into the class at compile time and flattened into the single runtime instance,
+ never a separate component supplied at construction. Internal polymorphism, but
+ not independent components.</sub>
 
+> <sub>**Doesn't Kotlin's `by` do this?** `by`, Lombok's `@Delegate`, and Scala's `export`
+ are all examples of ordinary *object composition*. That gets you independent components (the first column),
+ but not internal polymorphism: ordinary composition results in the "Swing club!" result above.</sub>
+ 
 ---
 
 <!-- TOC -->
@@ -154,7 +160,7 @@ Swing club!
 Although `takeAction()` is invoked on `wizard`, it executes inside BaseHero. The call to `attack()` therefore dispatches
 on the BaseHero instance, not on the composite. Wizard's override is never reached.
 
-This is the fundamental limitation of ordinary composition. It preserves external polymorphism, but internal self-calls remain
+This is the fundamental limitation of ordinary object composition. It preserves external polymorphism, but internal self-calls remain
 trapped within the delegated object. This limitation is known as the **Self problem**.
 
 ---
