@@ -1867,6 +1867,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
             }
             else if( !types.isSameType( getSymtab().objectType, returnType ) )
             {
+              // Note, Object is permitted for local identity purposes
               reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
             }
           }
@@ -1922,11 +1923,11 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
             }
             return true;
           }
-// escaping through Object is prohibited, force an @internal marker interface or other strategy
-//          else if( !types.isSameType( getSymtab().objectType, paramType ) )
-//          {
+          else if( !types.isSameType( getSymtab().objectType, paramType ) )
+          {
+            // Note, Object is permitted for local identity purposes
             reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
-//          }
+          }
           return true;
         }
       }
