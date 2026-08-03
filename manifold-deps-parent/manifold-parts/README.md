@@ -22,10 +22,10 @@ Combining these two features in arbitrary compositions has remained an open prob
 *Parts* delivers both: ***the flexibility of runtime composition and the polymorphism of inheritance***. It lets you assemble
 classes from independent, runtime-configured objects. Use it in place of inheritance, or alongside it.
 
-* `@part` provides **interface-scoped dispatch**: self-calls from a part can reach overrides in the composite
+* `@part` provides [**interface-scoped dispatch**](https://doi.org/10.5281/zenodo.21514973): self-calls from a part can reach overrides in the composite
 * Each part is a plain object **supplied at construction**, so composition is configured at runtime
 * `@link` implements an interface through a field, providing automatic forwarding
-* Parts preserves internal polymorphism with **vtable-equivalent performance** (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
+* Parts preserves internal polymorphism with **vtable-equivalent performance** (see [5.1 Dispatch Performance](https://doi.org/10.5281/zenodo.21514973))
 
 
 ```java
@@ -81,12 +81,12 @@ reach overrides supplied by the composite.</sub>
                                               
 ### Isn't this just...
 
-> *Isn't this traits?*<br>
+> ***Isn't this traits?***<br>
  Traits provide internal polymorphism, but at the price of adopting inheritance's single-object model. Composition with
- traits is limited to compile-time configuration, where they are folded into the hosting class, sacrificing independent
+ traits is limited to *compile-time* configuration, where they are folded into the hosting class, sacrificing independent
  runtime identity. Internal polymorphism, but not independent components.
 
-> *Doesn't Kotlin do this?*<br>
+> ***Doesn't Kotlin do this?***<br>
  Kotlin's `by`, Lombok's `@Delegate`, and Scala's `export` are all examples of ordinary *object composition*. They provide
  independent components (the first column), but not internal polymorphism: ordinary composition results in the "Swing club!"
  result above.
