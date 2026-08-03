@@ -22,7 +22,7 @@ Combining these two features in arbitrary compositions has remained an open prob
 *Parts* delivers both: ***the flexibility of runtime composition and the polymorphism of inheritance***. It lets you assemble
 classes from independent, runtime-configured objects. Use it in place of inheritance, or alongside it.
 
-* `@part` provides **composite-aware dispatch**: calls from a part can reach overrides in the composite
+* `@part` provides **interface-scoped dispatch**: self-calls from a part can reach overrides in the composite
 * Each part is a plain object **supplied at construction**, so composition is configured at runtime
 * `@link` implements an interface through a field, providing automatic forwarding
 * Parts preserves internal polymorphism with **vtable-equivalent performance** (see [Interface-Scoped Dispatch](https://doi.org/10.5281/zenodo.21514973))
@@ -95,12 +95,14 @@ reach overrides supplied by the composite.</sub>
 
 <!-- TOC -->
 * [_Parts_](#_parts_)
+    * [Isn't this just...](#isnt-this-just)
 * [The Self problem](#the-self-problem)
 * [`@part`](#part)
 * [`@link`](#link)
 * [Default methods](#default-methods)
 * [Abstract parts](#abstract-parts)
 * [Inheritance](#inheritance)
+* [Self-preservation](#self-preservation)
 * [Interface encapsulation](#interface-encapsulation)
     * [Usage on interface types (`implements` clause)](#usage-on-interface-types-implements-clause)
     * [Usage on methods](#usage-on-methods)
@@ -330,6 +332,39 @@ Output:
 
 ---
 
+# Self-preservation
+
+Composition integrity rests on dispatch identity: if a part exposes itself as its concrete type, calls through that reference
+can bypass the composite and compromise integrity. To prevent this, a part may use `this` only as one of its implemented
+interfaces or as `Object`.
+
+The compile error is: `Part class 'this' must be used as an interface here`.
+
+```java
+@part class MyPart implements MyInterface {
+    @override public void interfaceMethod() {
+      privateMethod(this); // compile error
+      MyInterface x = this; // ok
+      MyPart y = this; // compile error
+      Object z = this; // ok
+    }
+    
+    private MyPart privateMethod(MyPart a) {
+        return this; // compile error
+    }
+
+    private MyInterface otherMethod(MyPart a) {
+        return this; // ok
+    }
+```
+
+The same compiler logic that makes self-calls reach composites also rewrites `this` references as references to the composite.
+
+>Note: `Object` necessarily permits the usual Java instanceof and downcasting behavior. This is a general property of Java,
+> not specific to part classes.
+
+---
+
 # Interface encapsulation
 
 The `@internal` interface marks an interface in an implements clause or an interface method as internal to a composition graph.
@@ -472,19 +507,23 @@ indicates the overlap with Person.
 
 # Performance
 
-The challenging performance problem in compositional models is not delegation itself, but polymorphism within the composition
-graph. A part must be able to call its own methods while allowing that call to resolve to an implementation supplied by
-its composite. The conventional assumption has been that this requires additional dispatch machinery.
+The challenging problem with arbitrary composition is *partial delegation*: when a composite links only a subset of a component's
+delegation surface, leaving portions of the surface unclaimed and/or claimed by two or more composites. How does the component
+know where to dispatch self-calls?
 
-Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). Compositions wire
-the component associated with each linked interface, allowing a self-call to resolve directly to the composite's implementation
-per interface. The resulting dispatch is O(1), performance equivalent to a conventional virtual call.
+The conventional assumption has been that this requires additional dispatch machinery that either sacrifices performance,
+compromises arbitrary compositions, or some of both.
+
+Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). A component's delegation
+surface consists of interfaces, with composites wiring linked interfaces to components, allowing a self-call to resolve
+directly to the composite's implementation. The resulting dispatch is O(1): performance equivalent to a conventional virtual
+call.
 
 ---
 
 # IDE Support
 
-Delegation with links & parts is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
+*Parts* is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
 
 ---
 
