@@ -292,10 +292,11 @@ class Wizard implements Hero {
   public void attack() {out.println("Cast spell!");} // <--- must implement attack()
 }
 ```
----
 
 As with inheritance the compiler checks that the abstract Hero methods in BaseHero are implemented in Wizard or that Wizard
 is declared `abstract`.
+
+---
 
 # Inheritance
 
