@@ -29,7 +29,7 @@ public class VisibleMethodsTest extends TestCase
 
   // CharSequence has a synthetic method, which should be excluded from processing
   static class MyString implements CharSequence {
-    @link String string;
+    @link CharSequence string;
 
     public MyString(String string) {
       this.string = string;

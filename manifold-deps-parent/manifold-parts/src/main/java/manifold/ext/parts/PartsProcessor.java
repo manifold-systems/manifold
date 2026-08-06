@@ -73,8 +73,6 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
 
   private BasicJavacTask _javacTask;
   private Context _context;
-  private Stack<ClassInfo> _classInfoStack;
-  private Stack<JCClassDecl> _classDeclStack;
   private Map<Name, Map<Name, Integer>> _classToInterfaceToIndex;
 
   //todo: factor out the TaskEventTracker aspect into an abstract "BasicCompileComponent" class and factor out other common aspects
@@ -89,8 +87,6 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
   {
     _javacTask = javacTask;
     _context = _javacTask.getContext();
-    _classInfoStack = new Stack<>();
-    _classDeclStack = new Stack<>();
     _classToInterfaceToIndex = new HashMap<>();
     _taskEventTracker = new TaskEventTracker();
     _parents = new ParentMap( () -> getCompilationUnit() );
@@ -272,6 +268,8 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
   //
   private class Enter_Finish extends TreeTranslator
   {
+    private final Stack<ClassInfo> _classInfoStack = new Stack<>();
+
     @Override
     public void visitClassDef( JCClassDecl classDecl )
     {
@@ -1298,75 +1296,24 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
 
     private void addLinkedInterfaces( JCAnnotation linkAnno, ClassInfo ci, JCVariableDecl field )
     {
-      ArrayList<ClassType> interfaces = new ArrayList<>();
-      ArrayList<ClassType> shared = new ArrayList<>();
-      ArrayList<ClassType> fromAnno = new ArrayList<>();
-      getInterfacesFromLinkAnno( linkAnno, fromAnno, shared );
-      if( fromAnno.isEmpty() )
+      // derive interfaces from field's declared type
+
+      Type fieldType = field.sym.type;
+      ArrayList<ClassType> interfaces = new ArrayList<>( getCommonInterfaces( ci.getInterfaces(), fieldType, false, true ) );
+
+      if( !fieldType.isInterface() )
       {
-        // derive interfaces from field's declared type
-
-        Type fieldType = field.sym.type;
-        interfaces.addAll( getCommonInterfaces( ci.getInterfaces(), fieldType, false, true ) );
-
-        if( fieldType.isInterface() && ci.getInterfaces().stream().noneMatch( t -> getTypes().isSameType( t, fieldType ) ) )
-        {
-          // if the linked field's type is an interface, the delegating class must implement it
-          reportError( linkAnno, MSG_DELEGATING_CLASS_DOES_NOT_IMPLEMENT.get( ci._classDecl.name, fieldType, field.name ) );
-        }
-        else if( interfaces.isEmpty() )
-        {
-          // if the linked field's type is *not* an interface, the interfaces the type has in common with the delegating class must be non-empty
-          reportError( field.getType(), MSG_NO_INTERFACES.get( field.sym.type, ci._classDecl.sym.type ) );
-        }
-        else if( (fieldType.tsym.flags_field & ABSTRACT) == 0 ) // abstract classes and interfaces are preferred
-        {
-          ArrayList<ClassType> minimizedInterfaces = minimizeInterfaces( interfaces );
-          if( minimizedInterfaces.size() == 1 )
-          {
-            reportWarning( field.getType(), MSG_INTERFACE_LINK_FIELD_TYPE_EXPECTED_1.get(
-              field.sym.type.tsym.getSimpleName(), minimizedInterfaces.get( 0 ).tsym.getSimpleName(),
-              minimizedInterfaces.get( 0 ).tsym.getSimpleName() + ".class" ) );
-          }
-          else
-          {
-            reportWarning( field.getType(), MSG_INTERFACE_LINK_FIELD_TYPE_EXPECTED_N.get(
-              field.sym.type.tsym.getSimpleName(),
-              minimizedInterfaces.stream().map( t -> t.tsym.getSimpleName() + ".class" )
-                .collect( Collectors.joining( ", " ) ) ) );
-          }
-        }
+        reportError( linkAnno, MSG_INTERFACE_LINK_FIELD_TYPE_EXPECTED.get() );
       }
-      else
+      else if( ci.getInterfaces().stream().noneMatch( t -> getTypes().isSameType( t, fieldType ) ) )
       {
-        // derive interfaces from @link provided interfaces
-
-        for( int i = 0; i < fromAnno.size(); i++ )
-        {
-          ClassType iface = fromAnno.get( i );
-          Set<ClassType> commonInterfaces = getCommonInterfaces( ci.getInterfaces(), iface, true );
-          interfaces.addAll( commonInterfaces );
-
-          if( ci.getInterfaces().stream()
-            .map( t -> getTypes().erasure( t ) )
-            .noneMatch( t -> getTypes().isSameType( t, getTypes().erasure( iface ) ) ) )
-          {
-            // delegating class must implement all the interfaces specified in the link annotation
-            reportError( linkAnno.getArguments().get( i ), MSG_DELEGATING_CLASS_DOES_NOT_IMPLEMENT.get( ci._classDecl.name, iface.tsym.getSimpleName(), field.name ) );
-          }
-        }
-        checkFieldTypeSatisfiesAnnoTypes( field, interfaces );
+        // if the linked field's type is an interface, the delegating class must implement it
+        reportError( linkAnno, MSG_DELEGATING_CLASS_DOES_NOT_IMPLEMENT.get( ci._classDecl.name, fieldType, field.name ) );
       }
 
       removeDups( interfaces );
 
-      if( !shared.isEmpty() )
-      {
-        // shared links must be final
-        field.getModifiers().flags |= FINAL;
-      }
-
-      ci.getLinks().put( field, new LinkInfo( field, interfaces, shared ) );
+      ci.getLinks().put( field, new LinkInfo( field, interfaces, getSharedInterfacesFromLink( linkAnno ) ) );
     }
 
     ArrayList<ClassType> minimizeInterfaces( ArrayList<ClassType> list )
@@ -1393,20 +1340,6 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       }
 
       return new ArrayList<>( result );
-    }
-
-    private void checkFieldTypeSatisfiesAnnoTypes( JCVariableDecl field, ArrayList<ClassType> interfaces )
-    {
-      Types types = getTypes();
-      for( ClassType t: interfaces )
-      {
-        if( !types.isAssignable( field.sym.type, t ) )
-        {
-          JCTree typeTree = field.getType();
-          reportWarning( typeTree == null ? field : typeTree, MSG_FIELD_TYPE_NOT_ASSIGNABLE_TO.get(
-            field.sym.type.tsym.getQualifiedName(), t.tsym.getQualifiedName() ) );
-        }
-      }
     }
 
     private void linkInterfaces( LinkInfo li )
@@ -1534,12 +1467,14 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
     }
   }
 
-  private void getInterfacesFromLinkAnno( JCAnnotation linkAnno, ArrayList<ClassType> interfaces, ArrayList<ClassType> share )
+  private Set<ClassType> getSharedInterfacesFromLink( JCAnnotation linkAnno )
   {
+    Set<ClassType> share = new LinkedHashSet<>();
+
     List<JCExpression> args = linkAnno.getArguments();
     if( args.isEmpty() )
     {
-      return;
+      return share;
     }
 
     Attribute.Compound annoValues = linkAnno.attribute.getValue();
@@ -1552,34 +1487,31 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       {
         processClassType( share, value, args.get( i ) );
       }
-      else if( argSym.name.toString().equals( "value" ) )
-      {
-        processClassType( interfaces, value, args.get( i ) );
-      }
       else
       {
         throw new IllegalStateException();
       }
       i++;
     }
+    return share;
   }
 
-  private void processClassType( ArrayList<ClassType> share, Attribute value, JCExpression expr )
+  private void processClassType( Set<ClassType> share, Attribute value, JCExpression expr )
   {
     if( value instanceof Attribute.Class )
     {
-      processClassType( (Attribute.Class) value, share, expr );
+      processClassType( (Attribute.Class)value, share, expr );
     }
     if( value instanceof Attribute.Array )
     {
-      for( Attribute cls : ((Attribute.Array) value).values )
+      for( Attribute cls : ((Attribute.Array)value).values )
       {
         processClassType( (Attribute.Class)cls, share, expr );
       }
     }
   }
 
-  private void processClassType( Attribute.Class value, ArrayList<ClassType> interfaces, JCExpression location )
+  private void processClassType( Attribute.Class value, Set<ClassType> interfaces, JCExpression location )
   {
     ClassType classType = (ClassType)value.classType;
     if( classType.isInterface() )
@@ -1592,10 +1524,6 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
     }
   }
 
-  private Set<ClassType> getCommonInterfaces( ArrayList<ClassType> ci, Type fieldType, boolean erasure )
-  {
-    return getCommonInterfaces( ci, fieldType, erasure, false );
-  }
   private Set<ClassType> getCommonInterfaces( ArrayList<ClassType> ci, Type fieldType, boolean erasure, boolean excludeInternal  )
   {
     ArrayList<ClassType> linkFieldInterfaces = new ArrayList<>();
@@ -1720,6 +1648,8 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
   //
   private class Analyze_Finish extends TreeTranslator
   {
+    private final Stack<JCClassDecl> _classDeclStack = new Stack<>();
+
     @Override
     public void visitClassDef( JCClassDecl tree )
     {
@@ -1746,6 +1676,10 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       {
         replaceThis_Explicit( tree );
       }
+      else
+      {
+        prohibitLinkFieldUse( tree );
+      }
     }
 
     @Override
@@ -1756,6 +1690,58 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       if( tree.toString().endsWith( ".this" ) )
       {
         replaceThis_Explicit( tree );
+      }
+      else
+      {
+        prohibitLinkFieldUse( tree );
+      }
+    }
+
+    private void prohibitLinkFieldUse( JCExpression tree )
+    {
+      JCClassDecl classDecl = _classDeclStack.peek();
+      if( !isInPartClass( classDecl.sym ) ||
+          tree.pos == classDecl.pos ||  // classDecl.pos means tree is generated
+          notInInstanceMethod( tree ) ) // probably in a constructor, which is where fields may be assigned
+      {
+        return;
+      }
+
+      Symbol linkFieldRef = getLinkFieldRef( tree );
+      if( linkFieldRef != null )
+      {
+        JCVariableDecl linkField = getField( classDecl, linkFieldRef );
+        if( linkField == null || tree.pos == linkField.pos ) // linkField.pos means tree is generated
+        {
+          // not a link field ref, or is generated
+          return;
+        }
+
+        Tree parent = getParent( tree );
+        while( !(parent instanceof JCMethodInvocation) )
+        {
+          parent = getParent( parent );
+          if( parent == null )
+          {
+            break;
+          }
+        }
+
+        if( parent != null )
+        {
+          JCMethodInvocation m = (JCMethodInvocation)parent;
+          JCExpression methodSelect = m.getMethodSelect();
+          for( parent = tree; parent != null; parent = getParent( parent ) )
+          {
+            if( parent == methodSelect )
+            {
+              // interface method call is ok (analog to super.methodCall())
+              return;
+            }
+          }
+        }
+
+        reportError( tree, MSG_PART_LINKFIELD_USE.get( tree.toString() ) );
       }
     }
 
@@ -1784,7 +1770,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           JCClassDecl classDecl = findClassDecl( tree.type );
           result = getSelf( tree, classDecl, assignment.type );
         }
-        else
+        else if( !getTypes().isSameType( assignment.type, getSymtab().objectType ) )
         {
           reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
@@ -1798,7 +1784,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           JCClassDecl classDecl = findClassDecl( tree.type );
           result = getSelf( tree, classDecl, varDecl.getType().type );
         }
-        else
+        else if( !getTypes().isSameType( varDecl.getType().type, getSymtab().objectType ))
         {
           reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
@@ -1818,7 +1804,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           JCClassDecl classDecl = findClassDecl( tree.type );
           result = getSelf( tree, classDecl, ternary.type );
         }
-        else
+        else if( !getTypes().isSameType( ternary.type, getSymtab().objectType ) )
         {
           reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
@@ -1838,7 +1824,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           JCClassDecl classDecl = findClassDecl( tree.type );
           result = getSelf( tree, classDecl, cast.type );
         }
-        else
+        else if( !getTypes().isSameType( cast.type, getSymtab().objectType ) )
         {
           reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
@@ -2347,8 +2333,6 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       // with method call expr
       //   field = (<field-ref-expr-type>)$PartClass.Internal.linkPart( this, linkScope, "field-name", <value-expr> )
 
-      checkAbstract( linkField, rhs );
-
       Symbol.ClassSymbol internalMethodsClassSym = getRtClassSym( $PartClass.Internal.class );
 
       Names names = getNames();
@@ -2381,15 +2365,6 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       //noinspection UnnecessaryLocalVariable
       JCTypeCast castExpr = make.TypeCast( linkField.type, assignPartCall );
       return castExpr;
-    }
-
-    private void checkAbstract( Symbol linkField, JCExpression rhs )
-    {
-      if( (rhs.type.tsym.flags_field & ABSTRACT) != 0 && !rhs.type.isInterface() &&
-          !getTypes().isSameType( getTypes().erasure( rhs.type ), getTypes().erasure( linkField.type ) ) )
-      {
-        reportError( rhs, MSG_LINK_TYPE_MUST_MATCH_ABSTRACT_PART_TYPE.get( linkField.type.tsym.getQualifiedName(), rhs.type.tsym.getQualifiedName() ) );
-      }
     }
 
     private void verifyLinkedDelegatedInterfacesAgainstDelegateType( ArrayList<ClassType> interfaces, JCExpression rhs )
@@ -2437,31 +2412,11 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       }
 
       ArrayList<ClassType> interfaces = new ArrayList<>();
-      ArrayList<ClassType> shared = new ArrayList<>();
-      ArrayList<ClassType> fromAnno = new ArrayList<>();
-      getInterfacesFromLinkAnno( linkAnno, fromAnno, shared );
       ArrayList<ClassType> enclClassInterfaces = new ArrayList<>();
       findAllInterfaces( classDecl.sym.type, new HashSet<>(), enclClassInterfaces );
-      if( fromAnno.isEmpty() )
-      {
-        // derive interfaces from field's declared type
 
-        interfaces.addAll( getCommonInterfaces( enclClassInterfaces, linkFieldSym.type, false, true ) );
-      }
-      else
-      {
-        // derive interfaces from @link provided interfaces
-
-        for( ClassType iface : fromAnno )
-        {
-          Set<ClassType> commonInterfaces = getCommonInterfaces( enclClassInterfaces, iface, true );
-          interfaces.addAll( commonInterfaces );
-          if( commonInterfaces.isEmpty() )
-          {
-            reportError( linkAnno, MSG_NO_INTERFACES.get( iface, classDecl.sym.type ) );
-          }
-        }
-      }
+      // derive interfaces from field's declared type
+      interfaces.addAll( getCommonInterfaces( enclClassInterfaces, linkFieldSym.type, false, true ) );
 
       removeDups( interfaces );
 
@@ -2516,6 +2471,20 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       }
       return null;
     }
+
+    private boolean notInInstanceMethod( Tree tree )
+    {
+      Tree parent = getParent( tree );
+      if( parent == null )
+      {
+        return true;
+      }
+      if( parent instanceof JCMethodDecl )
+      {
+        return ((JCMethodDecl)parent).sym.isStatic() || ((JCMethodDecl)parent).sym.isConstructor();
+      }
+      return notInInstanceMethod( parent );
+    }
   }
 
   /**
@@ -2558,6 +2527,14 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
     Attr.instance( getContext() ).attribExpr( hasSelf, classEnv );
 
     return hasSelf;
+  }
+
+  private JCVariableDecl getField( JCClassDecl classDecl, Symbol sym )
+  {
+    return (JCVariableDecl)classDecl.defs.stream()
+      .filter( def -> def instanceof JCVariableDecl && ((JCVariableDecl)def).sym == sym )
+      .findFirst()
+      .orElse( null );
   }
 
   private void findAllInterfaces( Type type, Set<Type> seen, ArrayList<ClassType> result )
@@ -2883,9 +2860,9 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
     private final ArrayList<JCMethodDecl> _generatedMethods;
     private final Map<Name, Set<NamedMethodType>> _methodTypes;
     private final ArrayList<ClassType> _interfaces;
-    private final ArrayList<ClassType> _shared;
+    private final Set<ClassType> _shared;
 
-    LinkInfo( JCVariableDecl linkField, ArrayList<ClassType> linkedInterfaces, ArrayList<ClassType> shared )
+    LinkInfo( JCVariableDecl linkField, ArrayList<ClassType> linkedInterfaces, Set<ClassType> shared )
     {
       _linkField = linkField;
       _generatedMethods = new ArrayList<>();
@@ -2925,7 +2902,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       {
         throw new IllegalStateException();
       }
-      
+
       Set<NamedMethodType> methodTypes = _methodTypes.computeIfAbsent( m.name, k -> new HashSet<>() );
       methodTypes.add( new NamedMethodType( m, mt ) );
     }

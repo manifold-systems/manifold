@@ -167,7 +167,8 @@ public class DagTopologyTest extends TestCase
 
   static @part class OuterPart implements Shape, Colored
   {
-    @link InnerPart inner = new InnerPart();
+    @link Shape shape = new InnerPart();
+    @link Colored colored = (Colored)shape;
 
     @Override
     public String color() { return "blue"; } // OuterPart overrides color
@@ -175,7 +176,7 @@ public class DagTopologyTest extends TestCase
 
   static class PartialRoot implements Shape, Colored
   {
-    @link(Shape.class) OuterPart outer = new OuterPart(); // only delegates Shape, not Colored
+    @link Shape outer = new OuterPart(); // only delegates Shape, not Colored
 
     @Override
     public String color() { return "red"; } // Root provides Colored directly

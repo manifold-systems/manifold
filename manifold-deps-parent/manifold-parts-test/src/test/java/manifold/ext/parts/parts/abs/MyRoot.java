@@ -4,7 +4,7 @@ import manifold.ext.parts.rt.api.link;
 
 public class MyRoot implements Foo<String>
 {
-  @link AbstractFooPart<String> foo = AbstractFooPart.<String>asLink();
+  @link Foo<String> foo = AbstractFooPart.asLink();
 
   @Override
   public String bar( String p )

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 public class GenAnonTest extends TestCase
 {
     static class MyString implements CharSequence {
-        @link String string;
+        @link CharSequence string;
 
         public MyString(String string) {
             this.string = string;
@@ -65,7 +65,7 @@ public class GenAnonTest extends TestCase
     static @part class BB extends AA {
     }
     static @part class MyAB implements A {
-        @link AA aa = new BB();
+        @link A aa = new BB();
 
         @Override
         public String b(String b) {

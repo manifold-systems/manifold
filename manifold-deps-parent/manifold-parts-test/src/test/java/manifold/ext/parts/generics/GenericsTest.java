@@ -146,9 +146,4 @@ public class GenericsTest extends TestCase
       return "TA";
     }
   }
-
-  static @part class TeacherPart_ifaceFromAnno<L> implements Teacher<L> {
-    @link({Teacher.class}) Teacher<L> _student;
-    public String getTitle() { return "TA"; }
-  }
 }

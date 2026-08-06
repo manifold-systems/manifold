@@ -71,7 +71,8 @@ public class StandalonePartTest extends TestCase
 
   static class ComposedProcessor implements Processor, Formatter
   {
-    @link ProcessorPart pp = new ProcessorPart();
+    @link Processor pp = new ProcessorPart();
+    @link Formatter ff = (Formatter)pp;
 
     @Override
     public String format( String s ) { return "{" + s + "}"; } // overrides format

@@ -56,7 +56,7 @@ public class MiscGenericTest extends TestCase
   }
   static class MyList2<E> implements List<E>
   {
-    @link ArrayList<E> l = new ArrayList<>();
+    @link List<E> l = new ArrayList<>();
     int times = 0;
 
     @Override

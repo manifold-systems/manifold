@@ -4,7 +4,7 @@ import manifold.ext.parts.rt.api.link;
 
 public class MyGenericRoot<R extends CharSequence> implements Foo<R>
 {
-  @link AbstractFooPart<R> foo = AbstractFooPart.<R>asLink();
+  @link Foo<R> foo = AbstractFooPart.asLink();
 
   @Override
   public R bar( R r )

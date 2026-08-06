@@ -48,12 +48,6 @@ import java.lang.annotation.Target;
 public @interface link
 {
   /**
-   * Specify interfaces to link. This value overrides the declared type of the field. If no interfaces are specified (default),
-   * the linked interfaces are derived from the field's declared type.
-   */
-  Class<?>[] value() default {};
-
-  /**
    * Where interface overlap exists with other links, this list of interfaces resolves which links to use. Otherwise,
    * overlapping interfaces are not linked and the class must implement them directly, or it must be declared abstract.
    * If two or more links declare to share the same interface, a compiler error results.

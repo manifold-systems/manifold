@@ -31,7 +31,8 @@ public class MultiRootedTest extends TestCase
     public String cc() {return "MyBC.cc";}
   }
   static @part class MyAB implements A, B, C {
-    @link MyBC myBC = new MyBC();
+    @link B myB = new MyBC();
+    @link C myC = (C)myB;
 
     public String a() {return c();}
 
@@ -39,7 +40,8 @@ public class MultiRootedTest extends TestCase
     public String b() {return "MyAB.b";}
   }
   static class Root implements A, B, C {
-    @link({A.class, B.class}) MyAB myAB = new MyAB();
+    @link A myA = new MyAB();
+    @link B myB = (B)myA;
 
     @Override
     public String b() {return "Root.b";}

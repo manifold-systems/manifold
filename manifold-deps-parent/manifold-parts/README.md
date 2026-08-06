@@ -25,7 +25,7 @@ classes from independent, runtime-configured objects. Use it in place of inherit
 * `@part` provides [**interface-scoped dispatch**](https://doi.org/10.5281/zenodo.21514973): self-calls from a part can reach overrides in the composite
 * Each part is a plain object **supplied at construction**, so composition is configured at runtime
 * `@link` implements an interface through a field, providing automatic forwarding
-* Parts preserves internal polymorphism with **vtable-equivalent performance** (see [5.1 Dispatch Performance](https://doi.org/10.5281/zenodo.21514973))
+* Parts preserves internal polymorphism with **vtable-equivalent performance** (see [Performance](#performance))
 
 
 ```java
@@ -214,29 +214,20 @@ BaseHero's `@part` annotation extends Java's dynamic dispatch across the Wizard 
 
 Use `@link` to implement one or more interfaces through a field.
 
-The interfaces used in a link are the intersection of the type of the linked field and the interfaces of the enclosing class.
-
-If the field's type is an interface, the intersection of that interface and the interfaces of the enclosing class define
-the link.
+A link must be typed as an interface implemented by the declaring class. This interface defines the link.
 ```java
-public class MyClass implements A, B {
-  @link A foo; // links A to foo
-  . . .
+
+public class MyClass implements A {
+  @link A a; // links MyClass's A to a
+  
+  MyClass(A a) {
+    this.a = a;
+  }
+  
+  // A's implementation automatically forwards to `a`
 }
 ```
-If the field's type is a class, the intersection of the interfaces of the class and the interfaces of the enclosing class
-define the link.
-```java
-public class Sample implements A, B {. . .}
-
-@link Sample foo; // links A and B to foo
-```
-If interfaces are specified in `@link`, the intersection of those interfaces and the interfaces of the enclosing class define
-the link.
-```java
-  @link(A.class) Sample foo; // links just A to foo
-```
-Note, `@link` fields are `private` and `final` by default.
+Links are `private` and `final` by default.
 
 Unimplemented interface calls forward through the link to the value of the field. If the field's value is a `@part` class,
 internal polymorphism is preserved.
@@ -279,22 +270,21 @@ interface Hero {
   void attack();
 }
 
-@part abstract class BaseHero implements Hero {
+@part abstract class AbstractHero implements Hero {
   public void takeAction() {
     attack();  
   }
-  // attack() is abstract
+  // attack() is not implemented
 }
 
 class Wizard implements Hero {
-  @link BaseHero base = BaseHero.asLink(); // <--- use abstract parts via asLink()
+  @link Hero base = AbstractHero.asLink(); // <--- use abstract parts via asLink()
 
-  public void attack() {out.println("Cast spell!");} // <--- must implement attack()
+  public void attack() {out.println("Cast spell!");} // <--- must implement BaseHero's abstract methods
 }
 ```
 
-As with inheritance the compiler checks that the abstract Hero methods in BaseHero are implemented in Wizard or that Wizard
-is declared `abstract`.
+Wizard must implement abstract methods in AbstractHero or declare itself `abstract`.
 
 ---
 
@@ -335,34 +325,42 @@ Output:
 
 # Self-preservation
 
-Composition integrity rests on dispatch identity: if a part exposes itself as its concrete type, calls through that reference
+Composition integrity rests on dispatch identity: if a part exposes itself as its concrete type, a reference to that type
 can bypass the composite and compromise integrity. To prevent this, a part may use `this` only as one of its implemented
 interfaces or as `Object`.
 
-The compile error is: `Part class 'this' must be used as an interface here`.
+The compile error is: `'this' in a part class must be used as an interface here`.
 
 ```java
-@part class MyPart implements MyInterface {
-    @override public void interfaceMethod() {
-      privateMethod(this); // compile error
-      MyInterface x = this; // ok
-      MyPart y = this; // compile error
-      Object z = this; // ok
-    }
-    
-    private MyPart privateMethod(MyPart a) {
-        return this; // compile error
-    }
+@part
+class MyPart implements MyInterface {
+  @override
+  public void interfaceMethod() {
+    MyInterface x = this; // ok
+    MyPart y = this; // compile error
+    Object z = this; // ok
+    myMethod(this); // compile error
+    out.println(this); // ok, prints MyPart
+    out.println((MyInterface)this); // ok, prints MyInterface composite
+  }
 
-    private MyInterface otherMethod(MyPart a) {
-        return this; // ok
-    }
+  private MyPart myMethod(MyPart a) {
+    return this; // compile error
+  }
+
+  private MyInterface otherMethod(MyPart a) {
+    return this; // ok
+  }
+}
 ```
 
-The same compiler logic that makes self-calls reach composites also rewrites `this` references as references to the composite.
+The same compiler logic that makes self-calls reach the composite also rewrites `this` references as references to the composite
+when they are used through an interface.
 
->Note: `Object` necessarily permits the usual Java instanceof and downcasting behavior. This is a general property of Java,
-> not specific to part classes.
+**A word about identity:**<br>
+Unlike a superclass or a trait, a part is an independent object with its own identity. `this` as `Object` therefore
+refers directly to the part, scoped as `Object`. But a part also has *dispatch* identity: `this` as an interface refers
+to the composite that claims the interface, or the part itself if the interface is unclaimed in the composition graph.
 
 ---
 
@@ -518,7 +516,7 @@ compromises arbitrary compositions, or some of both.
 Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). A component's delegation
 surface consists of interfaces, with composites wiring linked interfaces to components, allowing a self-call to resolve
 directly to the composite's implementation. The resulting dispatch is O(1): performance equivalent to a conventional virtual
-call.
+call (see [5.1 Dispatch Performance](https://doi.org/10.5281/zenodo.21514973)).
 
 ---
 
