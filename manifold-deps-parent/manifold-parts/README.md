@@ -366,8 +366,8 @@ to the composite that claims the interface, or the part itself if the interface 
 
 # Interface encapsulation
 
-The `@internal` interface marks an interface in an implements clause or an interface method as internal to a composition graph.
-`@internal` is the `protected` modifier analog for the world of composition. It provides the same encapsulation benefits as `protected`
+`@internal` marks an interface in an implements clause or an interface method as internal to a composition graph. `@internal`
+is the `protected` modifier analog for the world of composition. It provides the same encapsulation benefits as `protected`
 but without the legacy "leakiness" of `package-private` access.
 
 ### Usage on interface types (`implements` clause)
