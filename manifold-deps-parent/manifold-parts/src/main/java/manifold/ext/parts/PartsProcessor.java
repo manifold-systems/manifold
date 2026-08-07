@@ -1950,7 +1950,13 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       {
         return;
       }
-      
+
+      JCMethodDecl enclosingMethod = getEnclosingMethod( tree );
+      if( enclosingMethod != null && enclosingMethod.getName().contentEquals( LINK_PART_TO_SELF ) )
+      {
+        return; // ignore recursive call in generated $linkPartToSelf
+      }
+
       if( tree.meth instanceof JCFieldAccess )
       {
         if( fa.selected instanceof JCIdent && ((JCIdent)fa.selected).name.toString().equals( "this" ) ||
@@ -2017,7 +2023,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
 
     private boolean hasInternalAnnotation( MethodSymbol m )
     {
-      for( Attribute.Compound attr : m.getRawTypeAttributes() )
+      for( Attribute.Compound attr : m.getRawAttributes() )
       {
         if( attr.type.tsym.getQualifiedName().contentEquals( internal.class.getTypeName() ) )
         {
@@ -2788,6 +2794,20 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
   {
     Attribute.Compound partAnno = getAnnotationMirror( sym, part.class );
     return partAnno != null;
+  }
+
+  private JCMethodDecl getEnclosingMethod( Tree tree )
+  {
+    Tree parent = getParent( tree );
+    if( parent == null )
+    {
+      return null;
+    }
+    if( parent instanceof JCMethodDecl )
+    {
+      return (JCMethodDecl)parent;
+    }
+    return getEnclosingMethod( parent );
   }
 
   private static boolean isInPartClass( Symbol sym )
