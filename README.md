@@ -8,66 +8,48 @@
 
 ---
 
-## What is Manifold?
-Manifold is a Java compiler plugin. Use it to supplement your Java projects with highly productive features.
+# Manifold
 
-Advanced compile-time <b>metaprogramming</b> type-safely integrates any kind of data, metadata, or DSL directly into Java.
-* [SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md) _**(New!)**_
-* [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
-* [JSON & JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
-  [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
-  [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)
-* [CSV](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)
-* [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
-* etc.
+**Manifold extends Java at compile time.**
 
+It adds language features and type-safe access to external data, APIs, and DSLs *directly* to Java, without leaving the
+Java compiler and without additional build steps.
 
-Powerful **language enhancements** improve developer productivity.
-* [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
-* [_True_ delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
-* [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
-* [Optional parameters](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params) _**(New!)**_
-* [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
-* [Operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
-* [Unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
-* [A *Java* template engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
-* [A preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
-* ...and more
+```java
+// Type-safe SQL, written directly in Java
+Language english =
+    "[.sql/] select * from Language where name = 'English'".fetchOne();
+```
+Or add behavior to existing Java types:
+```java
+"hello".myStringMethod();
+```
+Or use [_Parts_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) to compose independent objects with true polymorphic composition:
+```java
+@part class BaseHero implements Hero {
+  void takeAction() {
+    attack();  // dynamically dispatches through the composite
+  }
+}
+```
 
-Each feature is available as a separate dependency. Simply add the Manifold dependencies of your choosing to your existing project and begin taking advantage of them.
+Manifold is a **javac compiler plugin**. Add only the features you want to an existing Java project and keep using ordinary
+Java, Java libraries, and the JVM.
 
-All fully supported in JDK LTS releases 8 - 25 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
+Works with JDK LTS releases 8 - 25 + latest, plus comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
+             
+---
 
-># _**What's New...**_
-> 
->[<img width="40%" align="top" src="./docs/images/manifoldsql.png">](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
->
->### [Type-safe SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
-> Manifold SQL lets you write native SQL _directly_ and _type-safely_ in your Java code.
->- Query types are instantly available as you type native SQL of any complexity in your Java code
->- Schema types are automatically derived from your database, providing type-safe CRUD, decoupled TX, and more
->- No ORM, No DSL, No wiring, and No code generation build steps
-> <br><br>
-> [![img_3.png](./docs/images/img_3.png)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
-                       
-## Who is using Manifold?
+# What can you do with Manifold?
 
-Sampling of companies using Manifold:
-
-<img width="80%" src="./docs/images/companies.png">
-
-## What can you do with Manifold?
-
-### [Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
+## Compile-time [meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
 Use the framework to gain direct, type-safe access to *any* type of resource, such as
 [**SQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql),
 [**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
 [**GraphQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [**XML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml),
 [**YAML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
-[**CSV**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv), and even
-other languages such as [**JavaScript**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js).
-Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
+[**CSV**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv), and even other languages such as [**JavaScript**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
 
 [**SQL:**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql) 
 Use _native_ SQL of any complexity _directly_ and _type-safely_ from Java.
@@ -81,7 +63,18 @@ Film film = Film.builder("My Movie", english)
 MyDatabase.commit();
 ```
 
-[**GraphQL:**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql) 
+[**JSON:**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json) 
+Use .json schema files directly and type-safely, no code gen steps! Find usages of .json properties in your Java code.
+```java
+// From User.json
+User user = User.builder("myid", "mypassword", "Scott")
+  .withGender(male)
+  .withDob(LocalDate.of(1987, 6, 15))
+  .build();
+User.request("http://api.example.com/users").postOne(user);
+```
+
+[**GraphQL:**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
 Use types defined in .graphql files *directly*, no code gen steps! Make GraphQL changes and immediately use them with code completion.
 ```java
 var query = MovieQuery.builder(Action).build();
@@ -95,40 +88,71 @@ for (var movie : actionMovies) {
 }
 ```
 
-[**JSON:**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json) 
-Use .json schema files directly and type-safely, no code gen steps! Find usages of .json properties in your Java code.
-```java
-// From User.json
-User user = User.builder("myid", "mypassword", "Scott")
-  .withGender(male)
-  .withDob(LocalDate.of(1987, 6, 15))
-  .build();
-User.request("http://api.example.com/users").postOne(user);
-```
+---
 
-### [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+## [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 Add your own methods to existing Java classes, even *String*, *List*, and *File*. Eliminate boilerplate code.
 [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/ExtensionMethod.mp4)
 ```java
 String greeting = "hello";
 greeting.myMethod(); // Add your own methods to String!
 ```
+Or, **intercept** existing methods.
+```java
+// Intercepts Search.find() to insert a caching layer
+result = search.find(); // returns cached results
+``` 
 
-### [manifold-parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
-Favor composition over inheritance. Use `@link` and `@part` for automatic interface implementation forwarding and _true_ delegation.
-> ```java
-> class MyClass implements MyInterface {
->   @link MyInterface myInterface; // transfers calls on MyInterface to myInterface
->
->   public MyClass(MyInterface myInterface) {
->     this.myInterface = myInterface; // dynamically configure behavior
->   }
->
->   // No need to implement MyInterface here, but you can override myInterface as needed
-> }
-> ```
+---
 
-### [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
+Parts resolves a longstanding tension in object composition: **independent runtime components** and **internal polymorphism**
+have traditionally required separate object-oriented models.
+
+|                                      | Independent components | Internal polymorphism |
+|:-------------------------------------| :--------------------: | :-------------------: |
+| Implementation inheritance           |            —           |           ✓           |
+| Trait/mixin composition (flattening) |            —           |           ✓           |
+| Object composition (forwarding)      |            ✓           |           —           |
+| ***Parts***                          |          **✓**         |         **✓**         |
+
+Parts provides both without collapsing the components into a single object or reducing composition to ordinary forwarding.
+
+```java
+interface Hero {
+  void takeAction();
+  void attack();
+}
+
+@part class BaseHero implements Hero {
+  public void takeAction() {
+    attack();  // self-call is dynamically dispatched through the composite
+  }
+
+  public void attack() {out.println("Swing club!");}
+}
+
+class Wizard implements Hero {
+  @link Hero base;  // dynamically links an independent Hero object
+  Wizard(Hero base) {this.base = base;}
+  public void attack() {out.println("Cast spell!");}
+}
+
+// independent Hero supplied at runtime (factory, DI, etc.)
+Wizard wiz = new Wizard(createHero()); 
+wiz.takeAction();
+```
+`BaseHero.takeAction()` calls `attack()` on itself (a self-call). Because `BaseHero` is a linked part of the `Wizard` composite,
+the self-call dispatches to `Wizard.attack()`, so the output is:
+```
+Cast spell!
+```
+With ordinary object composition, `BaseHero`'s own `attack()` implementation `Swing club!` would result instead. This internal
+polymorphism across a runtime-injected part is the fundamental capability that Parts adds.
+
+---
+
+## [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 Eliminate boilerplate getter/setter code, improve your overall dev experience with properties.
 ```java
 public interface Book {
@@ -151,7 +175,9 @@ to this:
 result.movie.leadingRole.actor.likes.count++;
 ``` 
 
-### [Optional parameters & named arguments](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params)
+---
+
+## [Optional parameters & named arguments](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params)
 Use optional parameters and named arguments with any Java project to add clarity and flexibility to call sites
 and as a refreshing alternative to method overloads and builders.
 ```java
@@ -165,7 +191,9 @@ valueOf(array, count:20) // use default for offset by naming count
 ```
 Binary compatible with methods, constructors, and records.
 
-### [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+---
+
+## [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 Implement *operator* methods on any type to directly support arithmetic, relational, index, and unit operators.
 ```java
 // BigDecimal expressions
@@ -177,7 +205,9 @@ if (bigDec1 > bigDec2) {
 MyType value = myType1 + myType2;
 ```  
 
-### [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
+---
+
+## [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
 Tuple expressions provide concise syntax to group named data items in a lightweight structure.
 ```java
 var t = (name: "Bob", age: "35");
@@ -187,45 +217,26 @@ var t = (person.name, person.age);
 System.out.println("Name: " + t.name + " Age: " + t.age);
 ```
 You can also use tuples with new [`auto` type inference](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto) to enable multiple return values from a method.
-### [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+
+---
+
+## [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
 Unit or *binding* operations are unique to the Manifold framework. They provide a powerfully concise syntax and can be
 applied to a wide range of applications.
+
+Use units with the [science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science) framework to type-safely incorporate SI units and precise measurements into your applications.
 ```java
 import static manifold.science.util.UnitConstants.*; // kg, m, s, ft, etc
 ...
 Length distance = 100 mph * 3 hr;
 Force f = 5.2 kg m/s/s; // same as 5.2 N
 Mass infant = 9 lb + 8.71 oz;
-```  
-
-### [Ranges](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
-Easily work with the *Range* API using [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions).
-Simply import the *RangeFun* constants to create ranges.
-```java
-// imports the `to`, `step`, and other "binding" constants
-import static manifold.collections.api.range.RangeFun.*;
-...
-for (int i: 1 to 5) {
-  out.println(i);
-}
-
-for (Mass m: 0kg to 10kg step 22r unit g) {
-  out.println(m);
-}
-```
-
-### [Science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
-Use the [manifold-science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
-framework to type-safely incorporate units and precise measurements into your applications.
-```java
-import static manifold.science.util.UnitConstants.*; // kg, m, s, ft, etc.
-...
-Velocity rate = 65mph;
 Time time = 1min + 3.7sec;
-Length distance = rate * time;
 ```  
 
-### [Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+---
+
+## [Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 Use familiar directives such as **#define** and **#if** to conditionally compile your Java projects. The preprocessor offers
 a simple and convenient way to support multiple build targets with a single codebase. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/preprocessor.mp4)
 ```java
@@ -238,8 +249,11 @@ a simple and convenient way to support multiple build targets with a single code
 #endif
 ```   
 
-### [Structural Typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
-Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/structural%20typing.mp4)
+---
+
+## [Structural Typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
+Unify disparate APIs. Bridge software components you do not control. Use structural typing to access objects (and maps)
+using type-safe interfaces. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/structural%20typing.mp4)
 ```java
 Map<String, Object> map = new HashMap<>();
 MyThingInterface thing = (MyThingInterface) map; // O_o
@@ -247,8 +261,10 @@ thing.setFoo(new Foo());
 Foo foo = thing.getFoo();
 out.println(thing.getClass()); // prints "java.util.HashMap"
 ```
- 
-### [Type-safe Reflection](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-safe-reflection-via-jailbreak)
+
+---
+
+## [Type-safe Reflection](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-safe-reflection-via-jailbreak)
 Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnerability of Java reflection. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/jailbreak.mp4) 
 ```java
 @Jailbreak Foo foo = new Foo();
@@ -257,7 +273,9 @@ foo.privateMethod(x, y, z);
 foo.privateField = value;
 ```
 
-### [Checked Exception Handling](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
+---
+
+## [Checked Exception Handling](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
 You now have an option to make checked exceptions behave like unchecked exceptions!  No more unintended exception
 swallowing. No more *try*/*catch*/*wrap*/*rethrow* boilerplate!
 ```java
@@ -267,7 +285,9 @@ List<URL> urls = strings.stream()
   .collect(Collectors.toList());
 ```
 
-### [String Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings)
+---
+
+## [String Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings)
 Inline variables and expressions in String literals, no more clunky string concat! [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/string_interpolation.mp4)
 ```java
 int hour = 15;
@@ -276,8 +296,10 @@ String result = "The hour is $hour"; // Yes!!!
 // Use expressions with '${}'
 result = "It is ${hour > 12 ? hour-12 : hour} o'clock";
 ``` 
-       
-### [A *Java* Template Engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
+
+---
+
+## [A *Java* Template Engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 Author template files with the full expressive power of Java, use your templates directly in your code as types.
 Supports type-safe inclusion of other templates, shared layouts, and more. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/mantl.mp4)
 ```java
@@ -301,17 +323,28 @@ A template file *abc/example/UserSample.html.mtl*
 </html>
 ```
 
-## [IDE Support](https://github.com/manifold-systems/manifold)
-Use the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to fully leverage
-Manifold with **IntelliJ IDEA** and **Android Studio**. The plugin provides comprehensive support for Manifold including code
-completion, navigation, usage searching, refactoring, incremental compilation, hotswap debugging, full-featured
-template editing, integrated preprocessor, and more.
+---
+
+# Who is using Manifold?
+
+Sampling of companies using Manifold:
+
+<img width="80%" src="./docs/images/companies.png">
+
+---
+
+# [IDE Support](https://github.com/manifold-systems/manifold)
+Use the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to fully leverage Manifold with **IntelliJ IDEA** and **Android Studio**. The plugin provides
+comprehensive support for Manifold including code completion, navigation, usage searching, refactoring, incremental compilation,
+hotswap debugging, full-featured template editing, integrated preprocessor, and more.
 
 <p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="manifold ij plugin" width="60%"/></p>
 
 [Get the plugin from JetBrains Marketplace](https://plugins.jetbrains.com/plugin/10057-manifold)
 
-## [Projects](https://github.com/manifold-systems/manifold)
+---
+
+# [Projects](https://github.com/manifold-systems/manifold)
 The Manifold project consists of the core Manifold framework and a collection of sub-projects implementing SPIs provided
 by the core framework. Each project consists of one or more **dependencies** you can easily add to your project:
 
@@ -319,7 +352,7 @@ by the core framework. Each project consists of one or more **dependencies** you
 
 [Manifold : _Extensions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
 
-[Manifold : _Delegation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)<br>
+[Manifold : _Parts_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)<br>
 
 [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)<br>
 
@@ -360,7 +393,9 @@ by the core framework. Each project consists of one or more **dependencies** you
 >* [Manifold : _Gradle Example Project_](https://github.com/manifold-systems/manifold-simple-gradle-project)
 >* [Manifold : _Sample Kotlin App_](https://github.com/manifold-systems/manifold-sample-kotlin-app)
 
-## Platforms
+---
+
+# Platforms
 
 Manifold supports:
 * Java SE (8 - 26)
@@ -369,7 +404,9 @@ Manifold supports:
 
 Comprehensive IDE support is also available for IntelliJ IDEA and Android Studio.
 
-## [Chat](https://discord.gg/9x2pCPAASn)
+---
+
+# [Chat](https://discord.gg/9x2pCPAASn)
 Join our [Discord server](https://discord.gg/9x2pCPAASn) to start
 a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
 

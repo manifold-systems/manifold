@@ -19,13 +19,13 @@ implementations and behavior to be configured at runtime. But composition sacrif
 
 Combining these two features in arbitrary compositions has remained an open problem in OO models for decades.
 
-*Parts* delivers both: ***the flexibility of runtime composition and the polymorphism of inheritance***. It lets you assemble
-classes from independent, runtime-configured objects. Use it in place of inheritance, or alongside it.
+*Parts* delivers both: ***the flexibility of runtime composition and the polymorphism of inheritance***. It lets you compose
+independent objects into a runtime-configured composite. Use it in place of inheritance, or alongside it.
 
-* `@part` provides [**interface-scoped dispatch**](https://doi.org/10.5281/zenodo.21514973): self-calls from a part can reach overrides in the composite
-* Each part is a plain object **supplied at construction**, so composition is configured at runtime
-* `@link` implements an interface through a field, providing automatic forwarding
-* Parts preserves internal polymorphism with **vtable-equivalent performance** (see [Performance](#performance))
+- `@part` provides [**interface-scoped dispatch**](https://doi.org/10.5281/zenodo.21514973): self-calls from a part dispatch to overrides in the composite
+- Parts are **independent objects supplied at construction**, making composition fully runtime-configurable
+- `@link` connects objects to a composite, **automatically implementing interfaces through forwarding**
+- Parts preserves **polymorphism at vtable-equivalent performance**, (see [Performance](#performance))
 
 
 ```java

@@ -81,7 +81,7 @@ designates a "rich" language? Anyhow, they appear to be leaning on records now a
 Although the tone might suggest it, the purpose of this post is not to disparage the Java language. On the contrary, it is more
 to light a fire under it. I use Java daily, it's still my preferred JVM language, but just barely. Honestly,
 my ideal Java would probably take it back to Java 8 and start over. Put Valhalla and Loom on the front burners and finish them,
-make lambdas actual closures, what's the deal with that? Add properties, declaration-site generic variance, true delegation / traits, operator overloading, null-safe
+make lambdas actual closures, what's the deal with that? Add properties, declaration-site generic variance, Parts (true composition), operator overloading, null-safe
 operators, structural interfaces, extension methods, string templates, proper templates, and make the type-system pluggable in the compiler,
 so we can stop writing code generators like it's 1979. But yeah, mainly properties.
 
