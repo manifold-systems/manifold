@@ -104,13 +104,15 @@ have traditionally required separate object-oriented models.
 
 <style>
   table {
-    width: 100%;
+    width: auto;               /* Lets columns adjust naturally to text size */
+    max-width: 100%;           /* Prevents the table from bleeding off screen */
+    min-width: 50%;            /* Optional: Keeps very small tables looking substantial */
     border-collapse: collapse;
-    margin: 20px 0;
+    margin: 20px auto;         /* Centered on the page with space top and bottom */
   }
   th, td {
     border: 1px solid #d0d7de;
-    padding: 8px 13px;
+    padding: 8px 16px;         /* Generous padding stops text from feeling squished */
     text-align: left;
   }
   th {
@@ -122,12 +124,12 @@ have traditionally required separate object-oriented models.
   }
 </style>
 
-|                                      | Independent components&nbsp; | &nbsp;Internal polymorphism |
-|:-------------------------------------|:----------------------------:|:---------------------------:|
-| Implementation inheritance           |              —               |              ✓              |
-| Trait/mixin composition (flattening) |              —               |              ✓              |
-| Object composition (forwarding)      |              ✓               |              —              |
-| ***Parts***                          |            **✓**             |            **✓**            |
+|                                      | Independent components | Internal polymorphism |
+|:-------------------------------------|:----------------------:|:---------------------:|
+| Implementation inheritance           |           —            |           ✓           |
+| Trait/mixin composition (flattening) |           —            |           ✓           |
+| Object composition (forwarding)      |           ✓            |           —           |
+| ***Parts***                          |         **✓**          |         **✓**         |
 
 Parts provides both without collapsing the components into a single object or reducing composition to ordinary forwarding.
 
