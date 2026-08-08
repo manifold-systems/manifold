@@ -102,12 +102,32 @@ result = search.find(); // returns cached results
 Parts resolves a longstanding tension in object composition: **independent runtime components** and **internal polymorphism**
 have traditionally required separate object-oriented models.
 
-|                                      | Independent components | Internal polymorphism |
-|:-------------------------------------| :--------------------: | :-------------------: |
-| Implementation inheritance           |            —           |           ✓           |
-| Trait/mixin composition (flattening) |            —           |           ✓           |
-| Object composition (forwarding)      |            ✓           |           —           |
-| ***Parts***                          |          **✓**         |         **✓**         |
+<style>
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 8px 13px;
+    text-align: left;
+  }
+  th {
+    background-color: #f6f8fa;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #f6f8fa;
+  }
+</style>
+
+|                                      | Independent components&nbsp; | &nbsp;Internal polymorphism |
+|:-------------------------------------|:----------------------------:|:---------------------------:|
+| Implementation inheritance           |              —               |              ✓              |
+| Trait/mixin composition (flattening) |              —               |              ✓              |
+| Object composition (forwarding)      |              ✓               |              —              |
+| ***Parts***                          |            **✓**             |            **✓**            |
 
 Parts provides both without collapsing the components into a single object or reducing composition to ordinary forwarding.
 
