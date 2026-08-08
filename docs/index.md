@@ -106,9 +106,8 @@ have traditionally required separate object-oriented models.
   table {
     width: auto;               /* Lets columns adjust naturally to text size */
     max-width: 100%;           /* Prevents the table from bleeding off screen */
-    min-width: 50%;            /* Optional: Keeps very small tables looking substantial */
     border-collapse: collapse;
-    margin: 20px auto;         /* Centered on the page with space top and bottom */
+    margin: 20px 0;            /* Aligns the table to the left margin */
   }
   th, td {
     border: 1px solid #d0d7de;
