@@ -22,12 +22,7 @@ import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.code.Attribute.Array;
 import com.sun.tools.javac.code.Attribute.Class;
-import com.sun.tools.javac.code.Attribute.Compound;
 import com.sun.tools.javac.code.Attribute.Enum;
-import com.sun.tools.javac.code.Symbol.MethodSymbol;
-import com.sun.tools.javac.code.Symbol.TypeSymbol;
-import com.sun.tools.javac.code.Type.ArrayType;
-import com.sun.tools.javac.code.Type.MethodType;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Pair;
@@ -42,7 +37,6 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 
 import manifold.api.gen.*;
-import manifold.api.gen.AbstractSrcClass.Kind;
 import manifold.api.host.IModule;
 import manifold.api.util.JavacUtil;
 import manifold.rt.api.util.ManEscapeUtil;
@@ -417,7 +411,7 @@ public class SrcClassUtil
     String name = method.flatName().toString();
     SrcMethod srcMethod = new SrcMethod( srcClass, name.equals( "<init>" ) );
     addAnnotations( srcMethod, method );
-    srcMethod.modifiers( getModifiers( method ) );
+    srcMethod.modifiers( getModifiers( method, javacTask ) );
     if( (method.flags() & Flags.VARARGS) != 0 )
     {
       srcMethod.modifiers( srcMethod.getModifiers() | 0x00000080 ); // Modifier.VARARGS
@@ -523,7 +517,7 @@ public class SrcClassUtil
     srcMethod.setDefaultValue( qualifiedValue );
   }
 
-  private static Set<javax.lang.model.element.Modifier> getModifiers( Symbol.MethodSymbol method )
+  private static Set<javax.lang.model.element.Modifier> getModifiers( Symbol.MethodSymbol method, BasicJavacTask javacTask )
   {
     long flags = method.flags();
     if( method.owner.getKind() == ElementKind.ENUM )
@@ -531,7 +525,67 @@ public class SrcClassUtil
       // abstract enum methods can't really be abstract
       flags = flags & ~ABSTRACT;
     }
+    flags = widenAccessToMethodOverride( method, flags, javacTask );
     return Flags.asModifierSet( (flags & DEFAULT) != 0 ? flags & ~ABSTRACT : flags );
+  }
+
+  /**
+   * https://github.com/manifold-systems/manifold/issues/773:
+   * A bytecode transformer (notably Fabric's "access wideners" for Minecraft) can widen a supertype method (e.g., protected ->
+   * public) without propagating the change to subclass overrides, leaving the override with *weaker* access than the method
+   * it overrides. This works in the JVM (no checks re weaker override access), and javac tolerates it while *reading* the
+   * class from the classpath. But our stub is *compiled*, so javac applies the source rule and fails with "attempting to
+   * assign weaker access privileges; was public". To stay internally consistent with (possibly widened) supertypes, we
+   * emit each overriding method at max(own, overridden) access. This only ever *widens* access, and it is access-correct:
+   * the method is already effectively callable at the supertype's (wider) access through the supertype reference.
+   */
+  private static long widenAccessToMethodOverride( Symbol.MethodSymbol method, long flags, BasicJavacTask javacTask )
+  {
+    if( method.isConstructor() || method.isStatic() ||
+        (flags & PUBLIC) != 0 || (flags & PRIVATE) != 0 ||
+        !(method.owner instanceof Symbol.ClassSymbol) )
+    {
+      // ctors/statics/private methods don't override; public is already the widest access
+      return flags;
+    }
+
+    try
+    {
+      Types types = Types.instance( javacTask.getContext() );
+      Symbol.ClassSymbol owner = (Symbol.ClassSymbol)method.owner;
+      long access = flags & (PUBLIC | PROTECTED | PRIVATE);
+      for( Type supertype: types.closure( owner.type ) )
+      {
+        if( supertype.tsym == owner || !(supertype.tsym instanceof Symbol.ClassSymbol) )
+        {
+          continue;
+        }
+        for( Symbol sym: supertype.tsym.getEnclosedElements() )
+        {
+          if( sym instanceof Symbol.MethodSymbol && sym != method &&
+              sym.name == method.name &&
+              accessRank( sym.flags() ) > accessRank( access ) &&
+              method.overrides( sym, owner, types, false ) )
+          {
+            access = sym.flags() & (PUBLIC | PROTECTED | PRIVATE);
+          }
+        }
+      }
+      return (flags & ~(PUBLIC | PROTECTED | PRIVATE)) | access;
+    }
+    catch( Throwable t )
+    {
+      // never let this defensive widening break stub generation
+      return flags;
+    }
+  }
+
+  private static int accessRank( long flags )
+  {
+    if( (flags & PUBLIC) != 0 ) return 3;
+    if( (flags & PROTECTED) != 0 ) return 2;
+    if( (flags & PRIVATE) != 0 ) return 0;
+    return 1; // package-private
   }
 
   /**
