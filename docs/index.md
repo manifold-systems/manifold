@@ -40,6 +40,27 @@ Works with JDK LTS releases 8 - 25 + latest, plus comprehensive IDE support in *
 *Parts* resolves a long-standing dilemma in object-oriented programming: **independent runtime components** and **internal polymorphism**
 remain unreconciled in mainstream models.
 
+<style>
+  table {
+    width: auto;               /* Lets columns adjust naturally to text size */
+    max-width: 100%;           /* Prevents the table from bleeding off screen */
+    border-collapse: collapse;
+    margin: 20px 0;            /* Aligns the table to the left margin */
+  }
+  th, td {
+    border: 1px solid #d0d7de;
+    padding: 8px 16px;         /* Generous padding stops text from feeling squished */
+    text-align: left;
+  }
+  th {
+    background-color: #f6f8fa;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #f6f8fa;
+  }
+</style>
+
 |                                      | Independent components | Internal polymorphism |
 | :----------------------------------- | :--------------------: | :-------------------: |
 | Implementation inheritance           |            —           |           ✓           |
