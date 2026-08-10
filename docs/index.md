@@ -17,7 +17,7 @@ Or add behavior to existing Java types:
 ```java
 "hello".myStringMethod();
 ```
-Or use [_Parts_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) to compose independent objects with true polymorphic composition:
+Or use [_Parts_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) for polymorphic composition of independent objects:
 ```java
 @part class BaseHero implements Hero {
   void takeAction() {
@@ -35,7 +35,58 @@ Works with JDK LTS releases 8 - 25 + latest, plus comprehensive IDE support in *
 
 # What can you do with Manifold?
 
-## Compile-time [meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
+## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
+
+*Parts* resolves a long-standing dilemma in object-oriented programming: **independent runtime components** and **internal polymorphism**
+remain unreconciled in mainstream models.
+
+|                                      | Independent components | Internal polymorphism |
+| :----------------------------------- | :--------------------: | :-------------------: |
+| Implementation inheritance           |            —           |           ✓           |
+| Trait/mixin composition (flattening) |            —           |           ✓           |
+| Object composition (forwarding)      |            ✓           |           —           |
+| ***Parts***                          |          **✓**         |         **✓**         |
+
+*Parts* is the first object-oriented model to provide both in arbitrary compositions without sacrificing component independence
+or limiting polymorphism.
+
+```java
+interface Hero {
+  void takeAction();
+  void attack();
+}
+
+@part class BaseHero implements Hero {
+  public void takeAction() {
+    attack();  // self-call is dynamically dispatched through the composite
+  }
+
+  public void attack() {out.println("Swing club!");}
+}
+
+class Wizard implements Hero {
+  @link Hero base;  // dynamically links an independent Hero object
+  Wizard(Hero base) {this.base = base;}
+  public void attack() {out.println("Cast spell!");}
+}
+
+// independent Hero supplied at runtime (factory, DI, etc.)
+Wizard wiz = new Wizard(createHero()); 
+wiz.takeAction();
+```
+`BaseHero.takeAction()` calls `attack()` on itself. Because BaseHero is a linked part of the Wizard composite, the call
+dispatches to `Wizard.attack()`, so the output is:
+```
+Cast spell!
+```
+With ordinary object composition, BaseHero's own `attack()` would be called and `Swing club!` would result instead. This
+**internal polymorphism across a runtime-injected part** is the defining capability of Parts, and it comes at **vtable speed**:
+dispatch is O(1), performance equivalent to a conventional virtual call. See the [Parts README](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts/README.md)
+for a deeper dive, or the [formal paper](https://doi.org/10.5281/zenodo.21514973) for the underlying model and supporting analysis.
+
+---
+
+## [Compile-time meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
 Use the framework to gain direct, type-safe access to *any* type of resource, such as
 [**SQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql),
 [**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
@@ -95,74 +146,6 @@ Or, **intercept** existing methods.
 // Intercepts Search.find() to insert a caching layer
 result = search.find(); // returns cached results
 ``` 
-
----
-
-## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
-Parts resolves a longstanding tension in object composition: **independent runtime components** and **internal polymorphism**
-have traditionally required separate object-oriented models.
-
-<style>
-  table {
-    width: auto;               /* Lets columns adjust naturally to text size */
-    max-width: 100%;           /* Prevents the table from bleeding off screen */
-    border-collapse: collapse;
-    margin: 20px 0;            /* Aligns the table to the left margin */
-  }
-  th, td {
-    border: 1px solid #d0d7de;
-    padding: 8px 16px;         /* Generous padding stops text from feeling squished */
-    text-align: left;
-  }
-  th {
-    background-color: #f6f8fa;
-    font-weight: 600;
-  }
-  tr:nth-child(even) {
-    background-color: #f6f8fa;
-  }
-</style>
-
-|                                      | Independent components | Internal polymorphism |
-|:-------------------------------------|:----------------------:|:---------------------:|
-| Implementation inheritance           |           —            |           ✓           |
-| Trait/mixin composition (flattening) |           —            |           ✓           |
-| Object composition (forwarding)      |           ✓            |           —           |
-| ***Parts***                          |         **✓**          |         **✓**         |
-
-Parts provides both without collapsing the components into a single object or reducing composition to ordinary forwarding.
-
-```java
-interface Hero {
-  void takeAction();
-  void attack();
-}
-
-@part class BaseHero implements Hero {
-  public void takeAction() {
-    attack();  // self-call is dynamically dispatched through the composite
-  }
-
-  public void attack() {out.println("Swing club!");}
-}
-
-class Wizard implements Hero {
-  @link Hero base;  // dynamically links an independent Hero object
-  Wizard(Hero base) {this.base = base;}
-  public void attack() {out.println("Cast spell!");}
-}
-
-// independent Hero supplied at runtime (factory, DI, etc.)
-Wizard wiz = new Wizard(createHero()); 
-wiz.takeAction();
-```
-`BaseHero.takeAction()` calls `attack()` on itself (a self-call). Because `BaseHero` is a linked part of the `Wizard` composite,
-the self-call dispatches to `Wizard.attack()`, so the output is:
-```
-Cast spell!
-```
-With ordinary object composition, `BaseHero`'s own `attack()` implementation `Swing club!` would result instead. This internal
-polymorphism across a runtime-injected part is the fundamental capability that Parts adds.
 
 ---
 

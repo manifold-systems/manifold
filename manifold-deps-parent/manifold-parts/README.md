@@ -8,24 +8,24 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 
-OOP offers two fundamental ways to reuse implementation.
+Object-oriented languages have traditionally separated two properties of implementation reuse:
 
-* **Implementation inheritance** naturally supports polymorphism. A call from one inherited method to another behaves exactly
-as expected because every method executes as part of the same object. The tradeoff: the implementation structure is fixed
-at compile time, and inherited behavior is merged into a single runtime object.
-* **Composition** solves the flexibility problem. Independent objects can be linked dynamically into a composite, allowing
-implementations and behavior to be configured at runtime. But composition sacrifices an important property of inheritance:
-*internal* polymorphism. A component's calls to its own methods (*self-calls*) cannot reach overrides supplied by the composite.
+* **Internal polymorphism** is a natural consequence of inheritance: the type hierarchy fuses into a single runtime object,
+with inherited methods executing as part of that object, so self-calls can reach overrides supplied by a subclass.
+* **Independent runtime components** are the defining property of object composition: objects remain distinct at runtime
+and can be linked dynamically into a composite, allowing implementations and behavior to be configured at runtime. But a
+component's self-calls remain local to the component and cannot reach overrides supplied by the composite.
 
-Combining these two features in arbitrary compositions has remained an open problem in OO models for decades.
+Reconciling these two properties in arbitrary compositions has remained an open problem in object-oriented models.
 
-*Parts* delivers both: ***the flexibility of runtime composition and the polymorphism of inheritance***. It lets you compose
-independent objects into a runtime-configured composite. Use it in place of inheritance, or alongside it.
+*Parts* introduces a new object-oriented model that resolves this gap. It provides ***the flexibility of runtime composition
+and the polymorphism of inheritance*** while preserving the independence of its components. Use Parts in place of inheritance
+or alongside it.
 
-- `@part` provides [**interface-scoped dispatch**](https://doi.org/10.5281/zenodo.21514973): self-calls from a part dispatch to overrides in the composite
-- Parts are **independent objects supplied at construction**, making composition fully runtime-configurable
-- `@link` connects objects to a composite, **automatically implementing interfaces through forwarding**
-- Parts preserves **polymorphism at vtable-equivalent performance**, (see [Performance](#performance))
+* `@part` provides [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973): self-calls from a part **dispatch to overrides in the composite**
+* Parts are **independent objects supplied at construction**, making composition fully runtime-configurable
+* `@link` connects objects to a composite, automatically implementing interfaces through forwarding
+* Parts preserves **self-call dispatch at vtable speed** (see [Performance](#performance))
 
 
 ```java
@@ -79,12 +79,12 @@ Parts gives you both:**
 configured at construction.<br>*Internal polymorphism*: a component's self-calls
 reach overrides supplied by the composite.</sub>
                                               
-### Isn't this just...
+### Wait...
 
 > ***Isn't this traits?***<br>
  Traits provide internal polymorphism, but at the price of adopting inheritance's single-object model. Composition with
  traits is limited to *compile-time* configuration, where they are folded into the hosting class, sacrificing independent
- runtime identity. Internal polymorphism, but not independent components.
+ runtime identity. Internal polymorphism, but not independent runtime components.
 
 > ***Doesn't Kotlin do this?***<br>
  Kotlin's `by`, Lombok's `@Delegate`, and Scala's `export` are all examples of ordinary *object composition*. They provide
@@ -95,7 +95,7 @@ reach overrides supplied by the composite.</sub>
 
 <!-- TOC -->
 * [_Parts_](#_parts_)
-    * [Isn't this just...](#isnt-this-just)
+    * [Wait...](#wait)
 * [The Self problem](#the-self-problem)
 * [`@part`](#part)
 * [`@link`](#link)
@@ -172,7 +172,7 @@ trapped within the delegated object. This limitation is known as the **Self prob
 Use `@part` to define a class designed to be composed with `@link`.
 
 Generally, a link establishes a "part-of" relationship between the linking object and the linked `part`. Both objects form
-a *composite* object in terms of the interfaces defined in the link.
+a *composite* object in terms of the interfaces defined in the link. A part's self-calls reach the composite.
 
 ```java
 interface Hero {
