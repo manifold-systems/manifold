@@ -89,13 +89,12 @@
 
 \begin{abstract}
 Object composition under static typing forces a trade: independent
-components, or open recursion. Forwarding-based constructs compose independent components, but a component's self-calls do not dispatch through the composite. Trait/mixin composition preserves self-call dispatch at the expense of independent
-components. Approaches that combine the two surrender the components'
-independence, fusing them into the class or binding them to an enclosing family.
-Composing independent components with open recursion has remained open.
+components, or open recursion. Forwarding-based constructs compose independent components, but a component's self-calls do not dispatch through the composite. Trait, mixin, and family-based composition preserves self-call dispatch but fuses
+the components into the class or binds them to an enclosing family, giving up their
+independence.
 
-We present \emph{Parts}, a compositional model that unifies independent
-components and open recursion, realized as a compiler plugin
+We present \emph{Parts}, a practical model for object composition with
+independent components and open recursion, realized as a compiler plugin
 for Java~8--26.
 A \emph{part} is an independent component, supplied as a runtime object at
 construction, whose self-calls route through the composite; the enabling
@@ -119,9 +118,7 @@ through the correct composite in arbitrary compositions. The dispatch cost is O(
 Object composition is the standard prescription for avoiding implementation
 inheritance~\cite{gamma1994}. Two properties make it a genuine replacement:
 \emph{independent components} (late-bound objects in arbitrary compositions) and \emph{open recursion} (self-calls through the composite).
-Static typing is what makes the two hard to combine: to our knowledge no
-statically-typed model composes independent components with open recursion
-(Section~\ref{sec:related}).
+Static typing is what makes the two hard to combine (Section~\ref{sec:related}).
 
 Forwarding-based composition (Kotlin \code{by}~\cite{kotlin}, Lombok
 \code{@Delegate}~\cite{lombok}) supplies independent components but does not
@@ -171,45 +168,49 @@ The core contributions are:
 Consider a minimal example that shows \code{@part} and \code{@link} working in a concrete single-rooted composite.
 
 \begin{lstlisting}
-interface Formatter {
-    String prefix();
-    String format(String msg);
+interface Actor {
+    void attack();
+    void takeAction();
 }
 
-@part class LogFormatter implements Formatter {
-    public String prefix() { return "INFO"; }
-    public String format(String msg) { return "[" + prefix() + "] " + msg; }
+@part class Hero implements Actor {
+    public void attack() { out.println("Swing club!"); }
+    public void takeAction() { attack(); }
 }
 
-class AppFormatter implements Formatter {
-    @link Formatter fmt;
-    AppFormatter(Formatter fmt) { this.fmt = fmt; }
-    @Override public String prefix() { return "APP"; }
+class Wizard implements Actor {
+    @link Actor actor;
+    Wizard(Actor actor) { this.actor = actor; }
+    @Override public void attack() { out.println("Cast spell!"); }
 }
 
-new AppFormatter(new LogFormatter()).format("started"); // "[APP] started"
+new Wizard(new Hero()).takeAction(); // "Cast spell!"
 \end{lstlisting}
 
-When \code{AppFormatter} is constructed, the compiler wires
-\code{LogFormatter}'s composite identity for \code{Formatter} to
-\code{AppFormatter}. A call to \code{format("started")} dispatches to
-\code{LogFormatter.format()}, and the self-call \code{prefix()} within
-\code{format()} dispatches back through \code{AppFormatter}, invoking
-\code{AppFormatter.prefix()}, not \code{LogFormatter.prefix()}.
+When \code{Wizard} is constructed, the compiler wires \code{Hero}'s
+composite identity for \code{Actor} to \code{Wizard}. A call to
+\code{takeAction()} dispatches to \code{Hero.takeAction()}, and the self-call
+\code{attack()} within it dispatches back through \code{Wizard}, invoking
+\code{Wizard.attack()}, not \code{Hero.attack()}.
 
-Because the link field accepts any \code{Formatter} at construction
+This is the decorator pattern with one addition: the wrapped object's self-call
+routes back through the composite. A plain decorator would forward
+\code{takeAction()} to the \code{Hero}, whose \code{attack()} call would stay on
+\code{Hero} (``Swing club!''), losing the override.
+
+Because the link field accepts any \code{Actor} at construction
 time, the part is a real late-bound object, not fused into the class
-hierarchy. A different \code{Formatter} implementation can be substituted
-without changing \code{AppFormatter}.
+hierarchy. A different \code{Actor} implementation can be substituted
+without changing \code{Wizard}.
 
 Interface contracts are enforced at compile time: the link field has
-type \code{Formatter}, and the compiler verifies that \code{AppFormatter}
+type \code{Actor}, and the compiler verifies that \code{Wizard}
 implements the delegated interface. Part identity may not escape the
 composite dispatch path: passing or assigning \code{this} as the concrete
 part type is a compile error; interface types are required.
 
-This example is single-rooted: \code{AppFormatter} is the sole composite
-for \code{LogFormatter}, and one composite identity suffices. The following
+This example is single-rooted: \code{Wizard} is the sole composite
+for \code{Hero}, and one composite identity suffices. The following
 section exposes the limit of the single-identity model and the per-interface
 generalization that resolves it.
 
@@ -221,12 +222,15 @@ generalization that resolves it.
 \subsection*{Motivating example}
 
 The following example shows a part whose interfaces are rooted at different
-composites. \code{Track} implements both \code{Streamable} and
-\code{Classifiable}; in the composed graph, \code{Streamable} is rooted at
-\code{Playlist} and \code{Classifiable} at \code{Library}. From one
-\code{Track} instance, \code{codec()} must route through \code{Playlist} and
-\code{genre()} through \code{Library}; a single composite identity cannot serve
-both. Assigning a separate composite identity per interface resolves this.
+composites. \code{Hero} implements both \code{Combatant} and \code{Actor},
+and two wrappers decorate it: a \code{Wizard} changes how it fights
+(\code{Combatant}), while a \code{Demon} partially possesses it, seizing its name
+and will (\code{Actor}) but leaving its trained combat untouched. As in the
+overview, the wrapped hero's self-calls route back through the wrappers; now two
+wrappers claim different interfaces of the same part. So from a single \code{Hero}
+instance, \code{attack()} must route through \code{Wizard} and \code{name()}
+through \code{Demon}; a single composite identity cannot serve both. Assigning a
+separate composite identity per interface resolves this.
 Figures~\ref{fig:dag-diagram} and~\ref{fig:dag-listing} show the structure.
 
 \begin{figure}[H]
@@ -240,97 +244,92 @@ Figures~\ref{fig:dag-diagram} and~\ref{fig:dag-listing} show the structure.
   lnk/.style={->, >=Stealth, semithick},
 ]
 \node[cls] (wp)
-  {\textbf{Track}\\[3pt]
-   \textit{implements Streamable, Classifiable}};
+  {\textbf{Hero}\\[3pt]
+   \textit{implements Combatant, Actor}};
 
 \node[cls, below=2cm of wp] (lw)
-  {\textbf{Playlist}\\[3pt]
-   \textit{implements Streamable, Classifiable}};
+  {\textbf{Wizard}\\[3pt]
+   \textit{implements Combatant, Actor}};
 
 \node[cls, below=2cm of lw] (app)
-  {\textbf{Library}\\[3pt]
-   \textit{implements Classifiable}};
+  {\textbf{Demon}\\[3pt]
+   \textit{implements Actor}};
 
-%% Playlist @link -> Track
+%% Wizard @link -> Hero
 \draw[lnk] ([xshift=-12pt]lw.north)
-  -- node[left,  font=\scriptsize\ttfamily] {@link Streamable}
+  -- node[left,  font=\scriptsize\ttfamily] {@link Combatant}
   ([xshift=-12pt]wp.south);
 \draw[lnk] ([xshift=12pt]lw.north)
-  -- node[right, font=\scriptsize\ttfamily] {@link Classifiable}
+  -- node[right, font=\scriptsize\ttfamily] {@link Actor}
   ([xshift=12pt]wp.south);
 
-%% Library @link -> Playlist
+%% Demon @link -> Wizard
 \draw[lnk] (app.north)
-  -- node[right, font=\scriptsize\ttfamily] {@link Classifiable}
+  -- node[right, font=\scriptsize\ttfamily] {@link Actor}
   (lw.south);
 
 %% Dispatch root annotations
 \node[font=\scriptsize\itshape, text=gray, right=0.5cm of lw, anchor=west]
-  {Streamable root};
+  {Combatant root};
 \node[font=\scriptsize\itshape, text=gray, right=0.5cm of app, anchor=west]
-  {Classifiable root};
+  {Actor root};
 \end{tikzpicture}
 \caption{Composition structure. Arrows show link fields labeled
-by the delegated interface. \code{Playlist} is the root for
-\code{Streamable} dispatch; \code{Library} is the root for \code{Classifiable} dispatch.}
+by the delegated interface. \code{Wizard} is the root for
+\code{Combatant} dispatch; \code{Demon} is the root for \code{Actor} dispatch.}
 \label{fig:dag-diagram}
-\Description{A three-class composition. Track implements Streamable and
-Classifiable. Playlist links both interfaces of Track and is the Streamable
-root. Library links the Classifiable interface of Playlist and is the
-Classifiable root.}
+\Description{A three-class composition. Hero implements Combatant and
+Actor. Wizard links both interfaces of Hero and is the Combatant root.
+Demon links the Actor interface of Wizard and is the Actor root.}
 \end{figure}
 
 \begin{figure}[H]
 \begin{lstlisting}
-interface Streamable {
-    String codec();
-    void stream(String audio);
+interface Combatant {
+  void attack();
 }
 
-interface Classifiable {
-    String genre();
-    String classify(String title);
+interface Actor {
+  String name();
+  void takeAction();
 }
 
-@part class Track implements Streamable, Classifiable {
-  public String codec()  { return "wav"; }
-  public String genre()  { return "unknown"; }
-  public void stream(String audio) {
-    System.out.println("[" + codec() + "] " + audio);
-  }
-  public String classify(String title) {
-    stream("indexing: " + title);   // Streamable dispatch
-    return genre() + ":" + title;   // Classifiable dispatch
+@part class Hero implements Combatant, Actor {
+  public void attack() { out.println("Swing club!"); }
+  public String name() { return "Milo"; }
+  public void takeAction() {
+    out.print(name() + " acts: ");  // Actor dispatch
+    attack();                       // Combatant dispatch
   }
 }
 
-@part class Playlist implements Streamable, Classifiable {
-  @link Streamable   streamable;
-  @link Classifiable classifiable;
-  Playlist(Track t) { this.streamable = t; this.classifiable = t; }
-  @Override public String codec() { return "mp3"; }
+@part class Wizard implements Combatant, Actor {
+  @link Combatant combatant;
+  @link Actor actor;
+  Wizard(Hero h) { this.combatant = h; this.actor = h; }
+  public void attack() { out.println("Cast spell!"); }
 }
 
-class Library implements Classifiable {
-  @link Classifiable classifiable;
-  Library(Classifiable c) { this.classifiable = c; }
-  @Override public String genre() { return "jazz"; }
+// A demon partially possesses the hero: it seizes the Actor facet
+// (name and will) but not the Combatant facet (trained combat).
+class Demon implements Actor {
+  @link Actor actor;
+  Demon(Actor a) { this.actor = a; }
+  public String name() { return "Diablo"; }
 }
 
-Playlist playlist = new Playlist(new Track());
-Library library   = new Library(playlist);
-String result = library.classify("Autumn Leaves");
-out.println(result);
-// Streamable dispatch rooted at Playlist  ->  codec()  -> "mp3"
-// Classifiable dispatch rooted at Library ->  genre()  -> "jazz"
-// prints:  "[mp3] indexing: Autumn Leaves"
-// returns: "jazz:Autumn Leaves"
+Wizard wizard = new Wizard(new Hero());
+Demon demon = new Demon(wizard);
+demon.takeAction();
+// Actor dispatch rooted at Demon:       name()   -> "Diablo"
+// Combatant dispatch rooted at Wizard:  attack() -> "Cast spell!"
+// prints:  Diablo acts: Cast spell!
 \end{lstlisting}
 \caption{Composition with multiple composite roots per part.
-\code{Track} carries distinct composite identities for \code{Streamable}
-(rooted at \code{Playlist}) and \code{Classifiable} (rooted at \code{Library}).}
+\code{Hero} carries distinct composite identities for \code{Combatant}
+(rooted at \code{Wizard}) and \code{Actor} (rooted at \code{Demon}).}
 \label{fig:dag-listing}
-\Description{Java source listing of the Track, Playlist, and Library
+\Description{Java source listing of the Hero, Wizard, and Demon
 composition, showing distinct composite roots per interface.}
 \end{figure}
 
@@ -536,8 +535,8 @@ part method that dispatches through anything other than the indexed
 slot. Because the slot holds $C$ once the composition is constructed and is not
 written thereafter, the invariant holds at every point a self-call can execute.
 Before wiring, each slot is initialized to \code{this}; an unwired part
-dispatches on itself, consistent with standard object-oriented dispatch, and
-the invariant is vacuously satisfied (no delegation chain exists).
+dispatches on itself, consistent with standard object-oriented dispatch. In this
+initial state, the invariant holds trivially.
 A full mechanized proof in a Featherweight Java subset is a natural direction
 for follow-on work (Section~\ref{sec:futurework}).
 
@@ -715,8 +714,8 @@ it, which may be the part itself. A client receiving it reaches the
 composite's overrides; recovering some other interface by reflection or
 downcast can still reach a lower root (Section~\ref{sec:limitations}).
 B\"uchi and Weck's generic wrappers~\cite{buchi2000} give the identity-escape
-hazard this constraint prevents a formal, soundness-proven treatment---the
-closest prior analysis---though they decline the disciplines Parts adopts here as
+hazard this constraint prevents a formal, soundness-proven treatment, though they
+decline the disciplines Parts adopts here as
 too restrictive for arbitrary legacy objects.
 
 %% ─────────────────────────────────────────────────────────────────────────────
@@ -764,10 +763,9 @@ The delta is measured against Parts's own forwarding path, which is the right
 baseline: that path is semantically equivalent to Kotlin \code{by} and Lombok
 \code{@Delegate} (Section~\ref{sec:related}), so the delta prices exactly the
 self-call routing those mechanisms cannot express, against their own dispatch
-cost. To our knowledge no other runnable implementation provides open recursion
-over independently supplied components under static typing, so there is no
-cross-system benchmark to run; that comparison is analytic
-(Section~\ref{sec:related}).
+cost. A cross-system benchmark against other composition models would price
+differences in implementation strategy rather than the self-call dispatch this
+delta isolates, so that comparison is analytic (Section~\ref{sec:related}).
 
 \begin{table}[htbp]
 \centering
@@ -846,92 +844,58 @@ a student and a teacher; both roles share a common \code{Person} base.
 
 \begin{lstlisting}
 interface Person {
-    String getName(); String getTitle(); String getTitledName();
+  String name();
+  String title();
+  String titledName();
 }
-interface Student extends Person { String getMajor(); }
-interface Teacher extends Person { String getDept();   }
-interface TA extends Student, Teacher {}
-\end{lstlisting}
+interface Student extends Person { ... }
+interface Teacher extends Person { ... }
+interface TA extends Student, Teacher { ... }
 
-\paragraph{Forwarding (Kotlin)~\cite{kotlin,lombok}.}
-Forwarding-based mechanisms inject the implementation as a real object at
-construction time; components are independent. But self-calls remain within
-the component: the composite is invisible. Delegating
-\code{Student by s} and \code{Teacher by t} creates a diamond: the compiler
-forces a manual override of every shared \code{Person} method. The deeper problem is that
-\code{getTitledName()}, the template method worth sharing, cannot be safely
-delegated: whichever branch receives it calls \code{getTitle()} on its own
-\code{this}, bypassing \code{TaImpl.getTitle()}.
-
-\begin{lstlisting}[style=kotlin]
-class TaImpl(val s: Student, val t: Teacher) : TA,
-    Student by s, Teacher by t {
-  // Diamond: every shared Person method must be manually resolved
-  override fun getName()  = s.getName()
-  override fun getTitle() = "TA"
-  // Without this override, getTitledName() forwards to s.getTitledName(),
-  // which calls s.getTitle() = "Student" -- self stays in the delegate:
-  //   TaImpl(...).getTitledName()  ->  "Student Milton"  (wrong)
-  override fun getTitledName() = "${getTitle()} ${getName()}"
-  //   TaImpl(...).getTitledName()  ->  "TA Milton"  (correct, but forced)
-}
-\end{lstlisting}
-
-Every composite must re-implement \code{getTitledName()}.
-Adding a new template method to \code{Person} requires a matching override in
-every composite class; the maintenance cost grows with the number of composites. Lombok's
-\code{@Delegate} generates equivalent forwarders in Java; the self-call
-semantics are identical.
-
-\paragraph{Parts.}
-\code{PersonPart} holds the template once. Its self-call to \code{getTitle()}
-dispatches through the composite at each level of the delegation chain.
-
-\begin{lstlisting}
-@part class PersonPart implements Person {
+@part abstract class PersonPart implements Person {
   private final String name;
   public PersonPart(String name) { this.name = name; }
-  public String getName()       { return name; }
-  public String getTitle()      { return "Person"; }
-  public String getTitledName() { return getTitle() + " " + getName(); }
+  public String name() { return name; }
+  public String titledName() { return title() + " " + name(); }
 }
+
 @part class StudentPart implements Student {
   @link Person person;
-  private final String major;
-  public StudentPart(Person p, String major) {
-    this.person = p; this.major = major;
-  }
-  public String getTitle()  { return "Student"; }
-  public String getMajor()  { return major; }
+  public StudentPart(Person p) { this.person = p; }
+  public String title() { return "Student"; }
 }
+
 @part class TeacherPart implements Teacher {
   @link Person person;
-  private final String dept;
-  public TeacherPart(Person p, String dept) {
-    this.person = p; this.dept = dept;
-  }
-  public String getTitle() { return "Teacher"; }
-  public String getDept()  { return dept; }
+  public TeacherPart(Person p) { this.person = p; }
+  public String title() { return "Teacher"; }
 }
+
 @part class TaPart implements TA {
   @link(share=Person.class) Student student;
   @link Teacher teacher;
-  public TaPart(Student s) {
-    this.student = s;
-    this.teacher = new TeacherPart(s, "Math");
+  public TaPart(Student student) {
+    this.student = student;
+    this.teacher = new TeacherPart(student);
   }
-  public String getTitle() { return "TA"; }
+  public String title() { return "TA"; }
 }
 
-TA ta = new TaPart(new StudentPart(new PersonPart("Milton"), "CS"));
-ta.getTitledName(); // "TA Milton"  -- getTitle() dispatches through TaPart
+TA ta = new TaPart(new StudentPart(PersonPart.asLink("Milton")));
+ta.titledName(); // "TA Milton"
 \end{lstlisting}
 
-\code{getTitledName()} is defined once in \code{PersonPart} and overridden
+Under ordinary object composition (forwarding), the shared \code{Person} methods
+must each be resolved by hand, and \code{titledName()} still calls
+\code{title()} on the delegate's own \code{this}. Parts resolves both problems.
+
+\code{PersonPart} holds the template once. Its self-call to \code{title()}
+dispatches through the composite at each level of the delegation chain.
+
+\code{titledName()} is defined once in \code{PersonPart} and overridden
 nowhere. Diamond resolution is handled statically: \code{@link(share=Person.class)}
-designates \code{student} as the authoritative delegate for \code{Person},
-so \code{Person} is excluded from propagation when \code{teacher} is wired,
-leaving the identity established through \code{student} intact.
+designates \code{student} as the authoritative delegate for \code{Person}, \code{TaPart}
+transitively claims \code{Person} throughout the composite.
 
 \subsection{Case Study: Stream Decoration}
 
@@ -1063,8 +1027,7 @@ structural scenarios:
         instance.
 \end{itemize}
 
-Multi-root requires a part to carry multiple simultaneous
-composite identities, one per interface. ISD resolves this by separating two
+Multi-root requires a part to carry multiple composite identities, one per interface. ISD resolves this by separating two
 notions of identity: \emph{implementation identity}, the part object, from
 \emph{dispatch identity}, the composite per interface. Within ISD, partial delegation and multi-root are modeled the same way. Every
 interface has a single composite root: the composite that claims it, or the
@@ -1072,11 +1035,11 @@ part itself when none does.
 
 Multi-root arises naturally from partial delegation: when an outer composite claims a subset of a
 part's interfaces, transitive propagation assigns different roots to the
-remaining interfaces, producing multi-root at the part level. The \code{Track} example in
-Section~\ref{sec:model} demonstrates this directly: \code{Library} claims
-only \code{Classifiable} from \code{Playlist} (partial delegation), which by propagation
-gives \code{Track} separate roots for \code{Streamable} and
-\code{Classifiable} (multi-root).
+remaining interfaces, producing multi-root at the part level. The possession example in
+Section~\ref{sec:model} demonstrates this directly: \code{Demon} claims
+only \code{Actor} from \code{Wizard} (partial delegation), which by propagation
+gives \code{Hero} separate roots for \code{Combatant} and
+\code{Actor} (multi-root).
 
 \subsection{Language Design Implications}
 
@@ -1117,9 +1080,8 @@ composite HAS-A its parts and IS-A only their interfaces. That inheritance
 is open recursion, separable from subtyping, is
 Cook's~\cite{cookpalsberg1989,cook1990}, and the reading of inheritance as
 composition is Bracha and Cook's~\cite{bracha1990}. Cook's model threads self as
-an explicit parameter; ISD keeps it implicit and per-interface. The missing piece
-was not theoretical but practical: independent runtime components, static interface
-contracts, and dispatch at the cost of a virtual call.
+an explicit parameter; ISD keeps it implicit and per-interface, over independent
+runtime components with static interface contracts, at the cost of a virtual call.
 
 \subsection{Concurrency}
 
@@ -1137,7 +1099,7 @@ state under the usual Java rules; dispatch adds no synchronization points.
 
 \paragraph{Per-interface composite roots as a general primitive.}
 Assigning dispatch identity per interface rather than per object is a primitive
-that prior composition models do not expose. Problems that current statically-typed designs address through dynamic dispatch, AOP weaving, or collapsed component hierarchies may have cleaner solutions within this primitive. The extent of that solution space is an open question.
+whose uses may extend beyond this paper. Problems currently addressed through dynamic dispatch, AOP weaving, or collapsed component hierarchies may have cleaner solutions within it. The extent of that solution space is an open question.
 
 \paragraph{Formal verification.}
 A mechanized proof of Invariant~\ref{prop:dispatch} in a small-step operational
@@ -1237,6 +1199,17 @@ but only over a single inherited base, not across arbitrary compositions;
 interface-scoped dispatch supplies both, by rooting identity in the interface
 rather than the object.
 
+\paragraph{Deep delegation.}
+DelphJ~\cite{gerakios2013} is a research language in which a delegatee is supplied
+at run time and its self-calls route through the wrapping composite, giving open
+recursion over independent objects under static typing. Two practical costs
+distinguish it from Parts. Forwarding is not automatic: a \code{subobject} ``does
+not imply any automatic forwarding,'' so each composite requires manually written
+scripts using a ``morphing'' tool to identify the methods it forwards. And dispatch
+resolves over a runtime access path rather than a constant-time indexed slot. It is
+also difficult to determine how far the model extends to arbitrary, multi-root compositions
+(Section~\ref{subsec:identity}).
+
 \paragraph{Family polymorphism.}
 gbeta~\cite{ernst2001} (formalized by
 Ernst, Ostermann, and Cook~\cite{ernst2006}), CaesarJ~\cite{aracic2006},
@@ -1289,8 +1262,8 @@ In static typing, the \emph{self} problem with independent components is a
 large part of why object composition never displaced implementation inheritance:
 a self-call that reaches the composite's overrides is the one capability that
 made inheritance necessary rather than merely convenient. Parts resolves this by grounding identity in the interface rather than the
-object, recovering open recursion across independent components---the two
-properties are not inherently in conflict, only unreconciled by prior models.
+object, recovering open recursion across independent components at the cost of a
+virtual call; the two properties are not inherently in conflict.
 
 
 %% ─────────────────────────────────────────────────────────────────────────────
@@ -1377,6 +1350,11 @@ G.~Kniesel.
 G.~Kniesel.
 \newblock {\em Dynamic Object-Based Inheritance with Subtyping}.
 \newblock PhD thesis, University of Bonn, 2000.
+
+\bibitem{gerakios2013}
+P.~Gerakios, A.~Biboudis, and Y.~Smaragdakis.
+\newblock Forsaking inheritance: Supercharged delegation in {DelphJ}.
+\newblock In {\em Proceedings of OOPSLA}, pages 233--252, 2013.
 
 \bibitem{buchi2000}
 M.~B\"uchi and W.~Weck.
