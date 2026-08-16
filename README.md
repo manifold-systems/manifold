@@ -10,42 +10,39 @@
 
 # Manifold
 
-**Manifold extends Java at compile time.**
+**Manifold extends Java at compile time** using the Java compile plugin.
 
 It adds language features and type-safe access to external data, APIs, and DSLs *directly* to Java, without leaving the
 Java compiler and without additional build steps.
 
-```java
-// Type-safe SQL, written directly in Java
-Language english =
-    "[.sql/] select * from Language where name = 'English'".fetchOne();
-```
-Or add behavior to existing Java types:
-```java
-"hello".myStringMethod();
-```
-Or use [_Parts_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) for polymorphic composition of independent objects:
-```java
-@part class BaseHero implements Hero {
-  void takeAction() {
-    attack();  // dynamically dispatches through the composite
-  }
-}
-```
+**Compile-time metaprogramming** type-safely integrates any kind of schema, metadata, or DSL directly into Java. These include:
+* [SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md) _**(New!)**_
+* [JSON & JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
+  [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
+  [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)
+* [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
 
-Manifold is a **javac compiler plugin**. Add only the features you want to an existing Java project and keep using ordinary
-Java, Java libraries, and the JVM.
+**Language enhancements** improve developer productivity. Such as:
+* [Parts (*true* composition)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) _**(New!)**_
+* [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+* [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+* [Optional parameters](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params)
+* [Operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+* [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
+* [A preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+
+Add only the features you want to an existing Java project and keep using ordinary Java, Java libraries, and the JVM.       
 
 Works with JDK LTS releases 8 - 25 + latest, plus comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
-             
+
 ---
 
 # What can you do with Manifold?
 
-## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) _**(New!)**_
+## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) (*true* composition)
 
-*Parts* resolves a long-standing dilemma in statically typed object-oriented programming: **independent runtime components** and **internal polymorphism**
-remain unreconciled in general-purpose models.
+*Parts* is a compositional model that resolves a long-standing dilemma in statically typed object-oriented programming:
+**independent runtime components** and **internal polymorphism** remain unreconciled in general-purpose languages.
 
 |                                      | Independent components | Internal polymorphism |
 | :----------------------------------- | :--------------------: | :-------------------: |
@@ -54,8 +51,8 @@ remain unreconciled in general-purpose models.
 | Object composition (forwarding)      |            ✓           |           —           |
 | ***Parts***                          |          **✓**         |         **✓**         |
 
-*Parts* is the first to provide both properties in arbitrary compositions without sacrificing component independence, limiting
-polymorphism, or compromising performance.
+*Parts* provides both properties in arbitrary compositions without sacrificing component independence, limiting polymorphism,
+or compromising performance.
 
 ```java
 interface Actor {
