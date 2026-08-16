@@ -707,16 +707,9 @@ and callbacks through the part's own link fields (the compositional
 analog of \code{super}) are all permitted. Passing or assigning \code{this} as
 the concrete part type is not: that is a compile error, since a caller
 holding the bare part could invoke methods outside the composite dispatch
-path and violate Invariant~\ref{prop:dispatch}. The only \code{this} that can
-leave is therefore interface-typed, and the reference that crosses is the
-\code{\$selves} slot for that interface: the part's composite identity for
-it, which may be the part itself. A client receiving it reaches the
-composite's overrides; recovering some other interface by reflection or
-downcast can still reach a lower root (Section~\ref{sec:limitations}).
-B\"uchi and Weck's generic wrappers~\cite{buchi2000} give the identity-escape
-hazard this constraint prevents a formal, soundness-proven treatment, though they
-decline the disciplines Parts adopts here as
-too restrictive for arbitrary legacy objects.
+path and violate Invariant~\ref{prop:dispatch}. The only \code{this} that can leave is therefore either interface-typed or
+\code{Object}-typed: resolving to the composite claiming the interface or the
+part itself. A client receiving it reaches the composite's overrides.
 
 %% ─────────────────────────────────────────────────────────────────────────────
 \section{Evaluation}
@@ -1013,33 +1006,23 @@ modification.
 \label{sec:discussion}
 %% ─────────────────────────────────────────────────────────────────────────────
 
-\subsection{Implementation Identity and Dispatch Identity}
+\subsection{Partial delegation and part identity}
 \label{subsec:identity}
 
-A composition model that supports independent components must handle two
-structural scenarios:
+\emph{Partial delegation} is a requirement for arbitrary compositions, where a composite
+may claim only some of a part's delegation surface. \emph{Multi-rooted parts} result
+from this condition: a part's interfaces may therefore be rooted at two or more
+distinct identities, including the part itself and one or more composites.
 
-\begin{itemize}
-  \item \textbf{Partial delegation}: a composite delegates a subset of a
-        part's interfaces.
-  \item \textbf{Multi-root}: a part's interfaces are claimed by separate
-        composites, each requiring a distinct dispatch root from the same
-        instance.
-\end{itemize}
+This multi-rootedness makes a part's identity context-sensitive. References to
+\code{this}, whether implicit or explicit, resolve according to the context type
+of the reference. When that type is a claimed interface, ISD resolves \code{this}
+to the claiming composite. Otherwise, \code{this} remains the part itself.
 
-Multi-root requires a part to carry multiple composite identities, one per interface. ISD resolves this by separating two
-notions of identity: \emph{implementation identity}, the part object, from
-\emph{dispatch identity}, the composite per interface. Within ISD, partial delegation and multi-root are modeled the same way. Every
-interface has a single composite root: the composite that claims it, or the
-part itself when none does.
-
-Multi-root arises naturally from partial delegation: when an outer composite claims a subset of a
-part's interfaces, transitive propagation assigns different roots to the
-remaining interfaces, producing multi-root at the part level. The possession example in
-Section~\ref{sec:model} demonstrates this directly: \code{Demon} claims
-only \code{Actor} from \code{Wizard} (partial delegation), which by propagation
-gives \code{Hero} separate roots for \code{Combatant} and
-\code{Actor} (multi-root).
+The possession example in Section~\ref{sec:model} demonstrates this directly.
+\code{Demon} claims only \code{Actor} from \code{Wizard}. Through delegation
+propagation, \code{Hero} consequently has separate roots for \code{Actor} and
+\code{Combatant}, making it a multi-rooted part.
 
 \subsection{Language Design Implications}
 
@@ -1263,7 +1246,7 @@ large part of why object composition never displaced implementation inheritance:
 a self-call that reaches the composite's overrides is the one capability that
 made inheritance necessary rather than merely convenient. Parts resolves this by grounding identity in the interface rather than the
 object, recovering open recursion across independent components at the cost of a
-virtual call; the two properties are not inherently in conflict.
+virtual call; the two properties were never inherently in conflict.
 
 
 %% ─────────────────────────────────────────────────────────────────────────────
@@ -1355,11 +1338,6 @@ G.~Kniesel.
 P.~Gerakios, A.~Biboudis, and Y.~Smaragdakis.
 \newblock Forsaking inheritance: Supercharged delegation in {DelphJ}.
 \newblock In {\em Proceedings of OOPSLA}, pages 233--252, 2013.
-
-\bibitem{buchi2000}
-M.~B\"uchi and W.~Weck.
-\newblock Generic wrappers.
-\newblock In {\em Proceedings of ECOOP}, LNCS 1850, pages 201--225, 2000.
 
 \bibitem{ostermann2002}
 K.~Ostermann.

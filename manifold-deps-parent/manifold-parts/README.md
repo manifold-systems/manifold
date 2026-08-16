@@ -8,17 +8,18 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 
-Object-oriented languages have traditionally separated two properties of implementation reuse:
+Statically typed object-oriented languages have traditionally separated two properties of implementation reuse:
 
-* **Internal polymorphism** is a natural consequence of inheritance: the type hierarchy fuses into a single runtime object,
+* **Internal polymorphism** is a natural consequence of *inheritance*: the type hierarchy fuses into a single runtime object,
 with inherited methods executing as part of that object, so self-calls can reach overrides supplied by a subclass.
-* **Independent runtime components** are the defining property of object composition: objects remain distinct at runtime
-and can be linked dynamically into a composite, allowing implementations and behavior to be configured at runtime. But a
-component's self-calls remain local to the component and cannot reach overrides supplied by the composite.
+* **Independent runtime components** are the defining property of *object composition*: objects remain distinct at runtime
+and can be linked dynamically into a composite, allowing implementations and behavior to be configured at runtime in arbitrary
+compositions. But a component's self-calls remain local to the component and cannot reach overrides supplied by the composite.
 
-Reconciling these two properties in arbitrary compositions has remained an open problem in object-oriented models.
+Combining these two properties in a general-purpose model without compromising either or sacrificing performance has remained
+an open problem.
 
-*Parts* introduces a new object-oriented model that resolves this gap. It provides ***the flexibility of runtime composition
+*Parts* introduces a new compositional model that resolves this gap. It provides ***the flexibility of runtime composition
 and the polymorphism of inheritance*** while preserving the independence of its components. Use Parts in place of inheritance
 or alongside it.
 
@@ -29,38 +30,39 @@ or alongside it.
 
 
 ```java
-interface Hero {
+interface Actor {
   void takeAction();
   void attack();
 }
 
-@part class BaseHero implements Hero {
+@part class Hero implements Actor {
   public void takeAction() {
-    attack();               // self-call is dynamically dispatched through the composite
+    attack();   // self-call is dynamically dispatched through the composite
   }
-
-  public void attack() {out.println("Swing club!");}
+ 
+  public void attack() {println("Swing club!");}
 }
 
-class Wizard implements Hero {
-  @link Hero base;          // dynamically links an independent Hero object
-  Wizard(Hero base) {this.base = base;}
-  public void attack() {out.println("Cast spell!");}
+class Wizard implements Actor {
+  @link Actor actor;  // dynamically links an independent Actor object
+  Wizard(Actor actor) {this.actor = actor;}
+  public void attack() {println("Cast spell!");}
 }
 
-Wizard wiz = new Wizard(createHero()); // independent Hero supplied at runtime (factory, DI, etc.)
-wiz.takeAction();
+Actor hero = createActor(); // independent Actor supplied at runtime (factory, DI, etc.)
+Wizard wizard = new Wizard(hero);
+wizard.takeAction();
 ```
-`BaseHero.takeAction()` calls `attack()` on itself (a self-call). Because `BaseHero` is a linked part of the `Wizard` composite,
+`Hero.takeAction()` calls `attack()` on itself (a self-call). Because Hero is a linked part of the Wizard composite,
 the self-call dispatches to `Wizard.attack()`, so the output is:
 ```
 Cast spell!
 ```
-With ordinary object composition, `BaseHero`'s own `attack()` implementation `Swing club!` would result instead. This internal
+With ordinary object composition, Hero's own `attack()` implementation `Swing club!` would result instead. This internal
 polymorphism across a runtime-injected part is the fundamental capability that Parts adds. 
 
-By supplying BaseHero as a runtime component instead of fusing it into Wizard's hierarchy, Wizard depends only on the Hero
-contract, not on BaseHero's implementation structure. Parts delegates the interface implementation while preserving the
+By supplying Hero as a runtime component instead of fusing it into Wizard's hierarchy, Wizard depends only on the Actor
+contract, not on Hero's implementation structure. Parts delegates the interface implementation while preserving the
 polymorphic behavior normally associated with inheritance.
 
 ---
@@ -82,15 +84,16 @@ reach overrides supplied by the composite.</sub>
 ### Wait...
 
 > ***Isn't this traits?***<br>
- Traits provide internal polymorphism, but at the price of adopting inheritance's single-object model. Composition with
- traits is limited to *compile-time* configuration, where they are folded into the hosting class, sacrificing independent
- runtime identity. Internal polymorphism, but not independent runtime components.
+ Traits provide internal polymorphism, but at the price of adopting inheritance's single-object model: they are folded into
+ the hosting class at *compile-time*, sacrificing both runtime-configured compositions and independent runtime identity.
+ Internal polymorphism, but not independent runtime components.
 
 > ***Doesn't Kotlin do this?***<br>
- Kotlin's `by`, Lombok's `@Delegate`, and Scala's `export` are all examples of ordinary *object composition*. They provide
- independent components (the first column), but not internal polymorphism: ordinary composition results in the "Swing club!"
- result above.
- 
+ Kotlin's `by` and Scala's `export` are examples of ordinary *object composition*. They provide independent components
+ (the first column), but not internal polymorphism: ordinary composition results in the "Swing club!" result above.
+
+**Parts provides both in arbitrary compositions.**
+
 ---
 
 <!-- TOC -->
@@ -128,30 +131,24 @@ reach overrides supplied by the composite.</sub>
 
 # The Self problem
 
-Consider the `Hero` example without `@part`:
+Consider the Hero example without `@part`:
 
 ```java
-/*@part*/ class BaseHero implements Hero {
+/*@part*/ class Hero implements Actor {
   public void takeAction() {
     attack();
   }
-
-  public void attack() {
-    out.println("Swing club!");
-  }
+  
+  public void attack() {println("Swing club!");}
 }
 
-class Wizard implements Hero {
-  @link Hero base;
-
-  Wizard(Hero base) { this.base = base; }
-
-  public void attack() {
-    out.println("Cast spell!");
-  }
+class Wizard implements Actor {
+  @link Actor actor;
+  Wizard(Actor actor) {this.actor = actor;}
+  public void attack() {println("Cast spell!");}
 }
 
-Wizard wizard = new Wizard(createHero());
+Wizard wizard = new Wizard(createActor());
 wizard.takeAction();
 ```
 The output is:
@@ -159,8 +156,8 @@ The output is:
 Swing club!
 ```
 
-Although `takeAction()` is invoked on `wizard`, it executes inside BaseHero. The call to `attack()` therefore dispatches
-on the BaseHero instance, not on the composite. Wizard's override is never reached.
+Although `takeAction()` is invoked on `wizard`, it executes inside Hero. The call to `attack()` therefore dispatches
+on the Hero instance, not on the composite. Wizard's override is never reached.
 
 This is the fundamental limitation of ordinary object composition. It preserves external polymorphism, but internal self-calls remain
 trapped within the delegated object. This limitation is known as the **Self problem**.
@@ -175,38 +172,39 @@ Generally, a link establishes a "part-of" relationship between the linking objec
 a *composite* object in terms of the interfaces defined in the link. A part's self-calls reach the composite.
 
 ```java
-interface Hero {
+interface Actor {
   void takeAction();
   void attack();
 }
 
-@part class BaseHero implements Hero {
-  public void takeAction() {
-    attack();
+@part class Hero implements Actor {
+  public void takeAction() { 
+    attack(); 
   }
-
-  public void attack() {
-    out.println("Swing club!");
-  }
-}
-
-class Wizard implements Hero {
-  @link Hero base;
-  Wizard(Hero base) {this.base = base;}
   
   public void attack() {
-    out.println("Cast spell!");
+    println("Swing club!");
   }
 }
 
-Wizard wizard = new Wizard(createHero());
-wizard.takeAction();
+class Wizard implements Actor {
+  @link Actor actor;
+  
+  Wizard(Actor actor) {this.actor = actor;}
+  
+  public void attack() {
+    println("Cast spell!");
+  }
+}
+
+Wizard wizard = new Wizard(createActor());
+wizard.takeAction(); // "Cast spell!"
 ```
 Output:
 ```
 Cast spell!
 ```
-BaseHero's `@part` annotation extends Java's dynamic dispatch across the Wizard composite, preserving polymorphic self-calls.
+Hero's `@part` annotation extends Java's dynamic dispatch across the Wizard composite, preserving polymorphic self-calls.
 
 ---
 
@@ -216,15 +214,17 @@ Use `@link` to implement one or more interfaces through a field.
 
 A link must be typed as an interface implemented by the declaring class. This interface defines the link.
 ```java
+class Wizard implements Actor {
+  @link Actor actor; // links Actor implementation to actor
 
-public class MyClass implements A {
-  @link A a; // links MyClass's A to a
-  
-  MyClass(A a) {
-    this.a = a;
+  Wizard(Actor actor) {this.actor = actor;}
+
+  @Override 
+  public void attack() {
+    println("Cast spell!");
   }
   
-  // A's implementation automatically forwards to `a`
+  // unimplemented Actor methods automatically forward to actor
 }
 ```
 Links are `private` and `final` by default.
@@ -238,9 +238,9 @@ internal polymorphism is preserved.
 
 `@part` classes preserve internal polymorphism even when behavior is defined in interface default methods.
 
-Suppose `takeAction()` is moved from `BaseHero` into the `Hero` interface:
+Suppose the `takeAction()` implementation is moved from Hero into the Actor interface:
 ```java
-interface Hero {
+interface Actor {
   default void takeAction() {
     attack();
   }
@@ -254,8 +254,8 @@ Cast spell!
 ```
 
 Although `takeAction()` executes from the interface, its call to `attack()` dispatches to Wizard exactly as it would if
-`takeAction()` were implemented in a part. Within the default method, `this` refers to the composite's Hero identity:
-the composite that claims Hero.
+`takeAction()` were implemented in a part. Within the default method, `this` refers to the composite's Actor identity:
+the composite that claims Actor.
 
 ---
 
@@ -265,22 +265,22 @@ To use an abstract `@part` class, it must be constructed using an `asLink()` sta
 static methods that match the signatures of the part's constructors.
 
 ```java
-interface Hero {
+interface Actor {
   void takeAction();
   void attack();
 }
 
-@part abstract class AbstractHero implements Hero {
+@part abstract class AbstractHero implements Actor {
   public void takeAction() {
     attack();  
   }
   // attack() is not implemented
 }
 
-class Wizard implements Hero {
-  @link Hero base = AbstractHero.asLink(); // <--- use abstract parts via asLink()
+class Wizard implements Actor {
+  @link Actor base = AbstractHero.asLink(); // use abstract parts via asLink()
 
-  public void attack() {out.println("Cast spell!");} // <--- must implement BaseHero's abstract methods
+  public void attack() {println("Cast spell!");} // must implement Hero's abstract methods
 }
 ```
 
@@ -314,7 +314,7 @@ class MyA implements A {
 }
 
 MyA myA = new MyA();
-out.println(myA.a( "x_" )); 
+println(myA.a( "x_" )); 
 ```
 Output:
 ```text
@@ -325,7 +325,7 @@ Output:
 
 # Self-preservation
 
-Composition integrity rests on dispatch identity: if a part exposes itself as its concrete type, a reference to that type
+Composition integrity rests on component identity: if a part exposes itself as its concrete type, a reference to that type
 can bypass the composite and compromise integrity. To prevent this, a part may use `this` only as one of its implemented
 interfaces or as `Object`.
 
@@ -340,8 +340,8 @@ class MyPart implements MyInterface {
     MyPart y = this; // compile error
     Object z = this; // ok
     myMethod(this); // compile error
-    out.println(this); // ok, prints MyPart
-    out.println((MyInterface)this); // ok, prints MyInterface composite
+    println(this); // ok, prints MyPart
+    println((MyInterface)this); // ok, prints MyInterface composite
   }
 
   private MyPart myMethod(MyPart a) {
@@ -358,9 +358,11 @@ The same compiler logic that makes self-calls reach the composite also rewrites 
 when they are used through an interface.
 
 **A word about identity:**<br>
-Unlike a superclass or a trait, a part is an independent object with its own identity. `this` as `Object` therefore
-refers directly to the part, scoped as `Object`. But a part also has *dispatch* identity: `this` as an interface refers
-to the composite that claims the interface, or the part itself if the interface is unclaimed in the composition graph.
+Unlike a superclass or a trait, a part is an independent object with *runtime identity*: within a composite each part is
+a separate runtime object with its own state, allowing a composite to freely define its structure at runtime. At the same
+time a part's runtime identity is contextual: a part's `this` in the context of an interface type refers to the composite
+that claims the interface, or the part itself if the interface is unclaimed in the composition graph. This contextual identity
+is what enables internal polymorphism.
 
 ---
 
@@ -385,8 +387,8 @@ class MyRoot implements Foo, Bar {
   @link Foo foo = new FooPart();
 }
 ```
-Note, here `@internal` applies to the delegation surface of FooPart, not to the methods of Bar: Bar methods are still
-*accessible* through FooPart.
+Note, here `@internal` applies to the *delegation surface* of FooPart (the interfaces that may be linked), not to the methods
+of Bar: Bar methods are still *accessible* through FooPart.
 
 ### Usage on methods
 
@@ -425,7 +427,8 @@ It is visible only to:
 ### Additionally:
 
 - Inherited: Implementors automatically inherit `@internal` status for overridden methods; it does not need to be reapplied.
-- Compiler Enforced: Parts produces compile errors for `@internal` access violations.
+- Compiler enforced: Parts produces compile errors for `@internal` access violations at compile-time.
+- Runtime enforced: When supplied at runtime, a component's `@internal` access violations are reported as runtime exceptions.
 
 ---
 
@@ -445,34 +448,34 @@ Should TA use Student's Person or Teacher's? Use `@link(share=Person.class)` to 
 
 ```java
 interface Person  {
-  String getName();
-  String getTitle();
-  String getTitledName();
+  String name();
+  String title();
+  String titledName();
 }
-interface Teacher extends Person {}
-interface Student extends Person {}
-interface TA extends Student, Teacher {}
+interface Teacher extends Person {...}
+interface Student extends Person {...}
+interface TA extends Student, Teacher {...}
 
 @part class PersonPart implements Person {
   private final String name;
   public PersonPart(String name) {this.name = name;}
-  public String getName() {return name;}
-  public String getTitle() {return "Person";}
-  public String getTitledName() {
-    return getTitle() + " " + getName();
+  public String name() {return name;}
+  public String title() {return "Person";}
+  public String titledName() {
+    return title() + " " + name();
   }
 }
 
 static @part class TeacherPart implements Teacher {
   @link Person person;
   public TeacherPart(Person person) {this.person = person;}
-  public String getTitle() {return "Teacher";}
+  public String title() {return "Teacher";}
 }
 
 static @part class StudentPart implements Student {
   @link Person person;
   public StudentPart(Person person) {this.person = person;}
-  public String getTitle() {return "Student";}
+  public String title() {return "Student";}
 }
 
 static @part class TaPart implements TA {
@@ -484,13 +487,13 @@ static @part class TaPart implements TA {
     this.teacher = new TeacherPart(student);
   }
 
-  public String getTitle() {return "TA";}
+  public String title() {return "TA";}
 }
 
 Person person = new PersonPart("Milton");
 Student student = new StudentPart(person);
 TA ta = new TaPart(student);
-out.println(ta.getTitledName());
+println(ta.titledName());
 ```
 Output:
 ```text
@@ -500,7 +503,7 @@ The TA's Student and Teacher roles share the same underlying Person identity: `@
 that the overlapping Person interface is supplied by the shared Student link. Without `share=Person.class` a compiler error
 indicates the overlap with Person.
 
->Note, `@part` classes are _not_ required with `@link(share=...)`; `share` applies to forwarding as well.
+>Note, `@part` classes are _not_ required with `@link(share=...)`; `share` applies equally to ordinary object composition.
 
 ---
 
@@ -513,10 +516,11 @@ know where to dispatch self-calls?
 The conventional assumption has been that this requires additional dispatch machinery that either sacrifices performance,
 compromises arbitrary compositions, or some of both.
 
-Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). A component's delegation
-surface consists of interfaces, with composites wiring linked interfaces to components, allowing a self-call to resolve
-directly to the composite's implementation. The resulting dispatch is O(1): performance equivalent to a conventional virtual
-call (see [5.1 Dispatch Performance](https://doi.org/10.5281/zenodo.21514973)).
+Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). The interfaces a component
+implements comprise its delegation surface; a composite can link to that surface selectively, by interface. Each link directly
+wires the composite to its component, allowing a component's self-calls on the link's interface to resolve directly
+to the composite's implementation. The resulting dispatch is O(1): performance equivalent to a conventional virtual call
+(see [5.1 Dispatch Performance](https://doi.org/10.5281/zenodo.21514973)).
 
 ---
 
