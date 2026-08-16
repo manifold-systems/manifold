@@ -35,7 +35,7 @@ Works with JDK LTS releases 8 - 25 + latest, plus comprehensive IDE support in *
 
 # What can you do with Manifold?
 
-## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
+## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) _**(New!)**_
 
 *Parts* resolves a long-standing dilemma in statically typed object-oriented programming: **independent runtime components** and **internal polymorphism**
 remain unreconciled in general-purpose models.
