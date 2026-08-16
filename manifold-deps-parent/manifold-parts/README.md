@@ -156,7 +156,7 @@ The output is:
 Swing club!
 ```
 
-Although `takeAction()` is invoked on `wizard`, it executes inside Hero. The call to `attack()` therefore dispatches
+Although `takeAction()` is invoked on `wizard`, it executes inside Hero. Without `@part`, the call to `attack()` dispatches
 on the Hero instance, not on the composite. Wizard's override is never reached.
 
 This is the fundamental limitation of ordinary object composition. It preserves external polymorphism, but internal self-calls remain
@@ -169,7 +169,7 @@ trapped within the delegated object. This limitation is known as the **Self prob
 Use `@part` to define a class designed to be composed with `@link`.
 
 Generally, a link establishes a "part-of" relationship between the linking object and the linked `part`. Both objects form
-a *composite* object in terms of the interfaces defined in the link. A part's self-calls reach the composite.
+a *composite* object in terms of the interfaces defined in the link. **A part's self-calls reach the composite.**
 
 ```java
 interface Actor {
