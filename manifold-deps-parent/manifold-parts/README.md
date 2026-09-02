@@ -2,7 +2,7 @@
 
 # _Parts_
 
-![latest](https://img.shields.io/badge/latest-v2026.1.12-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2026.1.13-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21514973-blue)](https://doi.org/10.5281/zenodo.21514973)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
@@ -591,11 +591,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-parts-rt:2026.1.12'
+     implementation 'systems.manifold:manifold-parts-rt:2026.1.13'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-parts:2026.1.12'
-     testAnnotationProcessor 'systems.manifold:manifold-parts:2026.1.12'
+     annotationProcessor 'systems.manifold:manifold-parts:2026.1.13'
+     testAnnotationProcessor 'systems.manifold:manifold-parts:2026.1.13'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -631,7 +631,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2026.1.12</manifold.version>
+        <manifold.version>2026.1.13</manifold.version>
     </properties>
     
     <dependencies>
@@ -677,10 +677,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-parts`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts/2026.1.12/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts/2026.1.12)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts/2026.1.13/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts/2026.1.13)
 
 `manifold-parts-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts-rt/2026.1.12/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts-rt/2026.1.12)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts-rt/2026.1.13/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts-rt/2026.1.13)
 
 ---
 
