@@ -97,6 +97,46 @@ public class DagTopologyTest extends TestCase
     assertEquals( "right:root.shared", root.rightResult() );
   }
 
+  // --- direct cycle
+
+  static @part class PartLeftCycle implements Left, Right
+  {
+    @link Right right = new PartRightCycle( this );
+
+    @Override
+    public String leftResult() { return "PartLeftCycle:" + ((Left)this).shared(); }
+
+    @Override
+    public String shared() { return "PartLeftCycle.shared"; }
+  }
+
+  static @part class PartRightCycle implements Left, Right
+  {
+    @link Left left;
+
+    public PartRightCycle( Left left )
+    {
+      this.left = left;
+    }
+
+    @Override
+    public String rightResult() { return "PartRightCycle:" + ((Right)this).shared(); }
+
+    @Override
+    public String shared() { return "PartRightCycle.shared"; }
+  }
+
+  public void testLeftRightCycle()
+  {
+    // PartLeftCycle claim Right from PartRightCycle
+    // PartRightCycle claim Left from PartLeftCycle
+    // hence, the cast calls behave as expected.
+
+    PartLeftCycle left = new PartLeftCycle();
+    assertEquals( "PartLeftCycle:PartRightCycle.shared", left.leftResult() );
+    assertEquals( "PartRightCycle:PartLeftCycle.shared", left.right.rightResult() );
+  }
+
   // --- intermediate composite overrides a method; leaf's self-dispatch resolves to mid, not root ---
   // Root -> CalcMid (composite) -> CalcLeaf
   // CalcLeaf.compute() calls scale() via self-dispatch
