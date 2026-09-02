@@ -801,8 +801,8 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       // the field
       JCVariableDecl fieldDecl = make.VarDef( access, name, type, initExpr );
 
-      // add to AST
-      classDecl.defs = classDecl.defs.append( fieldDecl );
+      // add to AST, add at the *head* of the list to guarantee initialization ahead of user field init
+      classDecl.defs = classDecl.defs.prepend( fieldDecl );
 
       // enter symbol as class member
       memberEnter( fieldDecl, classDecl );
