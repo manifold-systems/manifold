@@ -174,4 +174,47 @@ public class SimplePreprocessorTest
     #endif
     return sb.toString();
   }
+  
+  @Test
+  public void testIfdef()
+  {
+    #ifdef AAA
+    String answer = "AAA";
+    #endif
+    
+    #ifdef BBB
+    String answer = "BBB";
+    #endif
+
+    assertEquals( "BBB", answer );
+  }
+  
+  @Test
+  public void testIfndef()
+  {
+    #ifndef AAA
+    String answer = "AAA";
+    #endif
+    
+    #ifndef BBB
+    String answer = "BBB";
+    #endif
+
+    assertEquals( "AAA", answer );
+  }
+  
+  @Test
+  public void testDefined()
+  {
+    #if defined(AAA)
+    String answer = "AAA";
+    #endif
+    
+    #if defined(BBB)
+    String answer = "BBB";
+    #endif
+
+    assertEquals( "BBB", answer );
+  }
+  
 }
