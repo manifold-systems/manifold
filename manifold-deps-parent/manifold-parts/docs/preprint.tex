@@ -85,17 +85,21 @@
 \renewcommand{\shortauthors}{McKinney}
 
 \begin{abstract}
-Object composition under static typing forces a trade among three properties: independent components, open recursion, and
-arbitrary composition. Ordinary object composition models compose independent runtime components through forwarding,
-but a component's self-calls don't dispatch through the composite. Trait and mixin-based composition models preserve
-self-call dispatch but fuse components into the class, resulting in a single runtime object, giving up independent components.
-Other delegation-based composition models are forced to compromise by limiting component independence, restricting composition
-structure, or incurring runtime overhead.
+A longstanding tenet of object-oriented design is to favor composition over implementation inheritance. But to fully move
+off the inheritance crutch, a general composition model is needed that does not sacrifice the qualities of conventional
+composition that make it favorable: independent runtime components and arbitrary composition. At the same time it must retain
+the defining property of inheritance: open recursion. These three properties together define such a model.
 
-We present \emph{Parts}, a general composition model that removes the trade. Realized as a compiler plugin for Java 8–26,
-Parts provides independent components, supplied as runtime objects at construction, with self-calls that route through the
-composite in arbitrary compositions. The enabling mechanism, \emph{interface-scoped dispatch} (ISD), assigns composite identity
-per interface at construction. The dispatch cost is $O(1)$, empirically equivalent to a vtable call.
+No general-purpose language satisfies all three. Existing approaches fall into two modes: forwarding-based composition keeps
+independent components and arbitrary topologies but forfeits open recursion, since a component's self-calls never reach
+overriding composites; trait-based composition recovers open recursion by fusing components into a single compile-time object,
+forfeiting their independence and dynamic composition. Research models reach past both modes but still sacrifice independence,
+arbitrary composition, or performance.
+
+We present Parts, a general composition model that maintains these properties without compromise. Realized as a compiler
+plugin for Java 8–26, Parts reconciles the properties of conventional object composition with open recursion. The enabling
+mechanism, interface-scoped dispatch (ISD), assigns composite identity per interface at construction. The dispatch cost
+is $O(1)$, empirically equivalent to a vtable call.
 \end{abstract}
 
 \maketitle
@@ -105,38 +109,43 @@ per interface at construction. The dispatch cost is $O(1)$, empirically equivale
 \label{sec:intro}
 %% ─────────────────────────────────────────────────────────────────────────────
 
-Object composition is the standard prescription for structuring behavior from reusable components~\cite{gamma1994}. A general
-composition model must reconcile three properties: \emph{independent components} (late-bound objects supplied at construction),
-\emph{open recursion} (self-calls through the composite), and \emph{arbitrary composition} (unrestricted delegation topologies).
-Existing composition models typically trade among these properties, particularly under static typing (Section~\ref{sec:related}).
+Object composition is the standard prescription for structuring behavior from reusable components~\cite{gamma1994}. Newer
+mainstream languages (Rust, Swift, and Go) took this route to avoid the hazards of implementation inheritance, primarily
+fragile base classes and tight coupling to superclass internals. But avoiding those hazards with object composition alone
+introduced new ones.
 
-Ordinary object composition via forwarding-based constructs (Kotlin \code{by}~\cite{kotlin}, Lombok
-\code{@Delegate}~\cite{lombok}) supplies independent components under arbitrary composition, but does not
-support open recursion because plain objects do not preserve references to the forwarding composites required to resolve
-self-calls. This is the \emph{Object Schizophrenia} problem~\cite{sekharaiah2002}.
+Abandoning implementation inheritance isn't wrong, but inheritance has at least one quality worth keeping: open recursion.
+The behavior is particularly useful with interface-based object composition where a component's interface self-calls can
+reach composite overrides. But none of these languages provide this capability.
 
-Trait composition (Scala \code{with}~\cite{odersky2005},
-mixins~\cite{bracha1990}) inverts the trade. Self-calls dispatch through
-\code{this} in the linearized class, so composite overrides are visible. But
-traits are fused into the class hierarchy at compile time, not supplied as
-independent runtime objects at construction. Composition is static and compositional
-structure is limited to a single-rooted hierarchy.
+This paper proposes a general composition model that does. Our model cleanly reconciles the essential properties
+of object composition: \emph{independent components} (late-bound objects supplied at construction) and \emph{arbitrary composition}
+(unrestricted delegation topologies), with \emph{open recursion} (self-calls through the composite). Existing composition
+models typically circle these properties, never achieving all three (Section~\ref{sec:related}).
 
-Family-based composition models recover open recursion while retaining component structure, but the family module controls
-object construction, where members are instantiated within the family rather than supplied as independent objects: they
-provide open recursion without independent components.
+The conventional object composition of modern composition-based languages differs in implementation but comes down to basic forwarding.
+Some, like Rust and Swift, require manual forwarding; others, via constructs such as Kotlin's by clause~\cite{kotlin}, forward
+automatically. All supply independent components under arbitrary composition, but none have open recursion,
+because plain objects do not preserve references to the forwarding composites required to resolve self-calls. This
+is the \emph{Object Schizophrenia} problem~\cite{sekharaiah2002,kniesel2000}.
 
-Delegation-based composition models resembling Parts provide independent components with open recursion, but fall short
-of arbitrary composition without a dispatch mechanism that maps each of the composite's interface claims onto the corresponding
-composite identity in the component. Such mechanisms restrict the delegation topologies that can be practically expressed
-under arbitrary composition (Section~\ref{subsec:topologies}) and tend to introduce substantial runtime overhead (Section~\ref{sec:related}).
+Trait composition (Scala \code{with}~\cite{odersky2005}, mixins~\cite{bracha1990}) inverts the trade. Self-calls dispatch
+through \code{this} in the linearized class, so composite overrides are visible. But traits are fused into the hierarchy
+at compile time, resulting in a single runtime object; component independence and runtime defined composition structure
+are lost. Composition is static and limited to a single-rooted, merged hierarchy.
 
-\emph{Parts} satisfies all three properties. A \code{@part} class is an independent object supplied
-at construction; \code{@link} marks a field through which a composite delegates an interface to a part. When a
-composite is constructed, the compiler plugin wires composite identity into each part per delegated interface, causing
-self-calls in the part to dispatch through the composite. A link field accepts any implementation of its declared interface:
-forwarding therefore works with arbitrary objects, while part objects additionally provide open recursion. Parts thus subsumes
-forwarding rather than replacing it.
+Several research projects (Section~\ref{sec:related}) have produced delegation-based composition models that achieve independent
+components with open recursion, but only within limited topologies, not the full gamut supported in conventional object composition
+(Section~\ref{subsec:topologies}). Equally critical, these models tend to introduce auxiliary machinery to support open recursion,
+resulting in additional implementation complexity and runtime overhead that make them less practical.
+
+With \code{@part} and \code{@link}, \emph{Parts} satisfies all three properties. A \emph{part} (a class annotated with \code{@part})
+is an independent component supplied at construction. A \emph{composite} (a class with one or more fields annotated
+with \code{@link}) delegates the interfaces declared on the linked fields to parts. When a composite is constructed, the compiler
+plugin wires composite identity into each part per delegated interface, enabling self-calls in the part to dispatch through
+the composite. A link field accepts any implementation of its declared interface: forwarding therefore works with ordinary
+objects, while part objects additionally provide open recursion. Parts thus subsumes forwarding, enabling both forwarding
+with plain objects and delegation with parts in the same composite.
 
 The enabling mechanism is \emph{interface-scoped dispatch} (ISD): assigning composite identity per interface at construction
 makes open recursion possible under arbitrary composition. Because dispatch is interface-scoped, self-calls retain $O(1)$
@@ -206,9 +215,9 @@ without changing \code{Wizard}.
 
 Interface contracts are enforced at compile time: the link field has
 type \code{Actor}, and the compiler verifies that \code{Wizard}
-implements the delegated interface. Part identity may not escape the
+implements the delegated interface. A raw part may not escape the
 composite dispatch path: passing or assigning \code{this} as the concrete
-part type is a compile error; interface types are required.
+part type is a compile error; interface or Object types are required.
 
 This example is single-rooted: \code{Wizard} is the sole composite
 for \code{Hero}, and one composite identity suffices. The following
@@ -582,6 +591,9 @@ Each of the four topologies illustrated takes its reduced form using as few node
 the essential properties that make the topology distinct. Topologies (a) and (b) each have a single source, but (b) is multi-root;
 (c) is multi-root and multi-source; (d) is multi-root and sourceless. Topology (d) is structurally cyclic but behaviorally
 acyclic over distinct interfaces.
+
+These four are exhaustive over the two dimensions. Of the six combinations the dimensions admit, two cannot occur: a
+single-rooted part forces a single source, and a sourceless graph is necessarily multi-root. This leaves (a)–(d).
 
 These topologies provide a basis for verifying whether a composition model supports arbitrary composition: does its treatment
 of open recursion remain correct under arbitrary extensions of each topology?
@@ -1290,8 +1302,8 @@ directly. How this mapping is realized inside a persistence framework is an open
 \paragraph{Parts as a complete compositional alternative.}
 Parts does not argue that implementation inheritance is wrong, but that
 it is no longer the only practical option. Any codebase written with
-implementation inheritance can in principle be expressed purely in Parts
-compositions. What the model offers is a general compositional foundation that
+implementation inheritance should in principle be expressible purely in Parts
+compositions. What the model offers is a general composition foundation that
 delivers open recursion and fosters low coupling and high cohesion through its
 interface contracts and independent parts. A systematic study of implementation
 inheritance patterns in real codebases would identify any remaining gaps
@@ -1364,7 +1376,7 @@ single receiver typed at one interface admits no multi-root
 composition~\cite[\S5.5.4]{kniesel2000}. DARWIN thus achieves open recursion,
 but only over a single inherited base, sacrificing arbitrary composition.
 Parts' ISD supplies open recursion together with multiple delegation---required
-for arbitrary composition---by rooting identity in the interface rather than the object.
+for arbitrary composition---by assigning identity per interface at construction.
 
 \paragraph{Deep delegation.}
 DelphJ~\cite{gerakios2013} is a static research language that aims to emulate inheritance with
@@ -1374,11 +1386,22 @@ substantial practical costs. Interface method forwarding is not implicit: a sepa
 DSL is required to specify which interface methods a composite forwards. More critically, dispatch
 requires runtime machinery to assemble and traverse access paths, which must be carried with
 object references or mapped into stack references, spreading dispatch costs throughout the runtime.
-The limits inherent in the access path prevent the model from satisfying arbitrary composition:
-multi-source topologies and behaviorally terminal cycles, for instance, are not expressible at all
-with the access path strategy (Section~\ref{subsec:topologies}). Parts instead internalizes composite
-identity in the component; its compact, self-contained design enables automated forwarding while preserving
-$O(1)$ self-dispatch in arbitrary composition.
+The model's access path is also fundamentally incapable of supporting cross-interface calls in arbitrary topologies,
+for instance when the called interface is rooted in either a separate graph source or a behaviorally terminal cycle (Section~\ref{subsec:topologies}).
+Parts instead internalizes composite identity in the component; its compact, self-contained design
+enables automated forwarding while preserving $O(1)$ self-dispatch in arbitrary composition.
+
+\paragraph{Incomplete objects.}
+Incomplete Featherweight Java (IFJ)~\cite{bettini2011} is a statically typed,
+delegation-based calculus in which \emph{incomplete objects} are completed at run
+time by complete objects. Like Parts, it composes independent runtime objects with
+open recursion under static typing. Its delegation, however, is structural and per
+method, and binds a single \code{this} to the sender throughout, so a component cannot
+root different interfaces at different composites. Its composition is therefore
+confined to topology~(a) (Section~\ref{subsec:topologies}), the single-rooted,
+single-source chain. Parts binds each interface to a specific delegate through \code{@link},
+assigning composite identity per interface, which admits the multi-rooted and multi-source
+topologies~(b)--(d) that partial delegation induces in ordinary object composition.
 
 \paragraph{Family polymorphism.}
 gbeta~\cite{ernst2001} (formalized by
@@ -1447,21 +1470,11 @@ under a statically-checked interface contract.
 \section{Conclusion}
 %% ─────────────────────────────────────────────────────────────────────────────
 
-For decades, the conventional wisdom of object-oriented programming has favored composition over implementation inheritance,
-yet mainstream languages have not delivered a general composition model that makes this practical.
-
-Today's models still range between two failure modes: forwarding-based constructs that keep components independent but forgo
-open recursion, and trait- or mixin-based models that recover open recursion by flattening composition back into the class
-hierarchy, giving up the independent, dynamically composable objects that make composition worth choosing in the first place.
-
-Models that push beyond inheritance while retaining open recursion instead resolve composite identity through a single \emph{self},
-fixed at construction, or by reconstructing it per call. This limits such models to basic composition topologies, excluding
-the advanced topologies of Section~\ref{subsec:topologies} and forfeiting arbitrary composition. These models also tend
-to add substantial runtime overhead compared with the more mainstream models rooted in implementation inheritance.
-
-Parts aims to provide a \emph{practical} general composition model. It combines independent runtime components, open recursion,
-and arbitrary composition, while retaining $O(1)$ self-dispatch. By assigning composite identity per interface at construction,
-Parts shows that there was always a clear path.
+The advice to favor composition over implementation inheritance came with an unspoken cost: composition gives up the open
+recursion that made inheritance so powerful. Parts removes that cost. By assigning composite identity per interface at
+construction, it shows that open recursion need not be tied to inheritance's single runtime object; the two can be separated
+without compromise. The result is a general model that retains both properties of ordinary object composition---independent
+runtime components and arbitrary composition topologies---and adds dynamic self-dispatch at vtable speed.
 
 %% ─────────────────────────────────────────────────────────────────────────────
 %% References
@@ -1557,6 +1570,12 @@ G.~Kniesel.
 P.~Gerakios, A.~Biboudis, and Y.~Smaragdakis.
 \newblock Forsaking inheritance: Supercharged delegation in {DelphJ}.
 \newblock In {\em Proceedings of OOPSLA}, pages 233--252, 2013.
+
+\bibitem{bettini2011}
+L.~Bettini, V.~Bono, and B.~Venneri.
+\newblock Delegation by object composition.
+\newblock {\em Science of Computer Programming}, 76:992--1014, 2011.
+\newblock DOI: \href{https://doi.org/10.1016/j.scico.2010.04.006}{10.1016/j.scico.2010.04.006}.
 
 \bibitem{ostermann2002}
 K.~Ostermann.
