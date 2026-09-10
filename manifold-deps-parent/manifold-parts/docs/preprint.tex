@@ -88,12 +88,12 @@
 The conceptual attraction of object composition is its ability to freely build loosely coupled systems from independent
 runtime components. Yet practical limitations in today's languages prevent composition from fully realizing this potential,
 chiefly the inability to perform late-bound self-calls (open recursion), a defining strength of implementation inheritance.
-Filling this gap while retaining the essential properties of ordinary object composition remains an unmet challenge.
+Filling this gap while retaining the essential properties of object composition remains an unmet challenge.
 
-We present Parts, a general object composition model that meets this challenge by unifying independent runtime components,
+We present Parts, a general delegation model that meets this challenge by unifying independent runtime components,
 arbitrary composition, and open recursion. Its enabling mechanism, interface-scoped dispatch (ISD), assigns composite identity
 per interface at construction, allowing self-calls to dynamically dispatch through overriding composites. Parts is realized
-as a compiler plugin for Java 8--26 with IDE integration, and its dispatch cost is $O(1)$, empirically equivalent to a vtable
+as a compiler plugin for Java 8--26 with IDE integration. Its dispatch cost is $O(1)$, empirically equivalent to a vtable
 call.
 \end{abstract}
 
@@ -105,17 +105,17 @@ call.
 %% ─────────────────────────────────────────────────────────────────────────────
 
 Object composition is the standard prescription for structuring behavior from reusable components~\cite{gamma1994}. Most
-object-oriented languages provide some level of support for object composition, offering an alternative to implementation inheritance and
-its well-known hazards such as fragile base classes and coupling to superclass internals. But conventional object
-composition gives up a vital property that makes inheritance effective: \emph{open recursion}. With open recursion, a component's
-self-calls remain late-bound, allowing them to reach overrides supplied by delegating composites. Without it, self-calls
+object-oriented languages provide varying levels of composition through \emph{forwarding}~\cite{kniesel2000}, offering an alternative
+to implementation inheritance and its well-known hazards such as fragile base classes and coupling to superclass internals.
+But forwarding gives up a vital property that makes inheritance effective: \emph{open recursion}. With open recursion, a component's
+self-calls remain late-bound, allowing them to reach overrides supplied by forwarding composites. Without it, self-calls
 are fixed to the component's local implementation and never reach composite overrides. Yet modern languages provide no practical
 way to retain this behavior.
 
-The challenge is to retain the properties that make ordinary object composition favorable while recovering open recursion.
-In particular, a general composition model should preserve \emph{independent components} (late-bound objects supplied at
-construction) and \emph{arbitrary composition} (unrestricted delegation topologies), while providing \emph{open recursion}
-(self-calls through the composite). Existing composition models generally provide at most two of these properties (Section~\ref{sec:related}).
+The challenge is to retain the properties that make object composition favorable while recovering open recursion.
+In particular, a resolution must preserve \emph{independent components} (late-bound objects supplied at
+construction) and \emph{arbitrary composition} (unrestricted composition topologies), while providing \emph{open recursion}
+(self-calls through the composite). Mainstream composition models generally provide at most two of these properties (Section~\ref{sec:related}).
 
 The conventional object composition of modern languages differs in implementation but reduces to basic forwarding. Some,
 like Rust and Swift, require manual forwarding; others, such as Kotlin's \code{by} clause~\cite{kotlin} and Go's struct
@@ -126,30 +126,27 @@ so its self-calls cannot be redirected through the composite. This is the \emph{
 Trait composition, including Scala's \code{with}~\cite{odersky2005} and mixins~\cite{bracha1990}, makes the opposite trade.
 Self-calls through \code{this} dispatch in the composed hierarchy, so overrides remain visible. But traits are fused into
 the hierarchy at compile time and execute as a single runtime object. Components lose independent runtime identity, and
-composition cannot freely define its structure at runtime.
+composition is structurally static and cannot be defined at runtime.
 
-Several research projects (Section~\ref{sec:related}) have explored delegation-based models that retain independent components
-while restoring open recursion. These approaches, however, support only restricted composition topologies rather than the
-arbitrary topologies of conventional object composition (Section~\ref{subsec:topologies}). Most introduce auxiliary mechanisms
-for maintaining a level of composite identity. This mechanism tends to increase overall implementation complexity and, in
-some cases, incurs substantial runtime overhead.
+Several research projects (Section~\ref{sec:related}) have explored \emph{delegation}~\cite{lieberman1986,kniesel1999} models
+that retain independent components while restoring open recursion. So far, these models support only restricted composition
+topologies rather than the arbitrary topologies of object composition (Section~\ref{subsec:topologies}). Most introduce
+auxiliary mechanisms for maintaining a level of composite identity. These mechanisms tend to increase overall implementation
+complexity and, in some cases, incur substantial runtime overhead.
 
-Parts addresses these limitations. A \emph{part} is any class annotated with \code{@part}; it is an independent component supplied
-at construction. A \emph{composite} is a regular class with one or more fields annotated with \code{@link}; it delegates the interfaces
-declared on its linked fields to parts or plain objects. At link-field assignment, Parts stores the composite identity for
-each linked interface in the assigned part. Through this identity, a part's self-calls reach composite overrides while the part remains an independent
-runtime object. Because a link accepts any implementation of its declared interface, ordinary objects can still be used
-as forwarding components, allowing Parts to compose with types not designed for it. Parts therefore subsumes conventional
-composition by allowing both simple forwarding and open-recursive delegation to coexist within the same composite.
-
-The enabling mechanism is \emph{interface-scoped dispatch} (ISD). By assigning composite identity independently for each
-interface, ISD permits open recursion across arbitrary composition topologies while preserving independent runtime components.
-Because dispatch is interface-scoped, self-calls retain $O(1)$ dispatch cost.
+As a general delegation model, Parts addresses these limitations by unifying independent runtime components,
+arbitrary composition, and open recursion. Its enabling mechanism, interface-scoped dispatch (ISD), uses \emph{links} to assign
+composite identity per interface at construction to \emph{parts}, components that participate in delegation. A part's self-calls
+then dispatch dynamically through the composites that link it. Per-interface identity is what carries this across arbitrary
+composition topologies while the parts remain independent runtime objects. Links work with both part and non-part components,
+supporting delegation with parts and forwarding with non-parts, allowing both to coexist in the same composite.
+Parts is realized as a compiler plugin for Java 8--26 with IDE integration; because dispatch is interface-scoped, its cost
+is $O(1)$, empirically equivalent to a vtable call.
 
 The core contributions are:
 
 \begin{itemize}
-  \item \textbf{Parts}: a model for object composition in which
+  \item \textbf{Parts}: a general delegation model in which
         components are independent runtime objects, composable arbitrarily
         under partial delegation, with self-calls dispatching through
         the composite and interface contracts statically enforced.
@@ -340,55 +337,62 @@ composition, showing distinct composite roots per interface.}
 Parts is defined over a standard typed object model where classes implement interfaces and method dispatch is defined by
 the receiver's runtime type.
 
-A \emph{part} is a class annotated with \code{@part} and implements one or
-more interfaces. A \emph{link} is an ordinary field annotated with \code{@link} typed
-as an interface implemented by the enclosing class. The interface is delegated to the link's value, assigned at construction.
-Links are implicitly \code{private} and \code{final} (explicit modifiers are redundant).
-A class containing one or more links is a \emph{composite}, it nominally implements
-every interface its links claim. The \emph{delegation surface} of a part is its interface hierarchy,
-excluding any interface marked \code{@internal} in its \code{implements} clause.
+\begin{description}
+  \item[claim] a part's claimed interfaces are those that one or more composites have linked: the composite "claims" its
+  linked interfaces, becoming their exclusive identity within their implementing parts.
 
-When a composite links an interface to a part, the part is directly wired to the composite;
-it records a \emph{composite identity}: a reference to the composite statically indexed by the interface.
-The part's self-calls route through the composite indexed by the interface of the called method. The enabling mechanism
-is \emph{interface-scoped dispatch} (ISD).
+  \item[component] a class nominally implementing one or more interfaces available for delegation.
 
-A part may itself contain link fields, in which case composite identity
-propagates transitively. When such a part is wired to an outer composite, that
-composite becomes the dispatch root for each interface it claims throughout the
-delegation chain, while interfaces it does not claim retain the roots
-established by inner composites. This \emph{transitive propagation} traverses
-part links only: it terminates at any non-part link, a regular object with
-self-calls remaining local to the delegate. A composition may freely mix parts
-and non-part delegates, with no interaction between them.
+  \item[composite] a class containing one or more links. A composite nominally implements the interfaces declared on its
+  links.
 
-Composites must also resolve \emph{diamonds}. When a composite has multiple links that share a common
-interface, the authoritative link must be chosen via \code{@link(share=I.class)} at one of the link sites.
-This determines the leg of the diamond the linking composite forwards through. The other links wire the
-composite normally: self-calls on the shared interface always dispatch through the linking composite to the
-component on the authoritative leg.
+  \item[delegation surface] a component's interface hierarchy, excluding any interface marked \code{@internal} in its \code{implements}
+  clause.
 
-Two practical extensions, composite-scoped encapsulation (\code{@internal})
-and abstract parts with deferred linkage (\code{asLink()}), are defined
-and implemented (Section~\ref{sec:impl}).
+  \item[interface] a stateless abstract type that defines a contract (a Java interface).
+
+  \item[link] an ordinary field annotated with \code{@link} and typed as an interface. The enclosing class (the composite)
+  delegates the link's declared interface to the component assigned to the link at construction. Links are implicitly \code{private}
+  and \code{final}; explicit modifiers are redundant.
+
+  \item[part] a component annotated with \code{@part}, which signals compiler plugin processing for open recursion support.
+
+  \item[partial delegation] a requirement for arbitrary compositions, where a composite may claim only some of a part's
+  delegation surface.
+
+  \item[root (of an interface)] the linking composite claiming an interface of a part.
+\end{description}
+
+When a composite links an interface to a part, the part is directly wired to the composite; it records a \emph{composite
+identity}: a reference to the composite statically indexed by the interface. The part's self-calls route through the composite
+indexed by the interface of the called method. The enabling mechanism is \emph{interface-scoped dispatch} (ISD).
+
+A part may itself contain link fields, in which case composite identity propagates transitively. When such a part is wired
+to an outer composite, that composite becomes the dispatch root for each interface it claims throughout the delegation chain,
+while interfaces it does not claim retain the roots established by inner composites. This \emph{transitive propagation}
+traverses part links only; it terminates at any non-part link, where self-calls are fixed within the ordinary object. A
+composition may freely mix parts and non-part delegates, with no interaction between them.
+
+Composites must also resolve \emph{diamonds}. When a composite has multiple links that share a common interface, an authoritative
+link must be chosen via \code{@link(share=I.class)} at one of the link sites. This determines the leg of the diamond the
+linking composite forwards through. The other links wire the composite normally: self-calls on the shared interface always
+dispatch through the linking composite to the component on the authoritative leg.
+
+Two practical extensions, composite-scoped encapsulation (\code{@internal}) and abstract parts with deferred linkage (\code{asLink()}),
+are defined and implemented (Section~\ref{sec:impl}).
 
 \paragraph{Dispatch rule.}
-Traditional object-oriented dispatch resolves a call through the receiver's
-object identity:
+Traditional object-oriented dispatch resolves a call through the receiver's object identity:
 \[ \text{call } m() \text{ on } o \;\longrightarrow\; \mathit{vtable}(o,\, m) \]
-Interface-scoped dispatch replaces the single object identity with a
-per-interface composite identity. A self-call $m()$ in part $P$ where
-$m \in I$ resolves through the composite identity for $I$:
-\[ \text{self-call } m() \in I \text{ in } P \;\longrightarrow\;
-   \$\mathit{selves}_P[I].m() \]
-For self-calls within a part's methods, the dispatch triple is
-\emph{(part, interface, method)} rather than the conventional
+Interface-scoped dispatch replaces the single object identity with a per-interface composite identity. A self-call $m()$
+in part $P$ where $m \in I$ resolves through the composite identity for $I$:
+\[ \text{self-call } m() \in I \text{ in } P \;\longrightarrow\; \$\mathit{selves}_P[I].m() \]
+For self-calls within a part's methods, the dispatch triple is \emph{(part, interface, method)} rather than the conventional
 \emph{(object, method)}.
-Figure~\ref{fig:dispatch-comparison} contrasts this per-interface routing with a single shared composite identity.
-This is \emph{open recursion}: a method's self-calls late-bind to the
-most-derived receiver. Here the receiver resolves from the interface of the self-call. Forwarding is the closed case: a
-component's self-calls stay in the component, and the composite never enters
-the recursion.
+Figure~\ref{fig:dispatch-comparison} contrasts this per-interface routing with a single shared composite identity. This is
+\emph{open recursion}: a method's self-calls late-bind to the most-derived receiver. Here the receiver resolves from the
+interface of the self-call. Forwarding is the closed case: a component's self-calls stay in the component, and the composite
+never enters the recursion.
 
 \begin{figure}[H]
 \centering
@@ -490,9 +494,8 @@ self-call to its correct composite root.}
 
 \begin{invariant}
 \label{prop:dispatch}
-For any part $P$ in a delegation chain for interface $I$ rooted at
-composite $C$: a self-call \code{this.m()} within $P$ where $m \in I$
-dispatches to $C$.
+For any part $P$ in a delegation chain for interface $I$ rooted at composite $C$: a self-call \code{this.m()} within $P$
+where $m \in I$ dispatches to $C$.
 \end{invariant}
 
 This invariant presumes each interface has a single composite root. The model
@@ -536,15 +539,15 @@ for follow-on work (Section~\ref{sec:futurework}).
 \subsection{Arbitrary Composition}
 \label{subsec:topologies}
 
-Parts supports behaviorally acyclic graphs where nodes may be parts, composites, or ordinary objects, and
-edges are link fields. Each edge connects a composite to a component through the interface the link claims.
+Mirroring the structural flexibility of standard object composition and forwarding, Parts supports unrestricted topologies.
+These are expressed as behaviorally acyclic graphs where nodes are parts, composites, or ordinary objects, and edges are
+link fields. Each edge establishes a connection from a composite to a component through the interface specified by the link.
 
-Partial delegation permits a composite to claim only the interfaces it needs from a part's
-delegation surface, leaving the remaining interfaces for other composites to claim. This freedom
-gives rise to the four composition topology primitives shown in Figure~\ref{fig:topologies}
-and classified over two dimensions: the number of roots a part maintains and the number of sources the composition has.
-A root is an outermost node claiming one or more interfaces of a part's delegation surface; a source is a node with no incoming
-link edges.
+Partial delegation permits a composite to claim only the interfaces it needs from a part's delegation surface, leaving the
+remaining interfaces for other composites to claim. This freedom gives rise to the four composition topology primitives
+shown in Figure~\ref{fig:topologies} and classified over two dimensions: the number of roots a part maintains and the number
+of sources the composition has. A root is an outermost node claiming one or more interfaces of a part's delegation surface;
+a source is a node with no incoming link edges.
 
 \begin{enumerate}
 \item[(a)] \textbf{Single-root, single-source.}
@@ -601,7 +604,7 @@ construction.
 In all four cases, for each delegated interface, a part acquires the identity of the composite claiming that interface,
 independent of where execution enters the composition. Invariant~\ref{prop:dispatch} holds independently for each interface.
 
-Ordinary object composition already admits these topologies freely; nothing prevents the use of partial delegation to
+Ordinary forwarding already admits these topologies freely; nothing prevents the use of partial delegation to
 build compositions mirroring these structures. The differentiator is open recursion: without it, a component's
 self-calls remain effectively static and do not reach composite overrides. Parts fills this crucial gap comprehensively
 via interface-scoped identity, ensuring self-calls dispatch correctly regardless of how the composition is structured.
@@ -1029,7 +1032,7 @@ TA ta = new TaPart(new StudentPart(PersonPart.asLink("Milton")));
 ta.titledName(); // "TA Milton"
 \end{lstlisting}
 
-Under ordinary object composition (forwarding), the shared \code{Person} methods
+With forwarding, the shared \code{Person} methods
 must each be resolved by hand, and \code{titledName()} still calls
 \code{title()} on the delegate's own \code{this}. Parts resolves both problems.
 
@@ -1049,7 +1052,7 @@ transitively claims \code{Person} throughout the composite.
 \subsection{Partial delegation and part identity}
 \label{subsec:identity}
 
-\emph{Partial delegation} is a requirement for arbitrary compositions, where a composite may claim only some of a part's
+\emph{Partial delegation} is a requirement for arbitrary composition, where a composite may claim only some of a part's
 delegation surface. \emph{Multi-rooted parts} result from this condition: a part's interfaces may be rooted at two or more
 distinct identities, including the part itself and one or more composites, via any combination of the multi-rooted topologies
 in Section~\ref{subsec:topologies}.
@@ -1077,7 +1080,7 @@ Parts resolves the principal deficiencies of implementation inheritance:
   \item \textbf{Hierarchy-bound}: implementation inheritance is rooted in a single runtime object and therefore supports
         only single-source topologies; a component cannot participate in multiple, independently rooted composites. Parts
         permits arbitrary topologies by assigning composite identity per interface.
-  \item \textbf{The \emph{Object Schizophrenia} problem~\cite{sekharaiah2002}}: a hazard in ordinary object composition
+  \item \textbf{The \emph{Object Schizophrenia} problem~\cite{sekharaiah2002}}: a hazard with forwarding
         where self-calls remain within the component rather than routing through the composite; resolved by ISD.
   \item \textbf{Diamond ambiguity}: explicit \code{@link(share=I.class)} resolution; unresolved diamonds are compile errors,
         not silent merges.
@@ -1236,10 +1239,10 @@ time by complete objects. Like Parts, it composes independent runtime objects wi
 open recursion under static typing. Its delegation, however, is structural and per
 method, and binds a single \code{this} to the sender throughout, so a component cannot
 root different interfaces at different composites. Its composition is therefore
-confined to topology~(a) (Section~\ref{subsec:topologies}), the single-rooted,
+confined to topology~(a) (\S\ref{subsec:topologies}), the single-rooted,
 single-source chain. Parts binds each interface to a specific delegate through \code{@link},
 assigning composite identity per interface, which admits the multi-rooted and multi-source
-topologies~(b)--(d) that partial delegation induces in ordinary object composition.
+topologies~(b)--(d) that partial delegation induces with ordinary forwarding.
 
 \paragraph{Family polymorphism.}
 gbeta~\cite{ernst2001} (formalized by
@@ -1294,7 +1297,7 @@ externally specified \emph{composition rules} (e.g., \code{merge},
 \code{override}) rather than a single global object model, explicitly to
 support decentralized, unanticipated composition without a designated
 owning subject. This targets the same
-multi-source structure as topology (c): no subject is required to be the sole root
+multi-source structure as topology (c) (\S\ref{subsec:topologies}): no subject is required to be the sole root
 of a composed result, and independently developed subjects can be composed
 later without modifying the ones already in place. But composition happens once,
 when subjects are merged into a single class hierarchy according to their composition
@@ -1308,10 +1311,10 @@ under a statically-checked interface contract.
 \section{Conclusion}
 %% ─────────────────────────────────────────────────────────────────────────────
 
-The advice to favor composition over implementation inheritance came with an unspoken cost: composition gives up the open
-recursion that made inheritance so powerful. Parts removes that cost. By assigning composite identity per interface at
+The advice to favor object composition over class inheritance came with an unspoken cost: composition gives up the open
+recursion that made inheritance practical. Parts removes that cost. By assigning composite identity per interface at
 construction, it shows that open recursion need not be tied to inheritance's single runtime object; the two can be separated
-without compromise. The result is a general model that retains the essential properties of ordinary object composition---independent
+without compromise. The result is a general model that retains the essential properties of simple forwarding---independent
 runtime components and arbitrary composition topologies---while adding open recursion at vtable speed.
 
 %% ─────────────────────────────────────────────────────────────────────────────
