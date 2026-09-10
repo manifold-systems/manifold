@@ -7,10 +7,17 @@
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21514973-blue)](https://doi.org/10.5281/zenodo.21514973)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
+*The **"Favor object composition over class inheritance"** mantra came with an unspoken cost: object composition gives up
+the **open recursion** that makes inheritance practical.* 
+
+***Parts** offers a practical, comprehensive resolution: independent runtime objects and open recursion without sacrificing
+performance or composition flexibility.*
+                                         
+---
 
 Statically typed object-oriented languages have traditionally separated two properties of implementation reuse:
 
-* **Internal polymorphism** is a natural consequence of *inheritance*: the type hierarchy fuses into a single runtime object,
+* **Open recursion** is a natural consequence of *inheritance*: the type hierarchy fuses into a single runtime object,
 with inherited methods executing as part of that object, so self-calls can reach overrides supplied by a subclass.
 * **Independent runtime components** are the defining property of *object composition*: objects remain distinct at runtime
 and can be linked dynamically into a composite, allowing implementations and behavior to be configured at runtime in arbitrary
@@ -20,8 +27,8 @@ Combining these two properties in a general-purpose model without compromising e
 an open problem.
 
 *Parts* introduces a new compositional model that resolves this gap. It provides ***the flexibility of runtime composition
-and the polymorphism of inheritance*** while preserving the independence of its components. Use Parts in place of inheritance
-or alongside it.
+and the polymorphism of inheritance*** while preserving the independence of its components and eliminating the hazards
+of inheritance. Use Parts in place of inheritance or alongside it.
 
 * `@part` provides [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973): self-calls from a part **dispatch to overrides in the composite**
 * Parts are **independent objects supplied at construction**, making composition fully runtime-configurable
@@ -58,8 +65,8 @@ the self-call dispatches to `Wizard.attack()`, so the output is:
 ```
 Cast spell!
 ```
-With ordinary object composition, Hero's own `attack()` implementation `Swing club!` would result instead. This internal
-polymorphism across a runtime-injected part is the fundamental capability that Parts adds. 
+With ordinary object composition, Hero's own `attack()` implementation `Swing club!` would result instead. This late-bound
+self-call across a runtime-injected part is the fundamental capability that Parts adds. 
 
 By supplying Hero as a runtime component instead of fusing it into Wizard's hierarchy, Wizard depends only on the Actor
 contract, not on Hero's implementation structure. Parts delegates the interface implementation while preserving the
@@ -70,27 +77,27 @@ polymorphic behavior normally associated with inheritance.
 **Other mainstream ways to reuse behavior give you one of these two properties,<br> 
 Parts gives you both:**
 
-|                                      | Independent components | Internal polymorphism |
-|:-------------------------------------|:----------------------:| :-------------------: |
-| Implementation inheritance           |           —            |           ✓           |
-| Trait/mixin composition (flattening) |           —            |           ✓           |
-| Object composition (forwarding)      |           ✓            |           —           |
-| **Parts**                            |         **✓**          |         **✓**         |
+|                                      | Independent components | Open recursion |
+|:-------------------------------------|:----------------------:|:--------------:|
+| Implementation inheritance           |           —            |       ✓        |
+| Trait/mixin composition (flattening) |           —            |       ✓        |
+| Object composition (forwarding)      |           ✓            |       —        |
+| **Parts**                            |         **✓**          |     **✓**      |
 
 <sub>*Independent components*: composition consists of separate runtime objects, assembled and
-configured at construction.<br>*Internal polymorphism*: a component's self-calls
+configured at construction.<br>*Open recursion*: a component's self-calls
 reach overrides supplied by the composite.</sub>
                                               
 ### Wait...
 
 > ***Isn't this traits?***<br>
- Traits provide internal polymorphism, but at the price of adopting inheritance's single-object model: they are folded into
+ Traits provide open recursion, but at the price of adopting inheritance's single-object model: they are folded into
  the hosting class at *compile-time*, sacrificing both runtime-configured compositions and independent runtime identity.
- Internal polymorphism, but not independent runtime components.
+ Open recursion, but not independent runtime components.
 
 > ***Doesn't Kotlin do this?***<br>
  Kotlin's `by` and Scala's `export` are examples of ordinary *object composition*. They provide independent components
- (the first column), but not internal polymorphism: ordinary composition results in the "Swing club!" result above.
+ (the first column), but not open recursion: ordinary composition results in the "Swing club!" result above.
 
 **Parts provides both in arbitrary compositions.**
 
@@ -159,8 +166,8 @@ Swing club!
 Although `takeAction()` is invoked on `wizard`, it executes inside Hero. Without `@part`, the call to `attack()` dispatches
 on the Hero instance, not on the composite. Wizard's override is never reached.
 
-This is the fundamental limitation of ordinary object composition. It preserves external polymorphism, but internal self-calls remain
-trapped within the delegated object. This limitation is known as the **Self problem**.
+This is the fundamental limitation of ordinary object composition. Self-calls remain trapped within the delegated object.
+This limitation is known as the **Self problem**.
 
 ---
 
@@ -204,7 +211,7 @@ Output:
 ```
 Cast spell!
 ```
-Hero's `@part` annotation extends Java's dynamic dispatch across the Wizard composite, preserving polymorphic self-calls.
+Hero's `@part` annotation extends Java's dynamic dispatch across the Wizard composite, preserving open recursion.
 
 ---
 
@@ -230,13 +237,13 @@ class Wizard implements Actor {
 Links are `private` and `final` by default.
 
 Unimplemented interface calls forward through the link to the value of the field. If the field's value is a `@part` class,
-internal polymorphism is preserved.
+open recursion is preserved.
  
 ---
 
 # Default methods
 
-`@part` classes preserve internal polymorphism even when behavior is defined in interface default methods.
+`@part` classes preserve open recursion even when behavior is defined in interface default methods.
 
 Suppose the `takeAction()` implementation is moved from Hero into the Actor interface:
 ```java
@@ -290,7 +297,7 @@ Wizard must implement abstract methods in AbstractHero or declare itself `abstra
 
 # Inheritance
 
-`@part` classes support implementation inheritance. To maintain internal polymorphism within a linked part, the superclass
+`@part` classes support implementation inheritance. To maintain open recursion within a linked part, the superclass
 chain must consist of `@part` classes.
 ```java
 interface A {
@@ -362,7 +369,7 @@ Unlike a superclass or a trait, a part is an independent object with *runtime id
 a separate runtime object with its own state, allowing a composite to freely define its structure at runtime. At the same
 time a part's runtime identity is contextual: a part's `this` in the context of an interface type refers to the composite
 that claims the interface, or the part itself if the interface is unclaimed in the composition graph. This contextual identity
-is what enables internal polymorphism.
+is what enables open recursion.
 
 ---
 
