@@ -8,12 +8,14 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 *The **"Favor object composition over class inheritance"** mantra came with an unspoken cost: object composition gives up
-the **open recursion** that makes inheritance practical.* 
+**open recursion**, a defining feature that keeps inheritance as a **practical** choice over composition.* 
 
-***Parts** offers a practical, comprehensive resolution: independent runtime objects and open recursion without sacrificing
-performance or composition flexibility.*
+***Parts** offers an uncompromising resolution: **delegation** with independent runtime objects that retain open recursion
+without sacrificing the performance of inheritance or the flexibility of composition.*
                                          
 ---
+
+# Overview
 
 Statically typed object-oriented languages have traditionally separated two properties of implementation reuse:
 
@@ -105,10 +107,12 @@ reach overrides supplied by the composite.</sub>
 
 <!-- TOC -->
 * [_Parts_](#_parts_)
+* [Overview](#overview)
     * [Wait...](#wait)
 * [The Self problem](#the-self-problem)
 * [`@part`](#part)
 * [`@link`](#link)
+  * [](#-1)
 * [Default methods](#default-methods)
 * [Abstract parts](#abstract-parts)
 * [Inheritance](#inheritance)
