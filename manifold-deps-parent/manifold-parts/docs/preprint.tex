@@ -338,10 +338,11 @@ Parts is defined over a standard typed object model where classes implement inte
 the receiver's runtime type.
 
 \begin{description}
-  \item[claim] a part's claimed interfaces are those that one or more composites have linked: the composite "claims" its
-  linked interfaces, becoming their exclusive identity within their implementing parts.
+  \item[claim] an interface of a part is claimed when a composite links that interface, making the composite its exclusive
+  identity within the part.
 
-  \item[component] a class nominally implementing one or more interfaces available for delegation.
+  \item[component] a class nominally implementing one or more interfaces, available for delegation if the class is a part
+  and for forwarding otherwise.
 
   \item[composite] a class containing one or more links. A composite nominally implements the interfaces declared on its
   links.
