@@ -77,7 +77,7 @@
 
 \begin{document}
 
-\title{Interface-Scoped Dispatch:\texorpdfstring{\\}{ }Independent Components with \texorpdfstring{$\boldsymbol{O(1)}$}{O(1)} Self-Calls}
+\title{Interface-Scoped Dispatch:\texorpdfstring{\\}{ }General Delegation with \texorpdfstring{$\boldsymbol{O(1)}$}{O(1)} Self-Calls}
 
 \author{R. Scott McKinney}
 \affiliation{\institution{Manifold Systems}\country{USA}}
@@ -90,7 +90,7 @@ runtime components. Yet practical limitations in today's languages prevent compo
 chiefly the inability to perform late-bound self-calls (open recursion), a defining strength of implementation inheritance.
 Filling this gap while retaining the essential properties of object composition remains an unmet challenge.
 
-We present Parts, a general delegation model that meets this challenge by unifying independent runtime components,
+We present \emph{Parts}, a general delegation model that meets this challenge by unifying independent runtime components,
 arbitrary composition, and open recursion. Its enabling mechanism, interface-scoped dispatch (ISD), assigns composite identity
 per interface at construction, allowing self-calls to dynamically dispatch through overriding composites. Parts is realized
 as a compiler plugin for Java 8--26 with IDE integration. Its dispatch cost is $O(1)$, empirically equivalent to a vtable
