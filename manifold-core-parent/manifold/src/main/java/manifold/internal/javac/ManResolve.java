@@ -126,9 +126,9 @@ public class ManResolve extends Resolve
       // escapes the name, so there really isn't any conflict with Java's 'var' construct. Just sayin'
       ReflectUtil.field( this, "allowLocalVariableTypeInference" ).set( false );
     }
-    else if( JreUtil.isJava17orLater() )
+    if( JreUtil.isJava17orLater() )
     {
-      ReflectUtil.field( ReflectUtil.method( "com.sun.tools.javac.comp.TransPattern", "instance", Context.class )
+      ReflectUtil.field( ReflectUtil.method( "com.sun.tools.javac.comp.TransPatterns", "instance", Context.class )
         .invokeStatic( context ), RESOLVE_FIELD ).set( this );
     }
   }

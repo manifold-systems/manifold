@@ -210,7 +210,7 @@ public class JavaDynamicJdk_17 implements IDynamicJdk
     }
     else
     {
-      ReflectUtil.ConstructorRef ctor = ReflectUtil.constructor( JCDiagnostic.Error.class, Set.class, String.class, String.class, Object[].class );
+      ReflectUtil.ConstructorRef ctor = ReflectUtil.constructor( JCDiagnostic.Error.class, String.class, String.class, Object[].class );
       logger.error( pos, (JCDiagnostic.Error)ctor.newInstance( "compiler", key, args ) );
     }
   }
@@ -221,14 +221,13 @@ public class JavaDynamicJdk_17 implements IDynamicJdk
     //todo: make a JavaDynamicJdk_26 so these can be direct calls, not reflective
     if( JreUtil.isJava26orLater() )
     {
-      ReflectUtil.ConstructorRef ctor = ReflectUtil.constructor( JCDiagnostic.Warning.class, String.class, String.class, Object[].class );
+      ReflectUtil.ConstructorRef ctor = ReflectUtil.constructor( JCDiagnostic.Warning.class, Set.class, String.class, String.class, Object[].class );
       logger.warning( pos, (JCDiagnostic.Warning)ctor.newInstance( null, "compiler", key, args ) );
     }
     else
     {
-      ReflectUtil.ConstructorRef ctor = ReflectUtil.constructor( JCDiagnostic.Warning.class, Set.class, String.class, String.class, Object[].class );
+      ReflectUtil.ConstructorRef ctor = ReflectUtil.constructor( JCDiagnostic.Warning.class, String.class, String.class, Object[].class );
       logger.warning( pos, (JCDiagnostic.Warning)ctor.newInstance( "compiler", key, args ) );
     }
-
   }
 }
