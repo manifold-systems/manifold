@@ -462,10 +462,17 @@ If you define your project with **Maven**, you can explicitly compile resources 
       <source>8</source>
       <target>8</target>
       <encoding>UTF-8</encoding>
+      <fork>true</fork> 
       <compilerArgs>
         <arg>-Xplugin:Manifold</arg>
         <arg>-Amanifold.source.json=.*</arg>
         <arg>-Amanifold.source.graphql=^com\.example\..*Queries$</arg>
+
+        <!-- Add these ONLY for Java 26+ -->
+        <arg>-J--add-exports=java.base/jdk.internal.access=ALL-UNNAMED</arg>
+        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
       </compilerArgs>
     </configuration>
   </plugin>
@@ -770,15 +777,28 @@ dependencies {
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
-    sourceSets.main.allJava.files.any {it.name == "module-info.java"}) {
-    tasks.withType(JavaCompile) {
-        // if you DO define a module-info.java file:
-        options.compilerArgs += ['-Xplugin:Manifold', '--module-path', it.classpath.asPath]
+        sourceSets.main.allJava.files.any { it.name == "module-info.java" }) {
+
+    // IF YOU DO DEFINE A MODULE-INFO.JAVA FILE:
+    tasks.withType(JavaCompile).configureEach { task ->
+        options.compilerArgs += ['-Xplugin:Manifold', '--module-path', task.classpath.asPath]
+        options.fork = true
+        //!! Add these ONLY for Java 26+
+        options.forkOptions.jvmArgs += [
+                '--add-exports=java.base/jdk.internal.access=ALL-UNNAMED',
+                '--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED'
+        ]
     }
 } else {
-    tasks.withType(JavaCompile) {
-        // If you DO NOT define a module-info.java file:
+    // IF YOU DO NOT DEFINE A MODULE-INFO.JAVA FILE:
+    tasks.withType(JavaCompile).configureEach {
         options.compilerArgs += ['-Xplugin:Manifold']
+        options.fork = true
+        //!! Add these ONLY for Java 26+
+        options.forkOptions.jvmArgs += [
+                '--add-exports=java.base/jdk.internal.access=ALL-UNNAMED',
+                '--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED'
+        ]
     }
 }
 ```
@@ -828,6 +848,12 @@ rootProject.name = 'MyProject'
                     <compilerArgs>
                         <!-- Configure manifold plugin-->
                         <arg>-Xplugin:Manifold</arg>
+
+                        <!-- Add these ONLY for Java 26+ -->
+                        <arg>-J--add-exports=java.base/jdk.internal.access=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
                     </compilerArgs>
                     <!-- Add the processor path for the plugin -->
                     <annotationProcessorPaths>
