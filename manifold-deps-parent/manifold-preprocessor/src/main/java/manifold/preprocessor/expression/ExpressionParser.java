@@ -108,7 +108,7 @@ public class ExpressionParser
   {
     int offset = skipWhitespace();
 
-    Expression lhs = parseUnaryExpression();
+    Expression lhs = parseUnaryDefinedExpression();
     while( true )
     {
       skipWhitespace();
@@ -118,7 +118,7 @@ public class ExpressionParser
           match( ExpressionTokenType.lt ) ||
           match( ExpressionTokenType.le ) )
       {
-        Expression rhs = parseUnaryExpression();
+        Expression rhs = parseUnaryDefinedExpression();
         lhs = new RelationalExpression( lhs, rhs, tokenType.getToken(), offset, rhs.getEndOffset() );
       }
       else
@@ -129,13 +129,42 @@ public class ExpressionParser
     return lhs;
   }
 
+  private Expression parseUnaryDefinedExpression()
+  {
+    Expression expr = parseUnaryExpression();
+    if ( (expr instanceof Identifier) && ((Identifier)expr).getName().equals("defined") )
+    {
+      skipWhitespace();
+      if ( match( ExpressionTokenType.OpenParen )) {
+        int startOffset = expr.getStartOffset();
+        expr = parseUnaryExpression();
+
+        skipWhitespace();
+        if ( !match( ExpressionTokenType.CloseParen )) {
+          expr.error( "Expecting ')'", _tokenizer.getTokenStart() );
+        }
+        int endOffset = _tokenizer.getTokenEnd();
+        if( expr instanceof Identifier )
+        {
+          expr = new Identifier(((Identifier)expr).getName(), startOffset, endOffset );
+        }
+        else
+        {
+          expr.error( "Expecting an identifier within defined(...) expression", expr.getStartOffset() );
+        }
+      }
+
+    }
+    return expr;
+  }
+
   private Expression parseUnaryExpression()
   {
     int offset = skipWhitespace();
 
     if( match( ExpressionTokenType.Not ) )
     {
-      Expression expr = parseUnaryExpression();
+      Expression expr = parseUnaryDefinedExpression();
       return new NotExpression( expr, offset, expr.getEndOffset() );
     }
     else if( match( ExpressionTokenType.OpenParen ) )
@@ -144,7 +173,7 @@ public class ExpressionParser
       int endOffset = expr.getEndOffset();
       if( !match( ExpressionTokenType.CloseParen, false ) )
       {
-        expr.error( "')' Expected", _tokenizer.getTokenStart() );
+        expr.error( "Expecting ')'", _tokenizer.getTokenStart() );
       }
       else
       {
