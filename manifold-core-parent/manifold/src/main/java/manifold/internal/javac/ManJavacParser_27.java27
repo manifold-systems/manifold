@@ -49,6 +49,10 @@ import static com.sun.tools.javac.parser.Tokens.TokenKind.*;
  * rename the file back to *.java_ and copy it back to the manifold.internal.javac package, overwriting the existing
  * file. lol.
  * <p/>
+ * To build this file:
+ * <pre><code>
+ *   javac --patch-module jdk.compiler=src_dir src_dir/com/sun/tools/javac/parser/ManJavacParser_27.java
+ * </code></pre>
  * <p/>
  * Subclass java parser to implement the "empty" operator to support "Binding" expressions. See {@code term2()},
  * {@code term2Rest()}, and other overrides for details.
