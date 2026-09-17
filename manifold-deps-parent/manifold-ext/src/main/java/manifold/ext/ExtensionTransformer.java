@@ -401,7 +401,9 @@ public class ExtensionTransformer extends TreeTranslator
         // since the source may be preprocessed we attempt to get it in its preprocessed form
         CharSequence source = ParserFactoryFiles.getSource( _tp.getCompilationUnit().getSourceFile() );
         int start = tree.lhs.pos;
-        int end = tree.lhs.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions );
+        int end = JreUtil.isJava27orLater()
+                  ? (int)ReflectUtil.method( tree.lhs.pos(), "getEndPosition" ).invoke()
+                  : tree.lhs.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions );
         String token = source.subSequence( start, end ).toString();
         if( token.endsWith( "d" ) || token.endsWith( "f" ) )
         {
@@ -1283,7 +1285,9 @@ public class ExtensionTransformer extends TreeTranslator
 
     CharSequence source = ParserFactoryFiles.getSource( enclosingClass.sym.sourcefile );
     CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
-      tree.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions ) );
+      JreUtil.isJava27orLater()
+      ? (int)ReflectUtil.method( tree.pos(), "getEndPosition" ).invoke()
+      : tree.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions ) );
     HostKind hostKind = chars.length() > 3 && chars.charAt( 1 ) == '"'
       ? TEXT_BLOCK_LITERAL
       : DOUBLE_QUOTE_LITERAL;

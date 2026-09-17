@@ -23,6 +23,7 @@ import java.nio.CharBuffer;
 import javax.tools.JavaFileObject;
 
 import com.sun.tools.javac.util.JCDiagnostic;
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 
@@ -70,6 +71,12 @@ public class ManParserFactory_17 extends ParserFactory implements ParserFactoryF
     input = _preprocessor.process( _taskEvent.getSourceFile(), input );
     mapInput( _taskEvent.getSourceFile(), input );
     Lexer lexer = ((ScannerFactory)ReflectUtil.field( this, "scannerFactory" ).get()).newScanner(input, keepDocComments);
+    if( JreUtil.isJava27orLater() )
+    {
+      return (JavacParser)ReflectUtil.constructor( "com.sun.tools.javac.parser.ManJavacParser_27",
+          ParserFactory.class, Lexer.class, boolean.class, boolean.class, boolean.class )
+        .newInstance( this, lexer, keepDocComments, keepEndPos, keepLineMap ); // keepEndPos here is keepLineMap, and keepLineMap is pareModuleInfo
+    }
     return (JavacParser)ReflectUtil.constructor( "com.sun.tools.javac.parser.ManJavacParser",
         ParserFactory.class, Lexer.class, boolean.class, boolean.class, boolean.class, boolean.class )
       .newInstance( this, lexer, keepDocComments, keepLineMap, keepEndPos, parseModuleInfo );

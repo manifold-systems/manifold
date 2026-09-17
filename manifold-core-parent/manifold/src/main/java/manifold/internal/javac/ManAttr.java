@@ -190,7 +190,9 @@ public interface ManAttr
 
   default Type getFragmentValueType( JCTree.JCLiteral tree )
   {
-    int endPosition = tree.pos().getEndPosition( getEnv().toplevel.endPositions );
+    int endPosition = JreUtil.isJava27orLater()
+                      ? (int)ReflectUtil.method( tree.pos(), "getEndPosition" ).invoke()
+                      : tree.pos().getEndPosition( getEnv().toplevel.endPositions );
     if( endPosition < 0 )
     {
       // this is almost certainly harmless, since it is indicative of an intermediate compiler pass

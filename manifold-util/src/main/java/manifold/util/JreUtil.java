@@ -196,6 +196,15 @@ public class JreUtil
     return JAVA_VERSION >= 26;
   }
 
+  public static boolean isJava27()
+  {
+    return JAVA_VERSION == 27;
+  }
+  public static boolean isJava27orLater()
+  {
+    return JAVA_VERSION >= 27;
+  }
+
   public static boolean isJava9Modular_compiler( Object/*Context*/ ctx )
   {
     if( _modular == null )

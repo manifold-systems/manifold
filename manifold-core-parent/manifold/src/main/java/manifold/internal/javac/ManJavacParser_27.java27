@@ -1,0 +1,878 @@
+/*
+ * Copyright (c) 2022 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.sun.tools.javac.parser;
+
+import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Source;
+import com.sun.tools.javac.parser.Tokens.Comment;
+import com.sun.tools.javac.parser.Tokens.Token;
+import com.sun.tools.javac.parser.Tokens.TokenKind;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.JCTree.JCExpression;
+import com.sun.tools.javac.tree.JCTree.JCModifiers;
+import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
+import com.sun.tools.javac.tree.TreeInfo;
+import com.sun.tools.javac.util.Assert;
+import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.ListBuffer;
+import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Names;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.function.Predicate;
+
+import static com.sun.tools.javac.parser.Tokens.TokenKind.*;
+
+/**
+ * !!! IMPORTANT !!!
+ * <p/>
+ * If necessary, update this file if Java low-level expr grammar changes:
+ * Create a directory path mirroring the package "com.sun.tools.javac.parser", copy this there and remove underscore.
+ * Make necessary changes then compile the renamed file by itself, then copy/rename the ManJavaParser.class to *.clazz
+ * (note the zz) in the resource directory at manifold/internal/javac (overwrite the existing file there).  Finally,
+ * rename the file back to *.java_ and copy it back to the manifold.internal.javac package, overwriting the existing
+ * file. lol.
+ * <p/>
+ * <p/>
+ * Subclass java parser to implement the "empty" operator to support "Binding" expressions. See {@code term2()},
+ * {@code term2Rest()}, and other overrides for details.
+ * <p/>
+ * Also supporting @prop in interfaces.
+ */
+public class ManJavacParser_27 extends JavacParser
+{
+  private static final int infixPrecedenceLevels = 10;
+
+  private static Field field_mode = null;
+  private static Field field_parseModuleInfo = null;
+  private static Field field_PATTERN_MATCHING_IN_INSTANCEOF = null;
+  private static Field field_PATTERN_SWITCH = null;
+  private static Field field_UNNAMED_VARIABLES = null;
+  private static Method method_selectExprMode = null;
+  private static Method method_checkSourceLevel = null;
+  private static Method method_insertAnnotationsToMostInner = null;
+  private static Method method_reportSyntaxError = null;
+  private static Method method_peekToken = null;
+  private static Method method_unannotatedType = null;
+  private static Method method_parsePattern = null;
+  private static final int JAVA_VERSION = getJavaVersion();
+  private static int java_ver = 0;
+  static
+  {
+    try
+    {
+      field_mode = JavacParser.class.getDeclaredField( "mode" );
+      field_mode.setAccessible( true );
+
+      method_insertAnnotationsToMostInner = JavacParser.class.getDeclaredMethod( "insertAnnotationsToMostInner", JCExpression.class, List.class, boolean.class );
+      method_insertAnnotationsToMostInner.setAccessible( true );
+
+      java_ver = 8;
+
+      // Java 9+
+      field_parseModuleInfo = JavacParser.class.getDeclaredField( "parseModuleInfo" );
+      field_parseModuleInfo.setAccessible( true );
+
+      java_ver = 9;
+
+      // java 10+
+      method_unannotatedType = JavacParser.class.getDeclaredMethod( "unannotatedType", boolean.class );
+      method_unannotatedType.setAccessible( true );
+
+      java_ver = 10;
+
+      // java 11+
+
+      method_reportSyntaxError = JavacParser.class.getDeclaredMethod( "reportSyntaxError", int.class, Class.forName( JCDiagnostic.class.getTypeName() + "$Error" ) );
+      method_reportSyntaxError.setAccessible( true );
+
+      java_ver = 11;
+
+      // Java 15+
+      method_selectExprMode = JavacParser.class.getDeclaredMethod( "selectExprMode" );
+      method_selectExprMode.setAccessible( true );
+
+      Class<?> featureClass = Class.forName( Source.class.getTypeName() + "$Feature", false, JavacParser.class.getClassLoader() );
+      method_checkSourceLevel = JavacParser.class.getDeclaredMethod( "checkSourceLevel", int.class, featureClass );
+
+      field_PATTERN_MATCHING_IN_INSTANCEOF = featureClass.getDeclaredField( "PATTERN_MATCHING_IN_INSTANCEOF" );
+      field_PATTERN_MATCHING_IN_INSTANCEOF.setAccessible( true );
+
+      java_ver = 16;
+
+      // Java 17+
+      method_peekToken = JavacParser.class.getDeclaredMethod( "peekToken", int.class, Predicate.class );
+      method_peekToken.setAccessible( true );
+
+      java_ver = 17;
+
+      // Java 21+
+      field_UNNAMED_VARIABLES = featureClass.getDeclaredField( "UNNAMED_VARIABLES" );
+      field_UNNAMED_VARIABLES.setAccessible( true );
+
+      field_PATTERN_SWITCH = featureClass.getDeclaredField( "PATTERN_SWITCH" );
+      field_PATTERN_SWITCH.setAccessible( true );
+
+      method_parsePattern = JavacParser.class.getDeclaredMethod( "parsePattern", int.class, JCModifiers.class, JCExpression.class, boolean.class, boolean.class);
+      method_parsePattern.setAccessible( true );
+
+      java_ver = 27;
+    }
+    catch( Exception ignore )
+    {
+    }
+  }
+
+  private static int getJavaVersion()
+  {
+    String version = System.getProperty( "java.version" );
+    StringBuilder sb = new StringBuilder();
+    for( int i = 0; i < version.length(); i++ )
+    {
+      char c = version.charAt( i );
+      if( Character.isDigit( c ) )
+      {
+        sb.append( c );
+      }
+      else
+      {
+        break;
+      }
+    }
+    int major = Integer.parseInt( sb.toString() );
+    // note, android's major is 0, but is really 8 (ish)
+    return major <= 1 ? 8 : major;
+  }
+
+  private final Names _names;
+
+  public ManJavacParser_27( ParserFactory fac,
+                            Lexer S,
+                            boolean keepDocComments,
+                            boolean keepLineMap,
+                            boolean parseModuleInfo )
+  {
+    super( fac, S, keepDocComments, keepLineMap );
+    _names = fac.names;
+
+    if( parseModuleInfo && field_parseModuleInfo != null )
+    {
+      try
+      {
+        field_parseModuleInfo.set( this, true );
+      }
+      catch( IllegalAccessException e )
+      {
+        throw new RuntimeException( e );
+      }
+    }
+  }
+
+  public void nextToken() {
+    if( S == null ) return;
+    S.nextToken();
+    token = S.token();
+  }
+
+  /** Expression2   = Expression3 [Expression2Rest]
+   *  Type2         = Type3
+   *  TypeNoParams2 = TypeNoParams3
+   *
+   * <p/>
+   * Manifold: Allow for a binary expression to have an "empty" operator e.g., {@code foo bar}, where the types
+   * the operands can declare a "reaction", such an expression is called a binding expression. The "empty" operator's
+   * precedence is between '+' and '*', thus a binding expression can only have other binding expressions,
+   * multiplication expressions, and a subset of unary expressions as children (see {@code isBinderRhs() and
+   * {@code term2Rest()}.
+   */
+  JCExpression term2() {
+    JCExpression t = term3();
+    if ((get_mode() & EXPR) != 0 && prec(token.kind) >= TreeInfo.orPrec ||
+        get_mode() == EXPR && isBinderRhs()) {
+      set_mode( EXPR );
+      return term2Rest(t, TreeInfo.orPrec);
+    } else {
+      return t;
+    }
+  }
+
+  /*  Expression2Rest = {infixop Expression3}
+   *                  | Expression3 instanceof Type
+   *                  | Expression3 instanceof Pattern
+   *  infixop         = "||"
+   *                  | "&&"
+   *                  | "|"
+   *                  | "^"
+   *                  | "&"
+   *                  | "==" | "!="
+   *                  | "<" | ">" | "<=" | ">="
+   *                  | "<<" | ">>" | ">>>"
+   *                  | "+" | "-"
+   *                  | "*" | "/" | "%"
+   * <p/>
+   * Manifold: Handle binder expressions e.g., {@code ident unit}, involving the "empty" operator. See
+   * {@code term2()}.
+   */
+  JCExpression term2Rest(JCExpression t, int minprec) {
+    JCExpression[] odStack = newOdStack();
+    Token[] opStack = newOpStack();
+
+    // optimization, was odStack = new Tree[...]; opStack = new Tree[...];
+    int top = 0;
+    odStack[0] = t;
+    Token topOp = Tokens.DUMMY;
+    boolean binder = isBinderRhs();
+    while (binder || prec(token.kind) >= minprec) {
+      opStack[top] = topOp;
+      if (token.kind == INSTANCEOF) {
+        int pos = token.pos;
+        nextToken();
+
+        JCTree pattern;
+        if (token.kind == LPAREN) {
+            checkSourceLevel_PatternSwitch();
+            pattern = _parsePattern(token.pos, null, null, false, false);
+        } else {
+            int patternPos = token.pos;
+            JCModifiers mods = optFinal(0);
+            int typePos = token.pos;
+            JCExpression type;
+            if( java_ver >= 16 ) {
+              try {
+                type = (JCExpression)method_unannotatedType.invoke( this, false );
+              } catch( Exception e ) { throw new RuntimeException( e ); }
+            } else {
+              type = parseType();
+            }
+            pattern = type;
+
+            if (token.kind == IDENTIFIER) {
+              checkSourceLevel_InstanceOf();
+              try {
+                pattern = _parsePattern(patternPos, mods, type, false, false);
+              } catch( Exception ignore ) {
+                // a Java release prior to BindingPattern will have a compile error from the extra identifier
+              }
+            } else if (java_ver >= 21 && token.kind == LPAREN) {
+              checkSourceLevel_InstanceOf();
+              pattern = _parsePattern(patternPos, mods, type, false, false);
+            } else if (java_ver >= 21 && token.kind == UNDERSCORE) {
+              checkSourceLevel_UnnamedVariables();
+              pattern = _parsePattern(patternPos, mods, type, false, false);
+            } else if( java_ver >= 16 ) {
+              checkNoMods( mods.flags & ~Flags.DEPRECATED );
+              if( mods.annotations.nonEmpty() ) {
+                List<JCTree.JCAnnotation> typeAnnos =
+                  mods.annotations
+                    .map( decl -> {
+                      JCTree.JCAnnotation typeAnno = F.at( decl.pos )
+                        .TypeAnnotation( decl.annotationType,
+                          decl.args );
+                        typeAnno.endpos = decl.endpos;
+                        return typeAnno;
+                    } );
+                try {
+                  type = (JCExpression)method_insertAnnotationsToMostInner.invoke( this, type, typeAnnos, false );
+                } catch( Exception e ) { throw new RuntimeException( e ); }
+              }
+              pattern = type;
+            }
+        }
+        odStack[top] = F.at(pos).TypeTest(odStack[top], pattern);
+      }
+      else
+      {
+        top++;
+        if( binder )
+        {
+          topOp = null;
+        }
+        else
+        {
+          topOp = token;
+          nextToken();
+        }
+        odStack[top] = binder ? parseBinderOperand() : term3();
+        binder = isBinderRhs();
+      }
+      while (top > 0 && (isSameOrHigher(topOp == null ? null : topOp.kind, binder ? null : token.kind))) {
+        odStack[top-1] = makeOp(topOp == null ? odStack[top].pos : topOp.pos, topOp == null ? null : topOp.kind, odStack[top-1],
+          odStack[top]);
+        top--;
+        topOp = opStack[top];
+      }
+    }
+    Assert.check( top == 0);
+    t = odStack[0];
+
+    if (t.hasTag(JCTree.Tag.PLUS)) {
+      t = foldStrings(t);
+    }
+
+    odStackSupply.add(odStack);
+    opStackSupply.add(opStack);
+    return t;
+  }
+
+  private void checkSourceLevel_InstanceOf()
+  {
+    if( method_checkSourceLevel != null ) {
+      try{
+        method_checkSourceLevel.invoke(token.pos, field_PATTERN_MATCHING_IN_INSTANCEOF);
+      } catch( Exception e ) {
+        // oh well, don't let this ruin anyone's day
+      }
+    }
+  }
+
+  private void checkSourceLevel_UnnamedVariables()
+  {
+    if( method_checkSourceLevel != null ) {
+      try{
+        method_checkSourceLevel.invoke(token.pos, field_UNNAMED_VARIABLES);
+      } catch( Exception e ) {
+        // oh well, don't let this ruin anyone's day
+      }
+    }
+  }
+
+  private void checkSourceLevel_PatternSwitch()
+  {
+    if( method_checkSourceLevel != null ) {
+      try{
+        method_checkSourceLevel.invoke(token.pos, field_PATTERN_SWITCH);
+      } catch( Exception e ) {
+        // oh well, don't let this ruin anyone's day
+      }
+    }
+  }
+
+  private JCExpression parseBinderOperand()
+  {
+    if( token.kind == LPAREN )
+    {
+      return term3();
+    }
+
+    if( token.kind == INTLITERAL ||
+        token.kind == LONGLITERAL ||
+        token.kind == FLOATLITERAL ||
+        token.kind == DOUBLELITERAL ||
+        token.kind == CHARLITERAL ||
+        token.kind == STRINGLITERAL )
+    {
+      set_mode( EXPR );
+      JCExpression t = literal( _names.empty );
+      return toP( t );
+    }
+
+    if( token.kind == IDENTIFIER )
+    {
+      JCExpression t = toP( F.at( token.pos ).Ident( ident() ) );
+      return toP( t );
+    }
+
+    return illegal();
+  }
+
+  private boolean isSameOrHigher( TokenKind kind, TokenKind other )
+  {
+    if( kind == null )
+    {
+      return other == null || prec(other) < TreeInfo.mulPrec;
+    }
+    else
+    {
+      return other == null ? prec(kind) >= TreeInfo.mulPrec : prec(kind) >= prec(other);
+    }
+  }
+
+  /** Construct a binary or type test node.
+   */
+  private JCExpression makeOp(int pos,
+                              TokenKind topOp,
+                              JCExpression od1,
+                              JCExpression od2)
+  {
+    //Manifold: use NO_TAG for binding op.
+    //It is later changed to MUL after ManAttr processing so the expr will pass safely through javac until it is
+    //transformed to a pre/postBind() call.
+    JCTree.Tag optag = topOp == null ? JCTree.Tag.NO_TAG : optag( topOp );
+
+    return F.at( pos ).Binary( optag, od1, od2 );
+  }
+
+  private boolean isBinderRhs()
+  {
+    return
+      token.kind == IDENTIFIER ||
+      token.kind == INTLITERAL || token.kind == LONGLITERAL || token.kind == FLOATLITERAL || token.kind == DOUBLELITERAL || token.kind == STRINGLITERAL ||
+      token.kind == LPAREN;
+  }
+
+  @Override
+  protected JCExpression term3()
+  {
+    //Manifold: handle tuple expression:
+    // tuple-expr: '(' {<tuple-item> {, <tuple-item>}} ')'
+    // tuple-item: <labeled-expr> | <expr>
+    // labeled-expr: <label> ':' <expr>
+    JCExpression tupleExpr = parseTupleExpr();
+    if( tupleExpr != null )
+    {
+      return tupleExpr;
+    }
+    
+    return super.term3();
+  }
+
+  private JCExpression parseTupleExpr()
+  {
+    int pos = token.pos;
+    if( token.kind == LPAREN &&
+      ((get_mode() & EXPR) != 0) &&
+      typeArgumentsOpt( EXPR ) == null &&
+      analyzeParens() == ParensResult.PARENS )
+    {
+      accept( LPAREN );
+      List<JCExpression> args = List.nil();
+      if( token.kind != RPAREN )
+      {
+        while( true )
+        {
+          JCExpression arg = args.isEmpty()
+            ? parseExpression() //termRest( term1Rest( term2Rest( term3(), TreeInfo.orPrec ) ) )
+            : parseExpression();
+          if( arg instanceof JCTree.JCIdent && token.kind == COLON )
+          {
+            JCTree.JCIdent labelMethod = F.Ident( _names.fromString( "$manifold_label" ) );
+            labelMethod.pos = arg.pos;
+            JCExpression label = F.Apply( List.nil(), labelMethod, List.of( arg ) );
+            label.pos = arg.pos;
+            args = args.append( label );
+            nextToken();
+            arg = parseExpression();
+          }
+          args = args.append( arg );
+          if( token.kind != COMMA )
+          {
+            break;
+          }
+          nextToken();
+        }
+      }
+      JCExpression result;
+      if( args.isEmpty() )
+      {
+        JCTree.JCIdent ident = F.Ident( _names.fromString( "$manifold_tuple" ) );
+        ident.pos = token.pos;
+        result = F.Apply( List.nil(), ident, args );
+        result.pos = token.pos;
+      }
+      else if( args.size() > 1 )
+      {
+        JCExpression lastArg = args.get( args.size() - 1 );
+        JCTree.JCIdent ident = F.Ident( _names.fromString( "$manifold_tuple" ) );
+        ident.pos = lastArg.pos;
+        result = F.Apply( List.nil(), ident, args );
+        result.pos = lastArg.pos;
+      }
+      else
+      {
+        result = args.get( 0 );
+      }
+      accept( RPAREN );
+      JCExpression expr = toP( F.at( pos ).Parens( result ) );
+      return term3Rest( expr, null );
+    }
+    return null;
+  }
+
+//  private JCTree.JCExpression parseTupleExpr()
+//  {
+//    if( token.kind == LPAREN &&
+//      get_mode() == EXPR &&
+//      typeArgumentsOpt( EXPR ) == null &&
+//      analyzeParens() == ParensResult.PARENS )
+//    {
+//      int lookahead = 1;
+//      boolean labeled = false;
+//      if( S.token( lookahead ).kind == COLON || (labeled = S.token( lookahead ).kind == IDENTIFIER) )
+//      {
+//        lookahead++;
+//        if( !labeled || S.token( lookahead ).kind == COLON )
+//        {
+//          int pos = token.pos;
+//
+//          accept( LPAREN );
+//
+//          JCExpression tupleGuts = null;
+//          List<JCExpression> args = List.nil();
+//          while( true )
+//          {
+//            labeled = token.kind != COLON;
+//
+//            if( !labeled )
+//            {
+//              accept( COLON );
+//            }
+//
+//            JCExpression arg = parseExpression();
+//
+//            if( labeled )
+//            {
+//              if( !(arg instanceof JCTree.JCIdent) || token.kind != COLON )
+//              {
+//                reportError( arg.pos, "A tuple value must be labeled or must be preceded by a ':'" );
+//              }
+//              else
+//              {
+//                JCTree.JCIdent labelMethod = F.Ident( _names.fromString( "$manifold_label" ) );
+//                labelMethod.pos = arg.pos;
+//                JCExpression label = F.Apply( List.nil(), labelMethod, List.of( arg ) );
+//                label.pos = arg.pos;
+//                args = args.append( label );
+//                nextToken();
+//                arg = parseExpression();
+//              }
+//            }
+//            args = args.append( arg );
+//            if( token.kind != COMMA )
+//            {
+//              break;
+//            }
+//            accept( COMMA );
+//          }
+//
+//          accept( RPAREN );
+//
+//          if( !args.isEmpty() )
+//          {
+//            JCExpression lastArg = args.get( args.size() - 1 );
+//            JCTree.JCIdent ident = F.Ident( _names.fromString( "$manifold_tuple" ) );
+//            ident.pos = lastArg.pos;
+//            tupleGuts = F.Apply( List.nil(), ident, args );
+//            tupleGuts.pos = lastArg.pos;
+//            JCTree.JCParens tupleExpr = toP( F.at( pos ).Parens( tupleGuts ) );
+//            return term3Rest( tupleExpr, null );
+//          }
+//        }
+//      }
+//    }
+//    return null;
+//  }
+
+  private void reportError( int pos, String message )
+  {
+    try
+    {
+      if( java_ver >= 11 )
+      {
+        method_reportSyntaxError.invoke( this, pos,
+          Class.forName( "com.sun.tools.javac.resources.CompilerProperties$Errors" ).getMethod( "ProcMessager", String.class )
+            .invoke( null, message ) );
+      }
+      else
+      {
+        method_reportSyntaxError.invoke( this, pos, "proc.messager", new Object[]{message} );
+      }
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * Manifold:
+   * Override to account for case: {@code (ident unit)}.  This otherwise conflicts with the parser's handling of parens
+   * for lambda parsing eg. {@code (int index) -> ...}. Hence the lookahead here for the '->' to distinguish from a
+   * binding expression.
+   */
+  @Override
+  ParensResult analyzeParens()
+  {
+    ParensResult parensResult = super.analyzeParens();
+    if( parensResult == ParensResult.EXPLICIT_LAMBDA ||
+        parensResult == ParensResult.IMPLICIT_LAMBDA )
+    {
+      int lookahead = 0;
+      while( !_peekToken( lookahead, RPAREN ) )
+      {
+        lookahead++;
+      }
+      if( !_peekToken( ++lookahead, ARROW ) )
+      {
+        parensResult = ParensResult.PARENS;
+      }
+    }
+    return parensResult;
+  }
+
+  private int get_mode()
+  {
+    try
+    {
+      return (int)field_mode.get( this );
+    }
+    catch( IllegalAccessException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+  private void set_mode( int mode )
+  {
+    try
+    {
+      if( method_selectExprMode != null )
+      {
+        method_selectExprMode.invoke( this );
+      }
+      else
+      {
+        field_mode.set( this, mode );
+      }
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  private boolean _peekToken( int i, Object filter )
+  {
+    try
+    {
+      return (boolean)method_peekToken.invoke( this, i, filter );
+    }
+    catch( Throwable t )
+    {
+      throw new RuntimeException( t );
+    }
+  }
+
+  private /*JCPattern*/ JCTree _parsePattern(int pos, JCModifiers mods, JCExpression parsedType, boolean allowVar, boolean checkGuard)
+  {
+    try
+    {
+      return (JCTree)method_parsePattern.invoke( this, pos, mods, parsedType, allowVar, checkGuard );
+    }
+    catch( Throwable t )
+    {
+      throw new RuntimeException( t );
+    }
+  }
+
+  private JCExpression[] newOdStack() {
+    if (odStackSupply.isEmpty())
+      return new JCExpression[infixPrecedenceLevels + 1];
+    return odStackSupply.remove(odStackSupply.size() - 1);
+  }
+
+  private Token[] newOpStack() {
+    if (opStackSupply.isEmpty())
+      return new Token[infixPrecedenceLevels + 1];
+    return opStackSupply.remove(opStackSupply.size() - 1);
+  }
+
+  @Override
+  JCVariableDecl variableDeclaratorRest(int pos, JCModifiers mods, JCExpression type, Name name,
+                                        boolean reqInit, Comment dc, boolean localDecl, boolean compound) {
+    reqInit = isProperty( mods, reqInit );
+    return super.variableDeclaratorRest( pos, mods, type, name, reqInit, dc, localDecl, compound );
+  }
+  private boolean isProperty( JCModifiers mods, boolean reqInit )
+  {
+    if( reqInit && token.kind != EQ )
+    {
+      List<JCTree.JCAnnotation> annotations = mods.getAnnotations();
+      if( annotations != null )
+      {
+        if( mods.annotations.stream()
+          .anyMatch( anno ->
+            "var".equals( anno.getAnnotationType().toString() ) ||
+            "val".equals( anno.getAnnotationType().toString() ) ||
+              "get".equals( anno.getAnnotationType().toString() ) ||
+              "set".equals( anno.getAnnotationType().toString() ) ) )
+        {
+          // Manifold: a @prop, @get, @set field has no initialization in an interface
+          reqInit = false;
+        }
+      }
+    }
+    return reqInit;
+  }
+
+  @Override
+  protected JCVariableDecl formalParameter(boolean lambdaParameter, boolean recordComponent)
+  {
+    JCVariableDecl varDecl;
+    varDecl = super.formalParameter( lambdaParameter, recordComponent );
+    parseDefaultParamValue( varDecl );
+    return varDecl;
+  }
+  //Manifold: for handling default parameter values
+  private void parseDefaultParamValue( JCVariableDecl varDecl )
+  {
+    if( token.kind == EQ )
+    {
+      nextToken();
+      JCExpression init = variableInitializer();
+      varDecl.init = init;
+      toP( init );
+    }
+  }
+
+  @SuppressWarnings("fallthrough")
+  public JCTree.JCStatement parseStatement() {
+    JCTree.JCStatement returnStmt = handleMultipleValueReturnAsTuple();
+    if( returnStmt != null )
+    {
+      return returnStmt;
+    }
+    return super.parseStatement();
+  }
+
+  List<JCTree.JCStatement> blockStatement()
+  {
+    JCTree.JCStatement returnStmt = handleMultipleValueReturnAsTuple();
+    if( returnStmt != null )
+    {
+      return List.of( returnStmt );
+    }
+    return super.blockStatement();
+  }
+
+  /** Arguments = "(" [Expression { COMMA Expression }] ")"
+   */
+  List<JCExpression> arguments() {
+    ListBuffer<JCExpression> args = new ListBuffer<>();
+    if (token.kind == LPAREN) {
+      nextToken();
+      if (token.kind != RPAREN) {
+        //manifold: handle named arg parsing
+        parseArgument( args );
+        while( token.kind == COMMA )
+        {
+          nextToken();
+          parseArgument( args );
+        }
+      }
+      accept(RPAREN);
+    } else {
+      return super.arguments();
+    }
+    // manifold: using tuple if named args are used
+    if( isTuple( args ) )
+    {
+      List<JCExpression> arguments = List.from( args );
+      JCExpression lastArg = arguments.get( arguments.size() - 1 );
+      JCTree.JCIdent ident = F.Ident( _names.fromString( "$manifold_tuple" ) );
+      ident.pos = lastArg.pos;
+      JCExpression result = F.Apply( List.nil(), ident, arguments );
+      result.pos = lastArg.pos;
+      return List.of( toP( F.at( args.first().pos ).Parens( result ) ) );
+    }
+    return args.toList();
+  }
+
+  private boolean isTuple( ListBuffer<JCExpression> args )
+  {
+    return args.stream().anyMatch( arg -> arg instanceof JCTree.JCMethodInvocation &&
+      ((JCTree.JCMethodInvocation)arg).meth instanceof JCTree.JCIdent &&
+      ((JCTree.JCIdent)((JCTree.JCMethodInvocation)arg).meth).getName().toString().equals( "$manifold_label" ) );
+  }
+
+  private void parseArgument( ListBuffer<JCExpression> args )
+  {
+    JCExpression arg = parseExpression();
+    if( arg instanceof JCTree.JCIdent && token.kind == COLON )
+    {
+      JCTree.JCIdent labelMethod = F.Ident( _names.fromString( "$manifold_label" ) );
+      labelMethod.pos = arg.pos;
+      JCExpression label = F.Apply( List.nil(), labelMethod, List.of( arg ) );
+      label.pos = arg.pos;
+      args.append( label );
+      nextToken();
+      arg = parseExpression();
+    }
+    args.append( arg );
+  }
+
+  private JCTree.JCStatement handleMultipleValueReturnAsTuple()
+  {
+    if( token.kind != RETURN )
+    {
+      return null;
+    }
+    int pos = token.pos;
+    //Manifold: handle multiple return expressions as a tuple
+    nextToken();
+    JCExpression result = null;
+    if( token.kind != SEMI )
+    {
+      result = parseTupleExprWithoutParens();
+    }
+    JCTree.JCReturn t = toP( F.at( pos ).Return( result ) );
+    accept( SEMI );
+    return t;
+  }
+
+  private JCExpression parseTupleExprWithoutParens()
+  {
+    int pos = token.pos;
+    JCExpression result;
+    List<JCExpression> args = List.nil();
+    while( true )
+    {
+      JCExpression arg = parseExpression();
+      if( arg instanceof JCTree.JCIdent && token.kind == COLON )
+      {
+        JCTree.JCIdent labelMethod = F.Ident( _names.fromString( "$manifold_label" ) );
+        labelMethod.pos = arg.pos;
+        JCExpression label = F.Apply( List.nil(), labelMethod, List.of( arg ) );
+        label.pos = arg.pos;
+        args = args.append( label );
+        nextToken();
+        arg = parseExpression();
+      }
+      args = args.append( arg );
+      if( token.kind != COMMA )
+      {
+        break;
+      }
+      nextToken();
+    }
+
+    if( args.size() > 1 )
+    {
+      JCExpression lastArg = args.get( args.size() - 1 );
+      JCTree.JCIdent ident = F.Ident( _names.fromString( "$manifold_tuple" ) );
+      ident.pos = lastArg.pos;
+      result = F.Apply( List.nil(), ident, args );
+      result.pos = lastArg.pos;
+      return toP( F.at( pos ).Parens( result ) );
+    }
+    else
+    {
+      result = args.isEmpty() ? null : args.get( 0 );
+    }
+    return result;
+  }
+}

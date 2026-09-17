@@ -1470,20 +1470,21 @@ public class JavacPlugin implements Plugin, TaskListener
   private static void loadJavacParserClass()
   {
     ClassLoader classLoader = JavacParser.class.getClassLoader();
+    String manJavacParser = JreUtil.isJava27orLater() ? "ManJavacParser_27" : "ManJavacParser";
     synchronized(
       ReflectUtil.method( classLoader, "getClassLoadingLock", String.class )
-        .invoke( "com.sun.tools.javac.parser.ManJavacParser" ) )
+        .invoke( "com.sun.tools.javac.parser." + manJavacParser ) )
     {
       if( null == ReflectUtil.method( classLoader, "findLoadedClass", String.class )
-        .invoke( "com.sun.tools.javac.parser.ManJavacParser" ) )
+        .invoke( "com.sun.tools.javac.parser." + manJavacParser ) )
       {
         InputStream is1 = JavacPlugin.class.getClassLoader().getResourceAsStream(
-          "manifold/internal/javac/ManJavacParser.clazz" );
+          "manifold/internal/javac/" + manJavacParser + ".clazz" );
         try
         {
           byte[] content = StreamUtil.getContent( is1 );
           ReflectUtil.method( classLoader, "defineClass", String.class, byte[].class, int.class, int.class )
-            .invoke( "com.sun.tools.javac.parser.ManJavacParser", content, 0, content.length );
+            .invoke( "com.sun.tools.javac.parser." + manJavacParser, content, 0, content.length );
         }
         catch( IOException e )
         {

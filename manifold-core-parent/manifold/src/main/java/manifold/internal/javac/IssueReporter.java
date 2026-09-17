@@ -92,6 +92,12 @@ public class IssueReporter<T> implements DiagnosticListener<T>
     {
       return (int)_d.getEndPosition();
     }
+
+    //@Override JDK 27+
+    public int getEndPosition()
+    {
+      return (int)_d.getEndPosition();
+    }
   }
 
 }
