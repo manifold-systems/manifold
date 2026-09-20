@@ -122,6 +122,10 @@ public class NonAmbiguousDiamondTest extends TestCase
     }
   }
 
+  static class Root_LinkSuperInterfaceOfPart implements Base {
+    @link Base _base = new SubBasePart( "Root");
+  }
+
   static class Root_AutoResolve implements SubBase
   {
     @link SubBase _subBase = new SubBasePart();

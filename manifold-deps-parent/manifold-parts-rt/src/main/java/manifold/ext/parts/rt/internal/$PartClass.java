@@ -13,6 +13,7 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -116,23 +117,55 @@ public interface $PartClass
                                         "is already wired into part: '" + part.getClass().getTypeName() + "'" );
     }
 
+    private static final Class<?>[] EMPTY_CLASS_ARRAY = new Class[0];
     // called from generated code
     @SuppressWarnings("unused")
     public static Class<?>[] intersect( Class<?>[] a, Class<?>[] b )
     {
-      List<Class<?>> result = new ArrayList<>();
-      for( Class<?> ca : a )
+      Class<?> amax = maximalInterface( a );
+      Class<?> bmax = maximalInterface( b );
+      if( amax.isAssignableFrom( bmax ) )
       {
-        for( Class<?> cb : b )
+        return a;
+      }
+      if( bmax.isAssignableFrom( amax ) )
+      {
+        return b;
+      }
+      return EMPTY_CLASS_ARRAY;
+    }
+
+    private static Class<?> maximalInterface( Class<?>[] interfaces )
+    {
+      ArrayList<Class<?>> maximal = new ArrayList<>( Arrays.asList( interfaces ) );
+      for( int i = 0; i < maximal.size(); i++ )
+      {
+        Class<?> iface = maximal.get( i );
+        for( int j = 0; j < maximal.size(); j++ )
         {
-          if( ca == cb )
+          if( i == j )
           {
-            result.add( ca );
-            break;
+            continue;
+          }
+
+          Class<?> jface = maximal.get( j );
+          if( jface.isAssignableFrom( iface ) )
+          {
+            if( j < i )
+            {
+              i--;
+            }
+
+            maximal.remove( j );
+            j--;
           }
         }
       }
-      return result.toArray( new Class<?>[0] );
+      if( maximal.size() != 1 )
+      {
+        throw new IllegalStateException( "Expecting single maximal interface" );
+      }
+      return maximal.get( 0 );
     }
 
     // called from generated code

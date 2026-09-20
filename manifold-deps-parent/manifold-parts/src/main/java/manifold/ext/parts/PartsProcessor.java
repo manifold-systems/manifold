@@ -2138,14 +2138,23 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
         {
           ArrayList<ClassType> interfaces = new ArrayList<>();
           findAllInterfaces( classDecl.sym.type, new HashSet<>(), interfaces );
+          interfaces = maximalInterfaces( interfaces );
           List<ClassType> matches = List.nil();
           for( ClassType iface : interfaces )
           {
-            for( Symbol mm : IDynamicJdk.instance().getMembersByName( (ClassSymbol)iface.tsym, sym.name ) )
+            for( Type t : getTypes().closure( iface ) )
             {
-              if( sym.overrides( mm, iface.tsym, getTypes(), false ) )
+              if( !t.isInterface() )
               {
-                matches = matches.append( iface );
+                continue;
+              }
+
+              for( Symbol mm : IDynamicJdk.instance().getMembersByName( (ClassSymbol)t.tsym, sym.name ) )
+              {
+                if( sym.overrides( mm, t.tsym, getTypes(), false ) )
+                {
+                  matches = matches.append( (ClassType)t );
+                }
               }
             }
           }
@@ -2161,6 +2170,37 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
         }
       }
       return null;
+    }
+
+    // given {BigInteger, Number, List, Collection, Iterable}, returns {BigInteger, List}
+    private ArrayList<ClassType> maximalInterfaces( ArrayList<ClassType> interfaces )
+    {
+      ArrayList<ClassType> maximal = interfaces.stream()
+        .map( t -> (ClassType)getTypes().erasure( t ) ).collect( Collectors.toCollection( ArrayList::new ) );
+      for( int i = 0; i < maximal.size(); i++ )
+      {
+        ClassType iface = maximal.get( i );
+        for( int j = 0; j < maximal.size(); j++ )
+        {
+          if( i == j )
+          {
+            continue;
+          }
+
+          ClassType jface = maximal.get( j );
+          if( getTypes().isSubtype( iface, jface ) )
+          {
+            if( j < i )
+            {
+              i--;
+            }
+
+            maximal.remove( j );
+            j--;
+          }
+        }
+      }
+      return maximal;
     }
 
     private boolean isException_Arg( JCMethodInvocation tree )
