@@ -21,22 +21,8 @@ import manifold.ext.parts.rt.api.link;
 import manifold.ext.parts.rt.api.part;
 
 /**
- * Tests a diamond with just an interface at the apex (the overlapping interface between multiple links), as opposed to
- * a part class implementing the interface as a delegate for the legs of the diamond.
- *
- *    QPart  SPart
- *       \    /
- *       QandS
- *       link Q -> QPart (impls Q)
- *       link S -> SPart (impls S)
- *  where:
- *    interface Q extends M
- *    interface S extends M
- *         M (apex)
- *       /  \
- *      Q    S
  */
-public class InterfaceApexDiamondTest extends TestCase
+public class IndyTest extends TestCase
 {
   public void testDiamond()
   {
@@ -44,34 +30,7 @@ public class InterfaceApexDiamondTest extends TestCase
     assertEquals( "QPart.m", qas.m() );
     assertEquals( "QPart.m QPart.q", qas.q() );
     assertEquals( "QPart.m QPart.q QandS.s", qas.s() );
-  }
-
-  public void testSinglePath()
-  {
-    Outer outer = new Outer();
-    assertEquals( "QPart.m QPart.q Middle.s", outer.s() );
-  }
-
-  public void testOuterSdoesNotWireMIntoQ()
-  {
-    Outer2 outer2 = new Outer2();
-    assertEquals( "QPart.m QPart.q QandS.s", outer2.s() );
-    assertEquals( "Outer2.m SPart.s QandS.z", outer2.z() );
-  }
-
-  public void testLinkSuperInterfaceOfPart()
-  {
-    Foo foo = new Foo();
-    assertEquals( "Foo.m QPart.q", foo.foo() );
-  }
-  static class Foo implements M {
-    @link M m = new QPart();
-    String foo() {
-      return ((QPart)m).q();
-    }
-    public String m() {
-      return "Foo.m";
-    }
+    assertEquals( "QPart.m SPart.s QandS.z", qas.z() );
   }
 
   interface M { String m(); }
@@ -101,23 +60,5 @@ public class InterfaceApexDiamondTest extends TestCase
 //      // which dispatch independently and may reach different implementations: qualify with the intended interface e.g. ((Q)this).m()
 //      return m(); // compile error: Ambiguous call.
 //    }
-  }
-
-  static @part class Middle implements Q, S {
-    @link Q q = new QPart();
-
-    public String s() { return q() + " Middle.s"; }
-  }
-
-  static class Outer implements S {
-    @link S s = new Middle();
-
-    public String m() { return "Outer.m"; }
-  }
-
-  static class Outer2 implements S {
-    @link S s = new QandS();
-
-    public String m() { return "Outer2.m"; }
   }
 }

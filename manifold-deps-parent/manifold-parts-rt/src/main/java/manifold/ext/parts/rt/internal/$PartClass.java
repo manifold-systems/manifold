@@ -13,7 +13,6 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,9 +32,9 @@ public interface $PartClass
   /**
    * The compiler generates the implementation of this method per `@part` class.
    * <p>
-   * A call to `Internal#linkPart()` is generated where a delegate is assigned to a `@link` field. In turn, `Internal#linkPart()`
-   * calls this method to write `root` into the appropriate `$selves[]` slots and recursively propagates through nested
-   * `@link` fields - this is how arbitrary DAG topologies work.
+   * The Parts javac plugin generates a call to `Internal#linkPart()` where a part delegate is assigned to a `@link` field.
+   * In turn, `Internal#linkPart()`calls `part.$linkPartToSelf` to write `root` into the part's `$selves[]` slot for `linkScope`
+   * and recursively propagates through the part's`@link` fields.
    *
    * @param root      A delegating class
    * @param linkScope The interfaces `root` links/delegates to this part
@@ -44,6 +43,8 @@ public interface $PartClass
 
   class Internal
   {
+    private static final Class<?>[] EMPTY_CLASS_ARRAY = {};
+
     // called from generated code.
     @SuppressWarnings( "unused" )
     public static Object linkPart( Object root, Class<?>[] linkScope, String fieldName, Object delegate )
@@ -109,63 +110,28 @@ public interface $PartClass
 
     // called from generated code
     @SuppressWarnings("unused")
-    public static void reportCycle( $PartClass part, Object root, Class<?> iface )
+    public static void reportCycle( $PartClass part, Object root )
     {
       throw new DelegationLinkageError( "Cycle detected in delegation graph.\n" +
-                                        "Interface: '" + iface.getTypeName() + "'\n" +
-                                        "delegated by root: '" + root.getClass().getTypeName() + "'\n" +
+                                        "Composite: '" + root.getClass().getTypeName() + "'\n" +
                                         "is already wired into part: '" + part.getClass().getTypeName() + "'" );
     }
 
-    private static final Class<?>[] EMPTY_CLASS_ARRAY = new Class[0];
     // called from generated code
+    //
+    // The Class arrays are sorted narrowest first and each array represents a single interface plus its superinterfaces
     @SuppressWarnings("unused")
-    public static Class<?>[] intersect( Class<?>[] a, Class<?>[] b )
+    public static Class<?>[] widest( Class<?>[] a, Class<?>[] b )
     {
-      Class<?> amax = maximalInterface( a );
-      Class<?> bmax = maximalInterface( b );
-      if( amax.isAssignableFrom( bmax ) )
+      if( a[0].isAssignableFrom( b[0] ) )
       {
         return a;
       }
-      if( bmax.isAssignableFrom( amax ) )
+      if( b[0].isAssignableFrom( a[0] ) )
       {
         return b;
       }
       return EMPTY_CLASS_ARRAY;
-    }
-
-    private static Class<?> maximalInterface( Class<?>[] interfaces )
-    {
-      ArrayList<Class<?>> maximal = new ArrayList<>( Arrays.asList( interfaces ) );
-      for( int i = 0; i < maximal.size(); i++ )
-      {
-        Class<?> iface = maximal.get( i );
-        for( int j = 0; j < maximal.size(); j++ )
-        {
-          if( i == j )
-          {
-            continue;
-          }
-
-          Class<?> jface = maximal.get( j );
-          if( jface.isAssignableFrom( iface ) )
-          {
-            if( j < i )
-            {
-              i--;
-            }
-
-            maximal.remove( j );
-            j--;
-          }
-        }
-      }
-      if( maximal.size() != 1 )
-      {
-        throw new IllegalStateException( "Expecting single maximal interface" );
-      }
-      return maximal.get( 0 );
     }
 
     // called from generated code

@@ -21,26 +21,12 @@ import manifold.ext.parts.rt.api.link;
 import manifold.ext.parts.rt.api.part;
 
 /**
- * Tests a diamond with just an interface at the apex (the overlapping interface between multiple links), as opposed to
- * a part class implementing the interface as a delegate for the legs of the diamond.
- *
- *    QPart  SPart
- *       \    /
- *       QandS
- *       link Q -> QPart (impls Q)
- *       link S -> SPart (impls S)
- *  where:
- *    interface Q extends M
- *    interface S extends M
- *         M (apex)
- *       /  \
- *      Q    S
  */
-public class InterfaceApexDiamondTest extends TestCase
+public class GenericInterfaceApexDiamondTest extends TestCase
 {
   public void testDiamond()
   {
-    QandS qas = new QandS();
+    QandS<String> qas = new QandS<>();
     assertEquals( "QPart.m", qas.m() );
     assertEquals( "QPart.m QPart.q", qas.q() );
     assertEquals( "QPart.m QPart.q QandS.s", qas.s() );
@@ -48,51 +34,51 @@ public class InterfaceApexDiamondTest extends TestCase
 
   public void testSinglePath()
   {
-    Outer outer = new Outer();
+    Outer<String> outer = new Outer<>();
     assertEquals( "QPart.m QPart.q Middle.s", outer.s() );
   }
 
   public void testOuterSdoesNotWireMIntoQ()
   {
-    Outer2 outer2 = new Outer2();
+    Outer2<String> outer2 = new Outer2<>();
     assertEquals( "QPart.m QPart.q QandS.s", outer2.s() );
-    assertEquals( "Outer2.m SPart.s QandS.z", outer2.z() );
+    assertEquals( "Outer2.m SPart.s QandS.z", outer2.z("hi") );
   }
 
   public void testLinkSuperInterfaceOfPart()
   {
-    Foo foo = new Foo();
+    Foo<String> foo = new Foo<>();
     assertEquals( "Foo.m QPart.q", foo.foo() );
   }
-  static class Foo implements M {
-    @link M m = new QPart();
+  static class Foo<T> implements M<T> {
+    @link M<T> m = new QPart<>();
     String foo() {
-      return ((QPart)m).q();
+      return ((QPart<T>)m).q();
     }
     public String m() {
       return "Foo.m";
     }
   }
 
-  interface M { String m(); }
-  interface Q extends M {String z(); String q();}
-  interface S extends M {String z(); String s();}
+  interface M<E> { String m(); }
+  interface Q<A> extends M<A> {A z(A a); String q();}
+  interface S<B> extends M<B> {B z(B b); String s();}
 
-  static @part class QPart implements Q {
+  static @part class QPart<T> implements Q<T> {
     public String m() { return "QPart.m"; }
     public String q() { return m() + " QPart.q"; }
-    public String z() { return "QPart.z"; }
+    public T z(T t) { return t; }
   }
-  static @part class SPart implements S {
+  static @part class SPart<U> implements S<U> {
     public String m() { return "SPart.m"; }
     public String s() { return m() + " SPart.s"; }
-    public String z() { return "SPart.z"; }
+    public U z(U t) { return t; }
   }
 
-  static @part class QandS implements Q, S {
-    @link(share=M.class) Q q = new QPart();
-    @link S s = new SPart();
-    public String z() { return s.s() + " QandS.z"; }
+  static @part class QandS<QS> implements Q<QS>, S<QS> {
+    @link(share=M.class) Q<QS> q = new QPart<>();
+    @link S<QS> s = new SPart<>();
+    public QS z(QS qs) { return (QS)(s.s() + " QandS.z"); }
 
     public String s() { return q() + " QandS.s"; }
 
@@ -103,20 +89,20 @@ public class InterfaceApexDiamondTest extends TestCase
 //    }
   }
 
-  static @part class Middle implements Q, S {
-    @link Q q = new QPart();
+  static @part class Middle<R> implements Q<R>, S<R> {
+    @link Q<R> q = new QPart<>();
 
     public String s() { return q() + " Middle.s"; }
   }
 
-  static class Outer implements S {
-    @link S s = new Middle();
+  static class Outer<O> implements S<O> {
+    @link S<O> s = new Middle<>();
 
     public String m() { return "Outer.m"; }
   }
 
-  static class Outer2 implements S {
-    @link S s = new QandS();
+  static class Outer2<O> implements S<O> {
+    @link S<O> s = new QandS<>();
 
     public String m() { return "Outer2.m"; }
   }

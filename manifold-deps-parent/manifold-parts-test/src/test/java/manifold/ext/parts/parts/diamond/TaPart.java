@@ -20,6 +20,8 @@ import manifold.ext.parts.rt.api.part;
 import manifold.ext.parts.rt.api.link;
 import manifold.util.ReflectUtil;
 
+import static manifold.ext.parts.parts.diamond.Student.Program.BS;
+
 /**
  * TaPart demonstrates how "diamond" patterns work with delegate sharing.
  * <p/>
@@ -34,14 +36,28 @@ public @part class TaPart implements TA // TA is a "diamond" interface with Stud
 
   public TaPart( Student student, Department department )
   {
+    _teacher = new TeacherPart( student, department );
+    _student = student;
+  }
+
+  public TaPart( Student student, Person person, Department department )
+  {
     // student is shared as the Person part of the Teacher. However, because TeacherPart only uses the student to delegate
     // the Person interface impl, student is effectively unused in TeacherPart because Person calls route through the TaPart composite
     // which forwards to StudentPart. In other words, self-calls on Person methods inside TeacherPart are wired to the TaPart
     // composite as the receiver (self), which forwards to StudentPart. To test this, instead of passing _student into TeacherPart
     // as we normally would, we pass in a new Person. Note, this is a real use-case e.g., consider if Teacher were passed
     // into TaPart, its Person would be set, perhaps to the professor the TA is assisting: its Person must be bypassed.
-    _teacher = new TeacherPart( new PersonPart( "Mr. Peabody" ), department );
-//    _teacher = new TeacherPart( _student, department );
+    _teacher = new TeacherPart( person, department );
+    _student = student;
+  }
+
+  // Cycle
+  public TaPart()
+  {
+    PersonPart fred = new PersonPart( "Fred" );
+    Student student = new StudentPart( this, BS );
+    _teacher = new TeacherPart( student, Department.Science );
     _student = student;
   }
 
@@ -49,6 +65,11 @@ public @part class TaPart implements TA // TA is a "diamond" interface with Stud
   public String getTitle()
   {
     return "TA";
+  }
+
+  public String getTeacherName()
+  {
+    return _teacher.getName();
   }
 
   public String callTitledNameFromInsideTeacherPart()

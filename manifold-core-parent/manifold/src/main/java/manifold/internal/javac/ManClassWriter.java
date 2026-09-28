@@ -16,18 +16,24 @@
 
 package manifold.internal.javac;
 
+import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.jvm.ClassWriter;
+import com.sun.tools.javac.jvm.Code;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.util.Context;
 import java.io.IOException;
 import java.io.OutputStream;
 import javax.tools.JavaFileObject;
+
+import com.sun.tools.javac.util.List;
 import manifold.api.type.ISelfCompiledFile;
 import manifold.util.ReflectUtil;
 
 public class ManClassWriter extends ClassWriter
 {
+  private static final String GENERATED = "parts.rt.internal.Generated";
+
   public static ManClassWriter instance( Context ctx )
   {
     ClassWriter classWriter = ctx.get( classWriterKey );
@@ -49,6 +55,8 @@ public class ManClassWriter extends ClassWriter
   @Override
   public void writeClassFile( OutputStream out, Symbol.ClassSymbol c ) throws StringOverflow, IOException, PoolOverflow
   {
+//    removeLineInfoForGeneratedMethods( c );
+
     JavaFileObject sourceFile = c.sourcefile;
     if( sourceFile instanceof ISelfCompiledFile && ((ISelfCompiledFile)sourceFile).isSelfCompile( c.getQualifiedName().toString() ) )
     {
@@ -58,5 +66,34 @@ public class ManClassWriter extends ClassWriter
     {
       super.writeClassFile( out, c );
     }
+  }
+
+  // remove the line info for generated methods so that debuggers will not try to land on invisible methods
+  private static void removeLineInfoForGeneratedMethods( Symbol.ClassSymbol c )
+  {
+    for (Symbol s : IDynamicJdk.instance().getMembers( c ) )
+    {
+      if( s instanceof Symbol.MethodSymbol )
+      {
+        Symbol.MethodSymbol m = (Symbol.MethodSymbol)s;
+        if( m.code != null && isGenerated( m ) )
+        {
+          // clear line numbers so debugger will not step into invisible generated methods
+          ReflectUtil.field( Code.class, "lineInfo" ).set( m.code, List.nil() );
+        }
+      }
+    }
+  }
+
+  private static boolean isGenerated( Symbol.MethodSymbol m )
+  {
+    for( Attribute.Compound a : m.getRawAttributes() )
+    {
+      if( a.type.tsym.flatName().toString().contains( GENERATED ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 }

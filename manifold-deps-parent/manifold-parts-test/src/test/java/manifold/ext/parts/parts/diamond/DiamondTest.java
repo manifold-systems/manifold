@@ -17,6 +17,7 @@
 package manifold.ext.parts.parts.diamond;
 
 import junit.framework.TestCase;
+import manifold.ext.parts.rt.api.DelegationLinkageError;
 
 import static manifold.ext.parts.parts.diamond.Student.Program.BS;
 import static manifold.ext.parts.parts.diamond.Teacher.Department.Science;
@@ -39,6 +40,23 @@ public class DiamondTest extends TestCase
 
     assertEquals( "TA", ta.getTitle() );
     assertEquals( "TA Fred", ta.getTitledName() );
+  }
+
+  public void testDiamondWithSeparateApexParts()
+  {
+    PersonPart fred = new PersonPart( "Fred" );
+    Student taStudent = new StudentPart( fred, BS );
+    PersonPart teacherPerson = new PersonPart( "Mr. Peabody" );
+    TA ta = new TaPart( taStudent, teacherPerson, Science );
+
+    assertEquals( "Fred", ta.getName() );
+    assertEquals( BS, ta.getProgram() );
+    assertEquals( Science, ta.getDepartment() );
+
+    assertEquals( "TA", ta.getTitle() );
+    assertEquals( "TA Fred", ta.getTitledName() );
+
+    assertEquals( "Mr. Peabody", ((TaPart)ta).getTeacherName() );
   }
 
   public void testMoreThisReplacement()
@@ -72,5 +90,18 @@ public class DiamondTest extends TestCase
     Student taStudent = new StudentPart( fred, BS );
     TaPart ta = new TaPart( taStudent, Science );
     assertEquals( ta.getTitledName(), ta.callTitledNameFromInsideTeacherPart() );
+  }
+
+  public void testCycle()
+  {
+    try
+    {
+      TA ta = new TaPart();
+      fail( "Expecting linkage error for cycle detection" );
+    }
+    catch( DelegationLinkageError e )
+    {
+      assertTrue( e.getMessage().contains( "Cycle detected" ) );
+    }
   }
 }
