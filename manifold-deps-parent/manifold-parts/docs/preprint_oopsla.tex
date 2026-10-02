@@ -1,4 +1,4 @@
-\documentclass[acmsmall,nonacm]{acmart}
+\documentclass[acmsmall,screen,review,anonymous]{acmart}
 
 % acmart already provides amsmath/amsthm/amssymb, booktabs, graphicx,
 % xcolor, array, and hyperref; add only what it does not.
@@ -11,7 +11,7 @@
 \addtolength{\topmargin}{-5.48402pt}
 \setlength{\emergencystretch}{3em} % absorb overfull lines from unbreakable inline code
 
-\settopmatter{printacmref=false}   % preprint: suppress the ACM reference block
+\settopmatter{printacmref=true}    % ACM reference format block required by acmart
 \raggedbottom                      % figure-heavy: let slack fall to page bottom,
                                    % not stretch above pinned [H] figures
 
@@ -79,10 +79,10 @@
 
 \title{Interface-Scoped Dispatch:\texorpdfstring{\\}{ }General Delegation with \texorpdfstring{$\boldsymbol{O(1)}$}{O(1)} Self-Calls}
 
-\author{R. Scott McKinney}
-\affiliation{\institution{Manifold Systems}\country{USA}}
-\email{scott@manifold.systems}
-\renewcommand{\shortauthors}{McKinney}
+\author{Anonymous Author(s)}
+\affiliation{\institution{Anonymous Institution}\country{}}
+\email{anonymous@example.com}
+\renewcommand{\shortauthors}{Anonymous Author(s)}
 
 \begin{abstract}
 The conceptual appeal of object composition is its ability to build loosely coupled systems from independent runtime components.
@@ -96,6 +96,33 @@ per interface at construction, allowing self-calls to dynamically dispatch throu
 as a compiler plugin for Java 8--27 with IDE integration. It achieves an $O(1)$ dispatch cost that is empirically equivalent
 to a standard vtable call, offering open recursion through composition without compromise.
 \end{abstract}
+
+\keywords{object composition, delegation, open recursion, self-calls, dynamic dispatch,
+interface-scoped dispatch, mixins, traits, inheritance, Java}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10003752.10010124.10010125.10010128</concept_id>
+       <concept_desc>Theory of computation~Object oriented constructs</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10011007.10011006.10011008.10011024.10011025</concept_id>
+       <concept_desc>Software and its engineering~Polymorphism</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10011007.10011006.10011008.10011024.10011026</concept_id>
+       <concept_desc>Software and its engineering~Inheritance</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Theory of computation~Object oriented constructs}
+\ccsdesc[500]{Software and its engineering~Polymorphism}
+\ccsdesc[500]{Software and its engineering~Inheritance}
 
 \maketitle
 

@@ -46,7 +46,6 @@ import manifold.ext.parts.rt.api.part;
 import manifold.ext.parts.rt.internal.$PartClass;
 import manifold.ext.parts.rt.internal.Generated;
 import manifold.ext.rt.ExtensionMethod;
-import manifold.ext.rt.api.Structural;
 import manifold.internal.javac.*;
 import manifold.rt.api.util.Stack;
 import manifold.util.JreUtil;
@@ -172,6 +171,13 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
   private boolean isSubtype( Type t, Type s )
   {
     return getTypes().isSubtype( t, s );
+  }
+
+  private Type classType()
+  {
+    Symtab symtab = getSymtab();
+    Type wildcardType = new Type.WildcardType( symtab.objectType, BoundKind.UNBOUND, symtab.classType.tsym );
+    return getTypes().subst( symtab.classType, symtab.classType.tsym.type.getTypeArguments(), List.of( wildcardType ) );
   }
 
   @Override
@@ -463,18 +469,19 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       List<JCVariableDecl> params = List.nil();
 
       Name rootName = names.fromString( "root" );
-      JCExpression rootType = make.Type( getSymtab().objectType );
+      Symtab symtab = getSymtab();
+      JCExpression rootType = make.Type( symtab.objectType );
       JCVariableDecl rootParam = make.VarDef( make.Modifiers( FINAL | Flags.PARAMETER ), rootName, rootType, null );
       params = params.append( rootParam );
 
       Name linkScopeName = names.fromString( "linkScope" );
-      Type classType = getTypes().erasure( getSymtab().classType );
-      JCExpression linkScopeType = make.Type( getTypes().makeArrayType( classType ) );
+
+      JCExpression linkScopeType = make.Type( getTypes().makeArrayType( classType() ) );
       JCVariableDecl linkScopeParam = make.VarDef( make.Modifiers( FINAL | Flags.PARAMETER ), linkScopeName, linkScopeType, null );
       params = params.append( linkScopeParam );
 
       // Return type
-      JCExpression resType = make.Type( getSymtab().voidType );
+      JCExpression resType = make.Type( symtab.voidType );
 
       // Code
       JCIf cycleCheck = make.If(
@@ -485,7 +492,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       List<JCStatement> outerLoopStmts = List.nil();
       Name linkIfaceName = names.fromString( "linkIface" );
       Name i = names.fromString( "i" );
-      JCVariableDecl indexVar = make.VarDef( make.Modifiers( 0 ), i, make.Type( getSymtab().intType ), make.Literal( INT, 0 ) );
+      JCVariableDecl indexVar = make.VarDef( make.Modifiers( 0 ), i, make.Type( symtab.intType ), make.Literal( INT, 0 ) );
       JCBinary cond = make.Binary( Tag.LT,
                                      make.Ident( i ),
                                      make.Select( make.Ident( names.fromString( INTERFACE_CLOSURE_FIELD ) ), names.fromString( "length" ) ) );
@@ -493,7 +500,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
 
       Name ifaceName = names.fromString( "iface" );
       JCVariableDecl ifaceVar = make.VarDef( make.Modifiers( FINAL ), ifaceName,
-                                        make.Type( getSymtab().classType ),
+                                        make.Type( classType() ),
                                         make.Indexed( make.Ident( names.fromString( INTERFACE_CLOSURE_FIELD ) ), make.Ident( i ) ) );
       JCIf ifStmt = make.If(
         make.Binary( Tag.EQ, make.Ident( ifaceName ), make.Ident( linkIfaceName ) ),
@@ -508,7 +515,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
                        List.of( make.Binary( Tag.PLUS, make.Literal( "Unimplemented linked interface: " ), make.Ident( linkIfaceName ) ) ), null ) );
       outerLoopStmts = outerLoopStmts.append( throwDelegationLinkageError );
       //////
-      JCEnhancedForLoop assignSelves = make.ForeachLoop( make.VarDef( make.Modifiers( FINAL ), linkIfaceName, make.Type( classType ), null ),
+      JCEnhancedForLoop assignSelves = make.ForeachLoop( make.VarDef( make.Modifiers( FINAL ), linkIfaceName, make.Type( classType() ), null ),
                                                          make.Ident( linkScopeName ), make.Block( 0, outerLoopStmts ) );
       JCLabeledStatement outerLoop = make.Labelled( names.fromString( "outer" ), assignSelves );
       List<JCStatement> methodBody = List.of( cycleCheck, outerLoop );
@@ -522,7 +529,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
                                                                    make.Ident( linkScopeName ) ) );
         Name widestOfRootOrLink_Name = names.fromString( "widestOf_root_or_" + fieldName );
         methodBody = methodBody.append(
-          make.VarDef( make.Modifiers( FINAL ), widestOfRootOrLink_Name, make.Type( getTypes().makeArrayType( classType ) ), widestOfRootOrLink ) );
+          make.VarDef( make.Modifiers( FINAL ), widestOfRootOrLink_Name, make.Type( getTypes().makeArrayType( classType() ) ), widestOfRootOrLink ) );
         methodBody = methodBody.append(
           make.If( make.Binary( Tag.AND,
                                 make.Binary( Tag.NE,
@@ -534,7 +541,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
                    null ) );
       }
       Type superclass = classDecl.sym.getSuperclass();
-      if( superclass != null && !isSameType( superclass, getSymtab().objectType ) )
+      if( superclass != null && !isSameType( superclass, symtab.objectType ) )
       {
         methodBody = methodBody.append( make.Exec( make.Apply( List.nil(), make.Select( make.Ident( names._super ), methName ),
                                                                List.of( make.Ident( rootName ), make.Ident( linkScopeName ) ) ) ) );
@@ -558,10 +565,10 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
         JCVariableDecl field = link.getKey();
         LinkInfo li = link.getValue();
 
-        Type.ArrayType arrayOfClassesType = getTypes().makeArrayType( getTypes().erasure( getSymtab().classType ) );
+        Type.ArrayType arrayOfClassesType = getTypes().makeArrayType( classType() );
         List<Type> interfaces = li.getInterfaces();
         List<JCExpression> interfaceTypes = List.from( interfaces.stream().map( t -> make.ClassLiteral( getTypes().erasure( t ) ) ).collect( Collectors.toList() ) );
-        JCNewArray interfaceArray = make.NewArray( make.Type( getTypes().erasure( getSymtab().classType ) ), List.nil(), interfaceTypes );
+        JCNewArray interfaceArray = make.NewArray( make.Type( classType() ), List.nil(), interfaceTypes );
         interfaceArray.type = arrayOfClassesType;
 
         addWiringField( ci._classDecl, STATIC | FINAL, LINKED_INTERFACES_FIELD + field.name, interfaceArray.type, interfaceArray );
@@ -575,10 +582,10 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       TreeMaker make = getTreeMaker();
       make.pos = ci._classDecl.pos;
 
-      Type.ArrayType arrayOfClassesType = getTypes().makeArrayType( getTypes().erasure( getSymtab().classType ) );
+      Type.ArrayType arrayOfClassesType = getTypes().makeArrayType( classType() );
       ArrayList<ClassType> interfaces = ci.getInterfaces();
       List<JCExpression> interfaceTypes = List.from( interfaces.stream().map( t -> make.ClassLiteral( getTypes().erasure( t ) ) ).collect( Collectors.toList() ) );
-      JCNewArray interfaceArray = make.NewArray( make.Type( getTypes().erasure( getSymtab().classType ) ), List.nil(), interfaceTypes );
+      JCNewArray interfaceArray = make.NewArray( make.Type( classType() ), List.nil(), interfaceTypes );
       interfaceArray.type = arrayOfClassesType;
 
       addWiringField( ci._classDecl, STATIC | FINAL, INTERFACE_CLOSURE_FIELD, interfaceArray.type, interfaceArray );
