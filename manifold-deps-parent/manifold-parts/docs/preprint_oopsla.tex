@@ -1306,7 +1306,7 @@ delegating (or forwarding) field per class~\cite[\S6.5]{kniesel2000}; multiple
 delegation is \emph{deliberately} excluded~\cite[\S6.5.1]{kniesel2000}, and a
 single receiver typed at one interface admits no multi-root
 composition~\cite[\S5.5.4]{kniesel2000}. DARWIN achieves open recursion,
-but only over a single inherited base, sacrificing arbitrary composition.
+but only over a single inherited base (topology (a)), sacrificing arbitrary composition.
 Parts' ISD supplies open recursion together with multiple delegation---required
 for arbitrary composition---by assigning identity per interface at construction.
 
@@ -1396,10 +1396,14 @@ the multi-source composition the authors originally aimed for---topology (c)---a
 object, under a statically-checked interface contract.
 
 \paragraph{Novelty.}
-No system surveyed above provides independent runtime components, arbitrary composition, and open recursion together;
-DelphJ comes closest, achieving independent components and open recursion in full, but restricting composition to a single
-topology. Even this partial result comes at substantial runtime cost, as DelphJ's own evaluation acknowledges (\S\ref{sec:related}).
-Parts achieves all three properties at vtable-equivalent dispatch cost.
+No system surveyed above provides independent runtime components, arbitrary composition, and open recursion together.
+The models closest to Parts, IFJ, DARWIN, and DelphJ, achieve independent components and open recursion but not arbitrary
+composition: all are confined to the single-rooted topology, their dispatch mechanisms unable to support the full range of
+ordinary forwarding. IFJ binds a single \code{this} by construction, and DARWIN deliberately excludes multiple delegation
+for stated performance concerns~\cite[\S6.5.1]{kniesel2000}. DelphJ comes closest: it permits multiple delegation, but its
+access-path dispatch cannot resolve the cross-interface cases that topologies (b)--(d) require, and it carries substantial
+runtime penalties its own evaluation acknowledges~(\S\ref{sec:related}). What these models set aside, Parts shows is
+practical with interface-scoped dispatch, achieving all three properties without compromise at vtable-equivalent dispatch cost.
 
 %% ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion}
@@ -1583,9 +1587,9 @@ A.~Shipilev and contributors.
 \newblock \url{https://github.com/openjdk/jmh}, 2013--2024.
 
 \bibitem{mckinney2026}
-R.~S.~McKinney.
-\newblock manifold-parts.
-\newblock \url{https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts}, 2026.
+Anonymous.
+\newblock manifold-parts: reference implementation.
+\newblock Artifact; repository URL omitted for double-blind review, 2026.
 
 \end{thebibliography}
 
