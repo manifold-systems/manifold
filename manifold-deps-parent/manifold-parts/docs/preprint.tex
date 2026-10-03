@@ -113,14 +113,14 @@ are fixed to the component's local implementation and never reach composite over
 way to retain this behavior.
 
 The challenge is to retain the architectural benefits of object composition while recovering open recursion. A comprehensive
-resolution must simultaneously preserve \emph{independent components} (late-bound objects supplied at construction) and
-\emph{arbitrary composition} (unrestricted composition topologies), while providing \emph{open recursion} (self-calls late-bound
-through the composite). Mainstream composition models achieve at most two of these three properties (Section~\ref{sec:related})
+resolution must preserve \emph{independent components} (late-bound objects supplied at construction) and \emph{arbitrary composition}
+(unrestricted composition topologies), while providing \emph{open recursion} (self-calls late-bound through the composite).
+Prior composition models achieve at most two of these three properties (Section~\ref{sec:related}).
 
-The conventional object composition of modern languages differs in implementation but reduces to basic forwarding. Some,
+The conventional object composition of conventional languages differs in implementation but reduces to basic forwarding. Some,
 like Rust and Swift, require manual forwarding; others, such as Kotlin's \code{by} clause~\cite{kotlin} and Go's struct
 embedding~\cite{go}, provide it automatically. They all support independent components under arbitrary composition, but
-forwarding does not preserve the composite identity needed for open recursion: a component's \code{this} remains the component,
+forwarding alone does not preserve the composite identity needed for open recursion: a component's \code{this} remains the component,
 so its self-calls cannot be redirected through the composite. This is the \emph{Object Schizophrenia} problem~\cite{sekharaiah2002,kniesel2000}.
 
 Trait composition, including Scala's \code{with}~\cite{odersky2005} and mixins~\cite{bracha1990}, makes the opposite trade.
@@ -372,7 +372,7 @@ A part may itself contain link fields, in which case composite identity propagat
 to an outer composite, that composite becomes the dispatch root for each interface it claims throughout the delegation chain,
 while interfaces it does not claim retain the roots established by inner composites. This \emph{transitive propagation}
 continues through a link field only when the field's value is a part and the field's declared interface and the claimed
-interface are comparable: one a subtype of the other (Figure~\ref{fig:linkPartToSelf-listing}).
+interface are comparable, one a subtype of the other (Figure~\ref{fig:linkPartToSelf-listing}).
 
 Composites must also resolve \emph{diamonds}. When a composite has multiple links that share a common interface, a sharing
 link must be chosen explicitly via \code{@link(share=I.class)} at one of the link sites. This determines the leg of the diamond the
@@ -592,8 +592,9 @@ acyclic over distinct interfaces.
 These four are exhaustive over the two dimensions. Of the six combinations the dimensions admit, two cannot occur: a
 single-rooted part forces a single source, and a sourceless graph is necessarily multi-root. This leaves (a)–(d).
 
-These topologies provide a basis for verifying whether a composition model supports arbitrary composition: does its treatment
-of open recursion remain correct under arbitrary extensions of each topology?
+Forwarding admits these topologies, so by definition a general delegation model must as well. The topologies therefore provide
+a basis for verifying whether a delegation model supports arbitrary composition: does its treatment of open recursion remain
+correct under arbitrary extensions of each topology?
 
 To answer this question, another set of labeled edges may be drawn onto the structural delegation graph to form a second graph in which each part
 is connected to the composites claiming its interfaces, determined by following the delegation edges backwards along each
@@ -602,11 +603,6 @@ reveals what open recursion under arbitrary composition requires: composite iden
 
 In all four cases, for each delegated interface, a part acquires the identity of the composite claiming that interface,
 independent of where execution enters the composition. Invariant~\ref{prop:dispatch} holds independently for each interface.
-
-Ordinary forwarding already admits these topologies freely; nothing prevents the use of partial delegation to
-build compositions mirroring these structures. The differentiator is open recursion: without it, a component's
-self-calls remain effectively static and do not reach composite overrides. Parts fills this crucial gap comprehensively
-via interface-scoped identity, ensuring self-calls dispatch correctly regardless of how the composition is structured.
 
 \begin{figure}[H]
 \centering
