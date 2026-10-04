@@ -143,6 +143,10 @@ and non-part components, supporting delegation with parts and forwarding with no
 same composite. Parts is realized as a compiler plugin for Java 8--27 with IDE integration; its execution cost is O(1),
 empirically equivalent to a standard vtable call.
 
+The model's guarantees are established constructively: the dispatch invariant by construction, and the safety rules by
+static enforcement in the compiler and IDE (Section~\ref{sec:impl}). A mechanized metatheory is a natural complement left
+to future work (Section~\ref{sec:futurework}).
+
 The core contributions are:
 
 \begin{itemize}
@@ -501,9 +505,10 @@ For any part $P$ in a delegation chain for interface $I$ rooted at composite $C$
 where $m \in I$ dispatches to $C$.
 \end{invariant}
 
-This invariant presumes each interface has a single composite root. The model
-maintains this precondition for every composition it admits but does not
-statically enforce it.
+Composite identity is single-valued per interface: a part's \code{\$selves} slot for $I$ holds exactly one composite, established
+at construction, with the most recent wiring of $I$ determining it. The root $C$ in the invariant denotes this current occupant
+and is therefore always well-defined. Whether a given wiring order matches the programmer's intent is, as with any construction-time
+assignment, the programmer's responsibility.
 
 The invariant is established by construction. When composite $C$ establishes
 a link to part $P$ for interface $I$, the plugin-generated
@@ -844,8 +849,11 @@ nor the part overrides it, resulting in incorrect self-call dispatch.
 No bytecode instruction directly invokes a default with a receiver other than the current \code{this}, but a method handle
 bound to an \code{invokedynamic} call site works around this limitation. When a part does not override a default, the plugin
 generates an override that invokes the interface's default implementation in this way, with the receiver taken from the
-interface's slot in \code{\$selves}, so the default's self-calls dispatch through that receiver. Similarly, an explicit
-\code{I.super.m()} invocation within a part is rewritten the same way.
+\code{\$selves} slot of the interface that \emph{provides} the default implementation, which may differ from the interface
+that declares the method, so the default body runs with a \code{this} that implements the default's interface. Cross-interface
+self-calls within the default are then routed and disambiguated per interface by the same rules as ordinary part methods
+(Section~\ref{subsec:safety}), so a default composes correctly even when the interfaces it spans are rooted at separate
+composites.
 
 \begin{lstlisting}
 interface Foo {

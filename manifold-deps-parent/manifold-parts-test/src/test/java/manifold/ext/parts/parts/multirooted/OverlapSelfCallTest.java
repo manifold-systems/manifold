@@ -10,7 +10,7 @@ public class OverlapSelfCallTest extends TestCase
   {
     AB ab = new AB();
     A a = new AImpl( ab );
-    assertEquals( "AImpl.z AB.z", a.a() );
+    assertEquals( "AB.z AImpl.z", a.a() );
   }
 
   public void testOverlapCallBoth_TopologyC()

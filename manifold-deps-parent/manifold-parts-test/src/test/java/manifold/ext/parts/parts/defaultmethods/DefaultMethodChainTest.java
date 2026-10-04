@@ -1,4 +1,4 @@
-package manifold.ext.parts;
+package manifold.ext.parts.parts.defaultmethods;
 
 import junit.framework.TestCase;
 import manifold.ext.parts.rt.api.link;

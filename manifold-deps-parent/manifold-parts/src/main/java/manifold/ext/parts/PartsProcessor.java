@@ -176,8 +176,10 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
   private Type classType()
   {
     Symtab symtab = getSymtab();
-    Type wildcardType = new Type.WildcardType( symtab.objectType, BoundKind.UNBOUND, symtab.classType.tsym );
-    return getTypes().subst( symtab.classType, symtab.classType.tsym.type.getTypeArguments(), List.of( wildcardType ) );
+    return getTypes().erasure( symtab.classType );
+
+//    Type.WildcardType wild = new Type.WildcardType( symtab.objectType, BoundKind.UNBOUND, symtab.boundClass );
+//    return new Type.ClassType( Type.noType, List.of( wild ), symtab.classType.tsym );
   }
 
   @Override
@@ -461,7 +463,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       make.pos = classDecl.pos;
 
       // Method name & modifiers
-      JCModifiers access = make.Modifiers( PUBLIC /*| Flags.BRIDGE*/ );
+      JCModifiers access = make.Modifiers( PUBLIC /*| Flags.BRIDGE*/, List.of( suppressRawTypesWarnings( make ) ) );
       Names names = getNames();
       Name methName = names.fromString( LINK_PART_TO_SELF );
 
@@ -852,7 +854,8 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       make.pos = classDecl.pos;
 
       // field name & modifiers & type
-      JCModifiers access = make.Modifiers( PRIVATE | mods );
+      JCModifiers access = make.Modifiers( PRIVATE | mods, List.of( suppressRawTypesWarnings( make ) ) );
+
       Names names = getNames();
       Name name = names.fromString( fieldName );
       JCExpression type = make.Type( fieldType );
@@ -1503,6 +1506,15 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       JCMethodDecl ifaceMethod = make.MethodDef( access, name, resType, typeParams, List.from( params ), thrown, block, null );
       li.addGeneratedMethod( ifaceMethod );
     }
+  }
+
+  private JCAnnotation suppressRawTypesWarnings( TreeMaker make )
+  {
+    // @SuppressWarnings("rawtypes") so we can use raw java.lang.Class and not Class<?> without warnings in user files
+    JCExpression sw = make.Type( getSymtab().suppressWarningsType );
+    JCExpression val = make.Literal( "rawtypes" ); // + "unchecked" if the array init needs it??
+    return make.Annotation( sw, List.of( make.Assign( make.Ident( getNames().value),
+                                                                  make.NewArray( null, List.nil(), List.of( val ) ) ) ) );
   }
 
   private void memberEnter( JCTree memberDecl, JCClassDecl classDecl )
