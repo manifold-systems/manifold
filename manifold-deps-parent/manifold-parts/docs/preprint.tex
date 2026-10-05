@@ -109,7 +109,7 @@ object-oriented languages provide varying levels of composition through \emph{fo
 to implementation inheritance and its well-known hazards such as fragile base classes and coupling to superclass internals.
 But forwarding gives up a vital property that makes inheritance practical: \emph{open recursion}. With open recursion, a component's
 self-calls remain late-bound, allowing them to reach overrides supplied by forwarding composites. Without it, self-calls
-are fixed to the component's local implementation and never reach composite overrides. Yet modern languages provide no practical
+are fixed to the component's local implementation and never reach composite overrides. Yet mainstream languages provide no practical
 way to retain this behavior.
 
 The challenge is to retain the architectural benefits of object composition while recovering open recursion. A comprehensive
@@ -117,7 +117,7 @@ resolution must preserve \emph{independent components} (late-bound objects suppl
 (unrestricted composition topologies), while providing \emph{open recursion} (self-calls late-bound through the composite).
 Prior composition models achieve at most two of these three properties (Section~\ref{sec:related}).
 
-The conventional object composition of conventional languages differs in implementation but reduces to basic forwarding. Some,
+The object composition of conventional languages differs in implementation but reduces to basic forwarding. Some,
 like Rust and Swift, require manual forwarding; others, such as Kotlin's \code{by} clause~\cite{kotlin} and Go's struct
 embedding~\cite{go}, provide it automatically. They all support independent components under arbitrary composition, but
 forwarding alone does not preserve the composite identity needed for open recursion: a component's \code{this} remains the component,

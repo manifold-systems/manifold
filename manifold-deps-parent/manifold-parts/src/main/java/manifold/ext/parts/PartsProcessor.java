@@ -2203,7 +2203,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           ArrayList<ClassType> interfaces = new ArrayList<>();
           findAllInterfaces( classDecl.sym.type, new HashSet<>(), interfaces );
           interfaces = maximalInterfaces( interfaces );
-          List<Pair<ClassType, ClassType>> matches = List.nil();
+          Map<ClassType, ArrayList<Type>> matches = new HashMap<>();
           for( ClassType iface : interfaces )
           {
             for( Type t : interfaceClosure( iface ) )
@@ -2212,43 +2212,49 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
               {
                 if( sym.overrides( mm, t.tsym, getTypes(), false ) )
                 {
-                  matches = matches.append( new Pair<>( iface, (ClassType)t ) );
+                  ArrayList<Type> types = matches.computeIfAbsent( iface, __ -> new ArrayList<>() );
+                  types.add( t );
+                  matches.put( iface, maximalInterfaces( (ArrayList)types ) );
                 }
               }
             }
           }
           if( !matches.isEmpty() )
           {
-            if( matches.size() > 1 )
+            if( matches.size() > 1 ||
+                matches.values().stream().anyMatch( superInterfaces -> superInterfaces.size() > 1 ) )
             {
               reportAmbiguousReceiverError( meth, sym, matches );
             }
-            return Pair.of( classDecl, matches.head.snd );
+            return Pair.of( classDecl, matches.entrySet().iterator().next().getValue().get( 0 ) );
           }
         }
       }
       return null;
     }
 
-    private void reportAmbiguousReceiverError( JCExpression meth, MethodSymbol sym, List<Pair<ClassType, ClassType>> matches )
+    private void reportAmbiguousReceiverError( JCExpression meth, MethodSymbol sym, Map<ClassType, ArrayList<Type>> matches )
     {
-      for( Pair<ClassType, ClassType> pair: matches )
+      // interfaces the caller must choose between. If multiple maximal interfaces reach the method,
+      // they are the cast targets, otherwise if the single maximal reaches it through two or more superinterfaces
+      LinkedHashSet<Type> candidates = new LinkedHashSet<>();
+      if( matches.size() > 1 )
       {
-        if( pair.snd != matches.get( 0 ).snd )
+        candidates.addAll( matches.keySet() );
+      }
+      for( ArrayList<Type> declarers : matches.values() )
+      {
+        if( declarers.size() > 1 )
         {
-          String ifaceList = matches.stream()
-            .map( e -> e.snd.tsym.getSimpleName() )
-            .collect( Collectors.joining( ", " ) );
-          reportError( meth, MSG_AMBIGUOUS_RECEIVER.get(
-            sym.toString(), ifaceList, matches.head.snd.tsym.getSimpleName() ) );
-          return;
+          candidates.addAll( declarers );
         }
       }
-      String ifaceList = matches.stream()
-        .map( e -> e.fst.tsym.getSimpleName() )
+
+      String ifaceList = candidates.stream()
+        .map( t -> t.tsym.getSimpleName() )
         .collect( Collectors.joining( ", " ) );
-      reportError( meth, MSG_AMBIGUOUS_RECEIVER.get(
-        sym.toString(), ifaceList, matches.head.snd.tsym.getSimpleName() ) );
+      Name castTo = candidates.iterator().next().tsym.getSimpleName();
+      reportError( meth, MSG_AMBIGUOUS_RECEIVER.get( sym.toString(), ifaceList, castTo ) );
     }
 
     // given {BigInteger, Number, List, Collection, Iterable}, returns {BigInteger, List}
