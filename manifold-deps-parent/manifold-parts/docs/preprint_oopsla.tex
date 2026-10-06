@@ -242,10 +242,8 @@ implements the delegated interface. A raw part may not escape the
 composite dispatch path: passing or assigning \code{this} as the concrete
 part type is a compile error; interface or Object types are required (Section~\ref{subsec:safety}).
 
-This example is single-rooted: \code{Wizard} is the sole composite
-for \code{Hero}, and one composite identity suffices. The following
-section exposes the limit of the single-identity model and the per-interface
-generalization that resolves it.
+This example is single-rooted where \code{Wizard} is the sole composite for \code{Hero}, and one composite identity suffices.
+The next section shows where a single composite identity breaks down, and how assigning one identity per interface fixes it.
 
 %% ─────────────────────────────────────────────────────────────────────────────
 \section{The Model}
@@ -256,7 +254,7 @@ generalization that resolves it.
 
 The following example shows a part with interfaces rooted at different
 composites. \code{Hero} implements both \code{Combatant} and \code{Actor},
-and two wrappers decorate it: a \code{Wizard} changes how it fights
+and two wrappers decorate it. A \code{Wizard} changes how it fights
 (\code{Combatant}), while a \code{Demon} partially possesses it, seizing its name
 and will (\code{Actor}) but leaving its trained combat untouched. As in the
 overview, the wrapped hero's self-calls route back through the wrappers; now two
@@ -395,7 +393,7 @@ the receiver's runtime type.
   \item[root (of an interface)] the linking composite claiming an interface of a part.
 \end{description}
 
-When a composite links an interface to a part, the part is directly wired to the composite; it records a \emph{composite
+When a composite links an interface to a part, the part is directly wired to the composite. It records a \emph{composite
 identity}: a reference to the composite statically indexed by the interface. The part's self-calls route through the composite
 indexed by the interface of the called method. The enabling mechanism is \emph{interface-scoped dispatch} (ISD).
 
@@ -532,7 +530,7 @@ For any part $P$ in a delegation chain for interface $I$ rooted at composite $C$
 where $m \in I$ dispatches to $C$.
 \end{invariant}
 
-Composite identity is single-valued per interface: a part's \code{\$selves} slot for $I$ holds exactly one composite, established
+Composite identity is single-valued per interface. A part's \code{\$selves} slot for $I$ holds exactly one composite, established
 at construction, with the most recent wiring of $I$ determining it. The root $C$ in the invariant denotes this current occupant
 and is therefore always well-defined. Whether a given wiring order matches the programmer's intent is, as with any construction-time
 assignment, the programmer's responsibility.
