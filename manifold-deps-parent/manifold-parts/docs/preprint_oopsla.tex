@@ -798,7 +798,7 @@ across separately-compiled classes is required.
 \begin{lstlisting}
 public void $linkPartToSelf(Object root, Class<?>[] linkScope) {
   // cycle detection
-  if (this == root) Internal.reportCycle(this, root, iface);
+  if (this == root) Internal.reportCycle(this, root);
   // wire the part's 'linkScope' interfaces to 'root'
   outer:
   for(Class<?> linkIface : linkScope) {
@@ -875,10 +875,8 @@ No bytecode instruction directly invokes a default with a receiver other than th
 bound to an \code{invokedynamic} call site works around this limitation. When a part does not override a default, the plugin
 generates an override that invokes the interface's default implementation in this way, with the receiver taken from the
 \code{\$selves} slot of the interface that \emph{provides} the default implementation, which may differ from the interface
-that declares the method, so the default body runs with a \code{this} that implements the default's interface. Cross-interface
-self-calls within the default are then routed and disambiguated per interface by the same rules as ordinary part methods
-(Section~\ref{subsec:safety}), so a default composes correctly even when the interfaces it spans are rooted at separate
-composites.
+that declares the method. The default body then runs with a \code{this} that implements the default's interface, so its
+self-calls dispatch through the composite claiming that interface, as a self-call on that interface would.
 
 \begin{lstlisting}
 interface Foo {
@@ -1164,7 +1162,7 @@ Parts resolves the principal deficiencies of implementation inheritance:
 
 \begin{itemize}
   \item \textbf{Fragile base class}~\cite{mikhajlov1998}: a composite's dependency surface is the interface contracts it
-        explicitly claims, not a components's internal implementation; changes to its encapsulated internals do not propagate.
+        explicitly claims, not a component's internal implementation; changes to its encapsulated internals do not propagate.
         Partial delegation completes the isolation: a composite is unaffected by changes to interfaces it does not claim.
   \item \textbf{Forced IS-A semantics}: reuse does not require a type relationship; the composite is a subtype of the interface,
         not of the component's implementation.
@@ -1199,7 +1197,7 @@ Parts wires composite identity per-interface at construction.
 A constructed composition is safe to share across threads. Each interface's \code{\$selves} slot is written only while its
 final composite root (Invariant~\ref{prop:dispatch}) is under construction. Once that root is safely published the slot
 is never written again, so the JMM makes all wired state visible to any thread observing the root, with no synchronization
-on the dispatch path. The guarantee is scoped to a single composition, resting on the one-root invariant of Section~\ref{sec:discussion}.
+on the dispatch path. The guarantee is scoped to a single composition, resting on the single-root property established in Section~\ref{sec:model}.
 Parts may hold mutable state under standard Java rules and dispatch adds no synchronization points.
 
 \subsection{Future Work}
@@ -1400,7 +1398,7 @@ object, under a statically-checked interface contract.
 \paragraph{Novelty.}
 No system surveyed above provides independent runtime components, arbitrary composition, and open recursion together.
 The models closest to Parts, IFJ, DARWIN, and DelphJ, achieve independent components and open recursion but not arbitrary
-composition: all are confined to the single-rooted topology, their dispatch mechanisms unable to support the full range of
+composition: all are effectively confined to the single-rooted topology, their dispatch mechanisms unable to support the full range of
 ordinary forwarding. IFJ binds a single \code{this} by construction, and DARWIN deliberately excludes multiple delegation
 for stated performance concerns~\cite[\S6.5.1]{kniesel2000}. DelphJ comes closest: it permits multiple delegation, but its
 access-path dispatch cannot resolve the cross-interface cases that topologies (b)--(d) require, and it carries substantial
