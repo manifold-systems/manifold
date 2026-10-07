@@ -143,7 +143,7 @@ loses the dynamic self-dispatch that makes inheritance effective for extensible 
 
 The challenge is to recover open recursion without giving up the essential properties of object composition. A model
 that fully meets this challenge must provide three properties: \emph{independent components}, meaning late-bound objects
-supplied at construction; \emph{arbitrary composition}, meaning unrestricted composition topologies; and
+supplied at construction; \emph{arbitrary composition}, meaning unrestricted composition topologies (Section~\ref{subsec:topologies}); and
 \emph{open recursion}, meaning self-calls that remain late-bound through the composite. Existing composition
 approaches achieve at most two of these three properties (Section~\ref{sec:related}).
 
@@ -281,16 +281,13 @@ Figures~\ref{fig:dag-diagram} and~\ref{fig:dag-listing} show the structure.
   lnk/.style={->, >=Stealth, semithick},
 ]
 \node[cls] (wp)
-  {\textbf{Hero}\\[3pt]
-   \textit{implements Combatant, Actor}};
+  {\textbf{Hero} \textit{impls Combatant, Actor}};
 
-\node[cls, below=2cm of wp] (lw)
-  {\textbf{Wizard}\\[3pt]
-   \textit{implements Combatant, Actor}};
+\node[cls, below=1.3cm of wp] (lw)
+  {\textbf{Wizard} \textit{impls Combatant, Actor}};
 
-\node[cls, below=2cm of lw] (app)
-  {\textbf{Demon}\\[3pt]
-   \textit{implements Actor}};
+\node[cls, below=1.3cm of lw] (app)
+  {\textbf{Demon} \textit{impls Actor}};
 
 %% Wizard @link -> Hero
 \draw[lnk] ([xshift=-12pt]lw.north)
@@ -329,7 +326,6 @@ interface Actor {
   String name();
   void takeAction();
 }
-
 @part class Hero implements Combatant, Actor {
   public void attack() { println("Swing club!"); }
   public String name() { return "Milo"; }
@@ -338,26 +334,20 @@ interface Actor {
     attack();                   // Combatant dispatch
   }
 }
-
 @part class Wizard implements Combatant, Actor {
   @link Combatant combatant;
   @link Actor actor;
   Wizard(Hero h) { this.combatant = h; this.actor = h; }
   public void attack() { println("Cast spell!"); }
 }
-
 class Demon implements Actor {
   @link Actor actor;
   Demon(Actor a) { this.actor = a; }
   public String name() { return "Diablo"; }
 }
-
-Wizard wizard = new Wizard(new Hero());
-Demon demon = new Demon(wizard);
-demon.takeAction();
-// Actor dispatch rooted at Demon
-// Combatant dispatch rooted at Wizard
-// prints:  Diablo acts: Cast spell!
+Wizard wizard = new Wizard(new Hero()); // Combatant rooted at Wizard
+Demon demon = new Demon(wizard);        // Actor rooted at Demon
+demon.takeAction();                     // prints:  Diablo acts: Cast spell!
 \end{lstlisting}
 \caption{Composition with multiple composite roots per part.
 \code{Hero} carries distinct composite identities for \code{Combatant}
@@ -1167,8 +1157,6 @@ Parts addresses several longstanding limitations of implementation inheritance:
   \item \textbf{Fragile base class}~\cite{mikhajlov1998}: a composite's dependency surface is the interface contracts it
         explicitly claims, not a component's internal implementation; changes to its encapsulated internals do not propagate.
         Partial delegation completes the isolation: a composite is unaffected by changes to interfaces it does not claim.
-  \item \textbf{Forced IS-A semantics}: reuse does not require a type relationship; the composite is a subtype of the interface,
-        not of the component's implementation.
   \item \textbf{Hierarchy-bound}: implementation inheritance binds behavior to a class hierarchy and a single object identity,
         making independently rooted compositions of the same component impossible. Parts permits arbitrary topologies by
         assigning composite identity per interface.
@@ -1336,9 +1324,12 @@ runtime costs from constructing and merging access paths for stack-held referenc
 access-path strategy does not provide the per-interface identity required by arbitrary composition. In particular, the model
 cannot correctly resolve cross-interface self-calls to methods common to separately claimed interfaces, as required by topologies
 (b),(d) (Figure~\ref{fig:overlapCall-listing}). Additionally, access paths cannot support cross-interface self-calls at all
-with topology~(c) (\S\ref{subsec:topologies}). Its composition is therefore limited to topology~(a). Parts inverts
-the access-path strategy: composite identity is fixed in the component rather than reconstructed by the caller on every
-access. This single design choice is what makes delegation under arbitrary composition possible.
+with topology~(c) (\S\ref{subsec:topologies}). Its composition is therefore limited to topology~(a).
+
+Generally, delegation models such as these that emulate inheritance's tree-shaped hierarchies using caller-side dispatch
+mechanisms are bound to topology~(a) because multi-rooted topologies ultimately require separate identities for each delegated
+interface. Parts inverts the caller-side assumption: composite identity is fixed in the component rather than reconstructed
+by the caller on every access. This single design choice is what makes delegation under arbitrary composition possible.
 
 \paragraph{Delegation at larger granularity.}
 Ostermann's delegation layers~\cite{ostermann2002} extend delegation from
@@ -1399,9 +1390,8 @@ The closest prior systems are therefore the delegation models. DARWIN
 deliberately excludes multiple delegation~\cite[\S6.5.1]{kniesel2000}; IFJ
 binds a single \code{this} across its delegation structure; and DelphJ's
 access-path mechanism, the most capable of the three, still limits composition
-to only the simplest single-rooted case. None provides all three properties
-together: independent runtime components, arbitrary composition, and open
-recursion.
+to only the simplest single-rooted case. Of the three properties, arbitrary
+composition is the practically unobtainable one under caller-side delegation models.
 
 Parts unifies the three properties through interface-scoped dispatch.
 By assigning composite identity per interface at construction, ISD allows a
@@ -1413,11 +1403,13 @@ $O(1)$ cost and is empirically equivalent to a standard vtable call.
 \section{Conclusion}
 %% ─────────────────────────────────────────────────────────────────────────────
 
-The advice to favor object composition over class inheritance came with an unspoken cost: composition gives up the open
-recursion that made inheritance practical. Parts removes that cost. By assigning composite identity per interface at
-construction, it shows that open recursion need not be tied to inheritance's single runtime object; the two can be separated
-without compromise. The result is a general model that retains the essential properties of simple forwarding---independent
-runtime components and arbitrary composition topologies---while adding open recursion at vtable speed.
+The familiar advice to favor object composition over class inheritance leaves an important tradeoff unresolved: composition
+gives up the open recursion that makes inheritance so effective for extension. Parts resolves the tradeoff. By assigning
+composite identity per interface at construction, it shows that open recursion need not depend on inheritance's single runtime
+object, and that the two can be decoupled in practice. The result is a general model that retains the essential properties
+of simple forwarding, namely independent runtime components and arbitrary composition topologies, while adding open recursion
+at vtable speed.
+
 
 %% ─────────────────────────────────────────────────────────────────────────────
 \section*{Data-Availability Statement}
