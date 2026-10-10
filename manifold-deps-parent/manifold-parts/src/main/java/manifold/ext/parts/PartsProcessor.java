@@ -72,6 +72,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
   private static final String LINKED_INTERFACES_FIELD = "$LINK_SCOPE_";
   private static final String LINK_PART_TO_SELF = "$linkPartToSelf";
   private static final String SELVES = "$selves";
+  private static final boolean PERMIT_OBJECT_ESCAPE = false;
 
   private BasicJavacTask _javacTask;
   private Context _context;
@@ -1834,7 +1835,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           JCClassDecl classDecl = findClassDecl( tree.type );
           result = getSelf( tree, classDecl, assignment.type );
         }
-        else if( !isSameType( assignment.type, getSymtab().objectType ) )
+        else if( !isObjectAndPermitObjectEscape( assignment.type ) )
         {
           reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
@@ -1848,13 +1849,18 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           JCClassDecl classDecl = findClassDecl( tree.type );
           result = getSelf( tree, classDecl, varDecl.getType().type );
         }
-        else if( !isSameType( varDecl.getType().type, getSymtab().objectType ))
+        else if( !isObjectAndPermitObjectEscape( varDecl.getType().type ) )
         {
           reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
         return true;
       }
       return false;
+    }
+
+    private boolean isObjectAndPermitObjectEscape( Type type )
+    {
+      return PERMIT_OBJECT_ESCAPE && isSameType( type, getSymtab().objectType );
     }
 
     private boolean replaceThisTernary( JCExpression tree )
@@ -1868,7 +1874,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           JCClassDecl classDecl = findClassDecl( tree.type );
           result = getSelf( tree, classDecl, ternary.type );
         }
-        else if( !isSameType( ternary.type, getSymtab().objectType ) )
+        else if( !isObjectAndPermitObjectEscape( ternary.type ) )
         {
           reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
@@ -1888,7 +1894,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           JCClassDecl classDecl = findClassDecl( tree.type );
           result = getSelf( tree, classDecl, cast.type );
         }
-        else if( !isSameType( cast.type, getSymtab().objectType ) )
+        else if( !isObjectAndPermitObjectEscape( cast.type ) )
         {
           reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
@@ -1915,7 +1921,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
               JCClassDecl classDecl = findClassDecl( tree.type );
               result = getSelf( tree, classDecl, returnType );
             }
-            else if( !types.isSameType( getSymtab().objectType, returnType ) )
+            else if( !isObjectAndPermitObjectEscape( returnType ) )
             {
               // Note, Object is permitted for local identity purposes
               reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
@@ -1973,7 +1979,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
             }
             return true;
           }
-          else if( !types.isSameType( getSymtab().objectType, paramType ) )
+          else if( !isObjectAndPermitObjectEscape( paramType ) )
           {
             // Note, Object is permitted for local identity purposes
             reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );

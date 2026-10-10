@@ -662,6 +662,9 @@ rootProject.name = 'MyProject'
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-parts-rt</artifactId>
             <version>${manifold.version}</version>
+            <maven.compiler.source>25</maven.compiler.source>
+            <maven.compiler.target>25</maven.compiler.target>
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         </dependency>
     </dependencies>
 
@@ -671,10 +674,11 @@ rootProject.name = 'MyProject'
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.16.0</version>
                 <configuration>
-                    <source>17</source>
-                    <target>17</target>
+                    <!-- Add these ONLY for older JDKs -->
+<!--                    <source>17</source>-->
+<!--                    <target>17</target>-->
                     <encoding>UTF-8</encoding>
                     <fork>true</fork>
                     <compilerArgs>
@@ -682,8 +686,8 @@ rootProject.name = 'MyProject'
                         <arg>-Xplugin:Manifold</arg>
 
                         <!-- Add these ONLY for Java 26+ -->
-                        <arg>-J--add-exports=java.base/jdk.internal.access=ALL-UNNAMED</arg>
-                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+<!--                        <arg>-J&#45;&#45;add-exports=java.base/jdk.internal.access=ALL-UNNAMED</arg>-->
+<!--                        <arg>-J&#45;&#45;add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>-->
                         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
                     </compilerArgs>
                     <!-- Add the processor path for the plugin -->

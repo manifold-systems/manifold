@@ -74,6 +74,13 @@ public @part class TaPart implements TA // TA is a "diamond" interface with Stud
 
   public String callTitledNameFromInsideTeacherPart()
   {
-    return ((TeacherPart)ReflectUtil.field(this, "_teacher").get()).callTitledNameFromInsideTeacherPart();
+    // tricky way to reference `this` without referencing `this`
+    Object anonymousInner = new Object() {{Object x=$selves;}}; // anon class needs to reference a member of outer class for this$0 to be generated
+    TaPart this_ = (TaPart)ReflectUtil.field( anonymousInner, "this$0" ).get();
+
+    synchronized( this )
+    {
+      return ((TeacherPart)ReflectUtil.field( this_, "_teacher" ).get()).callTitledNameFromInsideTeacherPart();
+    }
   }
 }

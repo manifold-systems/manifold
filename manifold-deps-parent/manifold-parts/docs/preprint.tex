@@ -219,7 +219,7 @@ Interface contracts are enforced at compile time. The link field has
 type \code{Actor}, and the compiler verifies that \code{Wizard}
 implements the delegated interface. A raw part may not escape the
 composite dispatch path: passing or assigning \code{this} as the concrete
-part type is a compile error; interface or Object types are required (Section~\ref{subsec:safety}).
+part type is a compile error; interface types are required (Section~\ref{subsec:safety}).
 
 This example is single-rooted where \code{Wizard} is the sole composite for \code{Hero}, and one composite identity suffices.
 The next section shows where a single composite identity breaks down, and how assigning identity per interface fixes it.
@@ -877,19 +877,30 @@ distinct effects. A method annotated with \code{@internal} is accessible only wi
 clause annotated with \code{@internal} removes that interface from the class's delegation surface: no composite may claim
 it via a link field.
 
-\paragraph{Self-preservation.}
-Inside a part, the compiler restricts both implicit and explicit uses of \code{this} that could expose the part's concrete
-identity outside the composite dispatch path. Field access, private calls, and callbacks through the part's own link fields
-(the compositional analog of \code{super}) are permitted. Passing or assigning \code{this} as the concrete part type is
-rejected because a caller holding the bare part could invoke methods outside the composite dispatch path and violate Invariant~\ref{prop:dispatch}.
-Interface-typed and \code{Object}-typed uses remain permitted: the former resolve through ISD to the composite claiming
-the interface, while the latter resolve to the part's own object identity.
+\paragraph{Ambiguous self-calls.}
+A bare self-call in a part is ambiguous when its method is carried by two or more mutually unrelated interfaces (neither
+assignable to the other), including when both inherit it from a common super-interface. The receiver must then be cast-qualified
+as the intended interface (Figure~\ref{fig:overlapCall-listing}). Casting is otherwise optional. When a sub-interface and
+its super-interface are claimed separately, for instance, ISD resolves a bare self-call through the super-interface, though
+a part can still reach the sub-interface's override by casting to it. A cast-qualified \code{this} thus lets a part target
+separate overrides of the same method, which the multi-rooted topologies~(b)--(d) (\S\ref{subsec:topologies}) require.
 
-A bare self-call is ambiguous when the method belongs to multiple interfaces, including when unrelated interfaces inherit
-it from a common interface. The self-call's \code{this} receiver must be qualified via casting to the intended interface
-(Figure~\ref{fig:overlapCall-listing}). In this way parts can target separate unrelated overrides of the same method. This
-behavior is vital for multi-source structures of topology (c) (\S\ref{subsec:topologies}), common with subject-oriented
-designs.
+\paragraph{Self-preservation.}
+Inside a part, the compiler restricts every use of \code{this}, implicit or explicit, that would expose the part's concrete
+identity outside the composite dispatch path. \code{this} may appear only (1)~as a call or field-access receiver, where
+interface-method calls route through ISD to the composite while every field access and non-interface call runs directly
+on the part; (2)~as an interface-typed value in any other position, rewritten to the current occupant of that interface's
+slot, either the claiming composite or, when the interface is unclaimed, the part itself; and (3)~as the operand of \code{synchronized},
+which retains no reference. An escaping interface-typed \code{this} thus takes the same path as an interface self-call,
+so a callee observes the same composition an external client would. Callbacks through the part's link fields, the compositional
+analog of \code{super}, are likewise permitted. Every other occurrence, whether direct, inferred, or captured, is rejected,
+including passing or assigning \code{this} as its concrete part type and casting it to \code{Object}.
+
+A caller holding the bare part could invoke methods off the composite dispatch path and violate Invariant~\ref{prop:dispatch},
+so the escape must be prevented, no legitimate use should require it. A part has no identity of its own beyond the composite, so
+a reference to the raw component, rather than to an interface it satisfies, adds nothing the composite does not already
+provide. Letting one escape could only split a single logical object in two, reintroducing the Object Schizophrenia
+that ISD otherwise eliminates.
 
 \begin{figure}[H]
 \begin{lstlisting}
@@ -1121,6 +1132,12 @@ This multi-rootedness makes a part's identity context-sensitive. References to \
 resolve according to the interface through which they are used. When that interface is claimed, ISD resolves \code{this}
 to the claiming composite. Otherwise, \code{this} remains the part itself. This is a direct resolution of the Object Schizophrenia
 problem mentioned in Section~\ref{sec:intro}.
+
+\subsection{Equality}
+Parts does not generate \code{equals} or \code{hashCode}. If object identity is insufficient for a composition's equality
+or hashing checks and state must be taken into account, we suggest the conventional recipe for both part and non-part classes:
+require that the argument's class is exactly the receiver's class (\code{getClass()}), compare the remaining owned state,
+including link fields, and derive \code{hashCode} from the same state. This is the same recipe one would use for a decorator.
 
 \subsection{Language Design Implications}
 
