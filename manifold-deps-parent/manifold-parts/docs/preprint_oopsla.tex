@@ -400,7 +400,7 @@ continues through a link field only when the field's value is a part and the fie
 interface are comparable, one a subtype of the other (Figure~\ref{fig:linkPartToSelf-listing}).
 
 Composites must also resolve \emph{diamonds}. When a composite has multiple links that share a common interface, a sharing
-link must be chosen explicitly via \code{@link(share=I.class)} at one of the link sites. This determines the leg of the diamond the
+link must be chosen via \code{@link(share=I.class)}, explicitly if ambiguous, at one of the link sites. This determines the leg of the diamond the
 linking composite forwards through for its implementation of the interface. Diamonds consisting of multiple shared interfaces require the same \code{share=I.class}
 to select the sharing links for each interface, where a single link can share multiple interfaces or the interfaces
 can be shared separately from any of the other links capable of sharing them. Wiring is unaffected: self-calls on common
@@ -542,7 +542,7 @@ does not claim unchanged, so the slot holds exactly one root at any time and
 stabilizes once the outermost composite claiming $I$ is wired; $C$ denotes that
 final root. Each write occurs during the wiring composite's construction. Wiring happens solely
 as link field assignment, and the plugin enforces \code{final} on link
-fields, so writes are confined to construction: the \code{\$selves} slots are never
+fields, so writes are confined to construction. The \code{\$selves} slots are therefore never
 written after the outermost composite claiming $I$ is constructed.
 
 Visibility follows from safe publication. Once the composite root is safely published, the
@@ -557,7 +557,7 @@ For self-calls through the delegation surface, there is no code path in a
 part method that dispatches through anything other than the indexed
 slot. Because the slot holds $C$ once the composition is constructed and is not
 written thereafter, the invariant holds at every point a self-call can execute.
-Before wiring, each slot is initialized to \code{this}; an unwired part
+Before wiring, each slot is initialized to \code{this}, so an unwired part
 dispatches on itself, consistent with standard object-oriented dispatch. In this
 initial state, the invariant holds trivially. A full mechanized proof in a Featherweight
 Java subset is a natural direction for follow-on work (Section~\ref{sec:futurework}).
@@ -866,7 +866,7 @@ If left unmitigated, a default method runs with the part as receiver, rather tha
 nor the part overrides it, resulting in incorrect self-call dispatch.
 
 A default method cannot be directly invoked with a receiver other than the current \code{this}. The implementation uses a method handle
-bound to an \code{invokedynamic} call site two work around this limitation. When a part does not override a default, the plugin
+bound to an \code{invokedynamic} call site to work around this limitation. When a part does not override a default, the plugin
 generates an override that invokes the interface's default implementation in this way, with the receiver taken from the
 \code{\$selves} slot of the interface that \emph{provides} the default implementation, which may differ from the interface
 that declares the method. The default body then runs with a \code{this} that implements the default's interface, so its
@@ -904,14 +904,6 @@ distinct effects. A method annotated with \code{@internal} is accessible only wi
 clause annotated with \code{@internal} removes that interface from the class's delegation surface: no composite may claim
 it via a link field.
 
-\paragraph{Ambiguous self-calls.}
-A bare self-call in a part is ambiguous when its method is carried by two or more mutually unrelated interfaces (neither
-assignable to the other), including when both inherit it from a common super-interface. The receiver must then be cast-qualified
-as the intended interface (Figure~\ref{fig:overlapCall-listing}). Casting is otherwise optional. When a sub-interface and
-its super-interface are claimed separately, for instance, ISD resolves a bare self-call through the super-interface, though
-a part can still reach the sub-interface's override by casting to it. A cast-qualified \code{this} thus lets a part target
-separate overrides of the same method, which the multi-rooted topologies~(b)--(d) (\S\ref{subsec:topologies}) require.
-
 \paragraph{Self-preservation.}
 Inside a part, the compiler restricts every use of \code{this}, implicit or explicit, that would expose the part's concrete
 identity outside the composite dispatch path. \code{this} may appear only (1)~as a call or field-access receiver, where
@@ -928,6 +920,14 @@ so the escape must be prevented, no legitimate use should require it. A part has
 a reference to the raw component, rather than to an interface it satisfies, adds nothing the composite does not already
 provide. Letting one escape could only split a single logical object in two, reintroducing the Object Schizophrenia
 that ISD otherwise eliminates.
+
+\paragraph{Ambiguous self-calls.}
+A bare self-call in a part is ambiguous when its method is carried by two or more mutually unrelated interfaces (neither
+assignable to the other), including when both inherit it from a common super-interface. The receiver must then be cast-qualified
+as the intended interface (Figure~\ref{fig:overlapCall-listing}). Casting is otherwise optional. When a sub-interface and
+its super-interface are claimed separately, for instance, ISD resolves a bare self-call through the super-interface, though
+a part can still reach the sub-interface's override by casting to it. A cast-qualified \code{this} thus lets a part target
+separate overrides of the same method, which the multi-rooted topologies~(b)--(d) (\S\ref{subsec:topologies}) require.
 
 \begin{figure}[H]
 \begin{lstlisting}
@@ -975,7 +975,7 @@ The dispatch path for a self-call through a composite is:
   \item \code{invokeinterface m}, standard JVM virtual dispatch
 \end{enumerate}
 
-This is $O(1)$. The parallel to vtable dispatch is direct. A vtable call is an
+This is $O(1)$. The parallel to vtable dispatch is direct: a vtable call is an
 indexed slot load followed by an indirect call. A self-call within a part is
 therefore on equal footing with a vtable call.
 
@@ -999,7 +999,7 @@ values in Table~\ref{tab:bench} are therefore roughly 1--2$\times$ a single virt
 dispatch.
 
 \paragraph{Choice of baseline.}
-The delta is measured against Parts's own forwarding path, which establishes the
+The delta is measured against Parts' own forwarding path, which establishes the
 baseline: that path is semantically equivalent to Kotlin \code{by} and Lombok
 \code{@Delegate} (Section~\ref{sec:related}), so the delta prices exactly the
 self-call routing those mechanisms cannot express, against their own dispatch
@@ -1162,9 +1162,9 @@ problem mentioned in Section~\ref{sec:intro}.
 
 \subsection{Equality}
 Parts does not generate \code{equals} or \code{hashCode}. If object identity is insufficient for a composition's equality
-or hashing checks and state must be taken into account, we suggest the conventional recipe for both part and non-part classes:
+or hashing checks and state must be taken into account, we suggest the conventional formula for both part and non-part classes:
 require that the argument's class is exactly the receiver's class (\code{getClass()}), compare the remaining owned state,
-including link fields, and derive \code{hashCode} from the same state. This is the same recipe one would use for a decorator.
+including link fields, and derive \code{hashCode} from the same state. This is the same strategy used with ordinary decorators.
 
 \subsection{Language Design Implications}
 
@@ -1184,8 +1184,9 @@ Parts addresses several longstanding limitations of implementation inheritance:
   \item \textbf{Unintended interface exposure}: a composite may implement a subset of its parts' interfaces; those it does
         not implement are absent from its API by construction. \code{@internal} strengthens this further: a class may declare selected
         interfaces as internal to its implementation and excluded from its delegation surface, preventing the
-        interfaces from being claimed by a composite.
-  \item \textbf{Abstract behavior}: abstract parts with deferred linkage (\code{asLink()}) preserve the template-method
+        interfaces from being claimed by a composite. At a more granular level, individual interface methods may be marked
+        \code{@internal} to restrict their access to composite internals.
+  \item \textbf{Abstract behavior}: abstract parts with deferred linkage (via \code{asLink()}) preserve the template-method
         capability of abstract classes without coupling their implementation and hierarchy.
 \end{itemize}
 
@@ -1195,7 +1196,7 @@ composite's overrides, while the internals that make base classes fragile are ne
 
 Implementation inheritance and Parts are, essentially, two bindings of the same open recursion: implementation inheritance
 binds it to the class hierarchy, where a subclass IS-A its superclass and inherits its entire implementation surface, while
-Parts binds it to a held object and its delegation surface, where the composite HAS-A its parts and IS-A only its interfaces.
+Parts binds it to a held object and its delegation surface, where the composite HAS-A its parts and IS-A only its declared interfaces.
 The concept that inheritance and open recursion are separable is Cook's~\cite{cookpalsberg1989,cook1990}, and the modeling
 of inheritance as composition is Bracha and Cook's~\cite{bracha1990}. Cook's model threads self as an explicit parameter;
 Parts wires composite identity per-interface at construction.
@@ -1215,7 +1216,7 @@ adds no synchronization points.
 \paragraph{Per-interface composite roots as a general primitive.}
 Assigning dispatch identity per interface at construction is, perhaps, a primitive that may be applied in areas beyond this
 paper's focus. It is an unexplored subject whether problems currently addressed through dynamic dispatch, AOP weaving, or
-collapsed component hierarchies could benefit from the same mechanism.
+flattened (or linearized) component hierarchies could benefit from the same mechanism.
 
 \paragraph{Formal verification.}
 A mechanized proof of Invariant~\ref{prop:dispatch} using small-step operational semantics would provide rigorous structural
@@ -1226,7 +1227,7 @@ and execution guarantees.
 \paragraph{Link timing and mutability.}
 Through \code{final} links, composite identity is finalized at construction. This read-only guarantee is what makes sharing
 lock-free (Section~\ref{sec:discussion}): stable wiring needs no synchronization on the dispatch path. Two relaxations of
-the rule, opt-in \emph{lazy} and \emph{mutable} links, are worth exploring, and they go in opposite directions.
+the rule, opt-in \emph{lazy} and \emph{mutable} links, are worth exploring, and go in opposite directions.
 
 A \emph{lazy} link changes only the timing. Backed by the stable-value facility of recent
 JDK releases (Project Leyden), it wires on first use instead of at construction, yet stays written once and
@@ -1343,10 +1344,12 @@ cannot correctly resolve cross-interface self-calls to methods common to separat
 (b),(d) (Figure~\ref{fig:overlapCall-listing}). Additionally, access paths cannot support cross-interface self-calls at all
 with topology~(c) (\S\ref{subsec:topologies}). Its composition is therefore limited to topology~(a).
 
-Generally, delegation models such as these that emulate inheritance's tree-shaped hierarchies using caller-side dispatch
-mechanisms are bound to topology~(a) because multi-rooted topologies ultimately require separate identities for each delegated
-interface. Parts inverts the caller-side assumption: composite identity is fixed in the component rather than reconstructed
-by the caller on every access. This single design choice is what makes delegation under arbitrary composition possible.
+Delegation models that emulate inheritance's tree-shaped hierarchies through caller-side dispatch are generally bound to
+topology~(a). Multi-rooted topologies ultimately require the identity of the composite that claims the interface,
+which a caller-side strategy cannot produce from the information available where a call enters the structure. Parts inverts
+the caller-side assumption: composite identity is fixed in the component at construction rather than reconstructed by the
+caller on every access. This design choice is what allows delegation, with its late-bound self, to support the topologies
+that forwarding already permits.
 
 \paragraph{Delegation at larger granularity.}
 Ostermann's delegation layers~\cite{ostermann2002} extend delegation from
@@ -1378,7 +1381,7 @@ relevant to multi-source composition. It composes independent
 externally specified composition rules such as \code{merge} and
 \code{override}. The model explicitly targets decentralized composition in
 which no subject is the sole owner of the result. This corresponds closely to
-the multi-source structure of topology (c). The original model and its
+the multi-source structure of topology~(c). The original model and its
 implementations, however, do not preserve independently composed runtime
 objects in the final representation and do not provide static typing across
 the composed result~\cite{ossher1995}. Parts addresses the same structural
@@ -1408,13 +1411,12 @@ deliberately excludes multiple delegation~\cite[\S6.5.1]{kniesel2000}; IFJ
 binds a single \code{this} across its delegation structure; and DelphJ's
 access-path mechanism, the most capable of the three, still limits composition
 to only the simplest single-rooted case. Of the three properties, arbitrary
-composition is the practically unobtainable one under caller-side delegation models.
+composition is the practically unobtainable one under these caller-side delegation models.
 
-Parts unifies the three properties through interface-scoped dispatch.
-By assigning composite identity per interface at construction, ISD allows a
-single component to participate in the arbitrary compositions of forwarding while
-preserving late-bound self-calls. The resulting self-dispatch path has
-$O(1)$ cost and is empirically equivalent to a standard vtable call.
+Parts unifies the three properties through interface-scoped dispatch. By assigning composite identity per interface at construction,
+ISD allows a single component to participate in the topologies that forwarding already permits while preserving late-bound
+self-calls. The resulting self-dispatch path has $O(1)$ cost and, as implemented, is empirically equivalent to a standard
+vtable call (Section~\ref{sec:eval}).
 
 %% ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion}
@@ -1610,7 +1612,7 @@ A.~Shipilev and contributors.
 
 \bibitem{mckinney2026}
 Anonymous.
-\newblock manifold-parts: reference implementation.
+\newblock parts: reference implementation.
 \newblock Artifact; repository URL omitted for double-blind review, 2026.
 
 \end{thebibliography}
