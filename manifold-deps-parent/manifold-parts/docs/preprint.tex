@@ -538,8 +538,8 @@ Java subset is a natural direction for follow-on work (Section~\ref{sec:futurewo
 \subsection{Arbitrary Composition}
 \label{subsec:topologies}
 
-Mirroring the structural flexibility of standard object composition and forwarding, Parts supports unrestricted topologies.
-These are expressed as behaviorally acyclic graphs where nodes are parts, composites, or ordinary objects, and edges are
+Mirroring the structural flexibility of standard object composition and forwarding, Parts supports unrestricted topologies
+expressed as behaviorally acyclic graphs where nodes are parts, composites, or ordinary objects, and edges are
 link fields. Each edge establishes a connection from a composite to a component through the interface specified by the link.
 
 Partial delegation permits a composite to claim only the interfaces it needs from a part's delegation surface, leaving the
@@ -889,7 +889,7 @@ analog of \code{super}, are likewise permitted. Every other occurrence, whether 
 including passing or assigning \code{this} as its concrete part type and casting it to \code{Object}.
 
 A caller holding the bare part could invoke methods off the composite dispatch path and violate Invariant~\ref{prop:dispatch},
-so the escape must be prevented, no legitimate use should require it. A part has no identity of its own beyond the composite, so
+so the escape must be prevented and no legitimate use should require it. A part has no outward identity beyond its interfaces, so
 a reference to the raw component, rather than to an interface it satisfies, adds nothing the composite does not already
 provide. Letting one escape could only split a single logical object in two, reintroducing the Object Schizophrenia
 that ISD otherwise eliminates.
@@ -940,54 +940,62 @@ interface. Here, part \code{AB} reaches both implementations of \code{z()} by se
 
 \subsection{Dispatch Performance}
 
-The dispatch path for a self-call through a composite is:
-\begin{enumerate}
-  \item Load \code{\$selves[IDX\_I]}, an array-indexed load with compile-time
-        constant index
-  \item Cast to $I$
-  \item \code{invokeinterface m}, standard JVM virtual dispatch
-\end{enumerate}
+A self-call through a composite compiles to a fixed sequence: an array-indexed
+load of \code{\$selves[IDX\_I]} (constant index), a cast to $I$, and an
+\code{invokeinterface}. The operation count is constant and independent of
+composition depth, so the self-call is $O(1)$; the sequence has the same shape as
+a vtable call, an indexed slot load followed by an indirect call. We measure the
+cost with JMH~\cite{jmh} (average-time mode; 10 forks, 5 warmup and 10 measurement
+iterations per fork; $\pm$ is the 99.9\% CI half-width), run on an Intel Core
+i7-1365U under Windows~11 with OpenJDK~21. Results are from a single machine,
+which we note as a limitation given the sub-nanosecond magnitudes; the equivalence
+below rests on measured indistinguishability rather than exact figures.
 
-This is $O(1)$. The parallel to vtable dispatch is direct: a vtable call is an
-indexed slot load followed by an indirect call. A self-call within a part is
-therefore on equal footing with a vtable call.
+\paragraph{The self-call costs one interface dispatch.}
+Holding a target method non-inlinable so a real call occurs, we compare three
+depth-0 forms over the same receiver: \code{invokevirtual}, the
+\code{invokeinterface} it compiles to, and the plugin's emitted
+\code{((I)\,\$selves[IDX\_I]).m()} (an \code{Object[]} load, a cast, and
+\code{invokeinterface}). The plugin emits \code{invokeinterface}, so that is the
+comparison that isolates ISD: the two are statistically indistinguishable
+($0.03\pm0.09$\,ns, the interval spanning zero), meaning the array load and cast
+add nothing. Both lie within $0.10\pm0.05$\,ns of \code{invokevirtual} --- the
+ordinary interface-versus-virtual dispatch gap, not a cost of ISD. The self-call
+therefore costs a single interface dispatch, within 0.15\,ns of a vtable call at
+99.9\% confidence.
 
-\paragraph{Benchmark.}
-We verify this empirically using JMH~\cite{jmh} in average-time mode.
-Each scenario calls \code{compute()} through a composite root at chain
-depth $d$ (1--6). The \emph{baseline} traverses $d$ \code{@link} delegation
-hops to a leaf that returns directly, with no self-call. The \emph{concrete}
-variant traverses the same hops but the leaf issues a self-call
-(\code{\$selves[IDX\_I].scale()}) from a concrete part method,
-dispatching through the composite root. The \emph{default} variant issues the
-same self-call from an inherited interface default method the leaf does not
-override, routed through the generated \code{invokedynamic} override of
-Section~\ref{subsec:default}. The delta (concrete minus baseline) isolates the cost of the self-call
-dispatch mechanism alone. All runs: 10 JVM forks,
-5 warmup iterations, 10 measurement iterations per fork (100 data points per
-cell); errors are $\pm$\,half-width of the 99.9\% confidence interval.
-A separate single-dispatch calibration run (\code{invokeinterface}
-on a monomorphic call site, same harness) yields 0.43\,ns/op; the delta
-values in Table~\ref{tab:bench} are therefore roughly 1--2$\times$ a single virtual
-dispatch.
-
-\paragraph{Choice of baseline.}
-The delta is measured against Parts' own forwarding path, which establishes the
-baseline: that path is semantically equivalent to Kotlin \code{by} and Lombok
-\code{@Delegate} (Section~\ref{sec:related}), so the delta prices exactly the
-self-call routing those mechanisms cannot express, against their own dispatch
-cost. A cross-system benchmark against other composition models would price
-differences in implementation strategy rather than the self-call dispatch this
-delta isolates, so that comparison is analytic (Section~\ref{sec:related}).
+\paragraph{The cost does not scale with depth.}
+To check that the self-call does not grow with composition depth, we sweep chain
+depth $d$ (1--6). The \emph{baseline} traverses $d$ delegation hops to a leaf
+that returns directly; the \emph{concrete} and \emph{default} variants add one
+self-call through the composite root, issued from a concrete part method and from
+an inherited interface default routed through the generated \code{invokedynamic}
+override of Section~\ref{subsec:default}. Because both variants share the $d$
+hops, the delta (Table~\ref{tab:bench}) is the added self-call. It is bounded
+(0.55--0.84\,ns) and grows by only about 0.06,ns per hop, small beside the
+roughly 0.35,ns per hop the traversal itself costs, so the self-call does not
+meaningfully add to depth scaling. Its receiver comes from a dynamically wired
+\code{\$selves} slot, so it is not statically known and the dispatch does not
+fold away; the delta's margin above the 0.43\,ns single dispatch, and the slight
+drift, plausibly reflect the small body the self-call invokes and less complete
+inlining at greater depth. The \emph{default} column tracks \emph{concrete} to
+within 3\% at every depth, so the \code{invokedynamic} default path adds no
+measurable cost over a concrete self-call; its one-time site bootstrap is
+absorbed during warmup.
 
 \begin{table}[htbp]
 \centering
-\caption{Self-call dispatch cost by delegation depth (JMH, average-time mode; ns/op, $\pm$\,99.9\% CI half-width).
-\emph{Baseline} traverses the delegation hops with no self-call. \emph{Concrete} and \emph{Default} add one self-call
-through the composite, issued from a concrete part method and from an inherited interface default (via \code{invokedynamic})
-respectively. The delta (Concrete minus Baseline) isolates the self-call dispatch cost over plain delegation. Values are
-rounded from the measured means and intervals. The delta combines the Baseline and Concrete cells (difference of means,
-half-widths in quadrature) and may differ from the rounded column difference by~0.01\,ns.}
+\caption{Self-call cost by delegation depth (JMH, average-time mode; ns/op,
+$\pm$\,99.9\% CI half-width). \emph{Baseline} traverses the $d$ delegation hops
+to a leaf that returns directly, with no self-call. \emph{Concrete} and
+\emph{Default} traverse the same hops and add one self-call through the composite
+root, issued from a concrete part method and from an inherited interface default
+(via \code{invokedynamic}), respectively. The delta (Concrete minus Baseline) is
+the added cost of one self-call over plain delegation (its dispatch plus the small
+body it invokes); it is bounded and grows by about 0.06\,ns per hop, consistent
+with $O(1)$ scaling. Values are rounded from measured means and intervals; the
+delta is computed from the unrounded means (half-widths combined in quadrature)
+and may differ from the rounded column difference by~0.01\,ns.}
 \label{tab:bench}
 {\small
 \begin{tabular}{crrrr}
@@ -1005,50 +1013,21 @@ Depth & Baseline (ns) & Concrete (ns) & Default (ns) & Delta (ns) \\
 }
 \end{table}
 
-\noindent
-Across depths 1--6 the delta remains bounded, on the order of a single virtual
-dispatch (the 0.43\,ns calibration above), consistent with one array-indexed load
-(\code{\$selves[IDX\_I]}) followed by \code{invokeinterface}. The self-call routes
-through a dynamically wired \code{\$selves} slot, so its receiver is not statically
-known and the dispatch does not fold away: the delta is one virtual dispatch,
-with the array indexing on top (confirmed free below). The $O(1)$ claim is
-structural: one dispatch per self-call, independent of depth, with the per-call
-cost pinned by the isolation measurement below. The small upward drift in the
-delta across depths (0.55 to 0.84\,ns) stays well under a second dispatch and
-plausibly reflects less complete inlining of the dispatch site within the larger
-compiled method at greater depth. The \emph{default} column tracks the \emph{concrete}
-column within $\pm$3\% at every depth, with the sign of the difference varying.
-The two are indistinguishable at this resolution. The interface-default template,
-dispatched through \code{invokedynamic}, carries no measurable cost over the
-concrete part template, confirming the equivalence claimed in
-Section~\ref{subsec:default}. The comparison is steady-state: the one-time
-bootstrap that links each \code{invokedynamic} site is absorbed during warmup and
-is not measured here.
-
-\paragraph{Isolating the array index.}
-The depth-series delta is essentially one virtual dispatch. To confirm the
-\code{\$selves} array indexing adds nothing on top, we isolate the dispatch.
-Holding a target method non-inlinable so a real call occurs, we compare three
-depth-0 forms over the same receiver: a vtable call (\code{invokevirtual}), the
-\code{invokeinterface} it compiles to, and the plugin's emitted form
-\code{((I)\,\$selves[IDX\_I]).m()} (an \code{Object[]} element load, a cast, and
-\code{invokeinterface}). Over 10 JVM forks (JDK~21) the three are statistically
-indistinguishable. The ISD form differs from the bare \code{invokeinterface} it
-emits by $0.03\pm0.09$\,ns, and from \code{invokevirtual} by $0.10\pm0.05$\,ns,
-both within the fork-to-fork variance of the measurement. The array-element load
-is not separately observable, therefore the self-call costs one virtual dispatch and no more.
-This is the empirical content of the vtable-equivalence claim.
+We measure the delta against Parts' own forwarding path rather than a competing
+system: that path is semantically equivalent to Kotlin \code{by} and Scala~3's
+\code{export} (Section~\ref{sec:related}), so the delta prices exactly the
+self-call routing those mechanisms cannot express. A cross-system benchmark would
+price implementation-strategy differences rather than this dispatch, so that
+comparison is analytic (Section~\ref{sec:related}).
 
 \paragraph{Construction cost.}
-The result above is the steady-state call cost; wiring is paid once, at construction. Building
-a composite invokes \code{part.\$linkPartToSelf} (Figure~\ref{fig:linkPartToSelf-listing}) at each link assignment involving a part, which
-sets the part's relevant \code{\$selves} slots and recurses through the part's own link fields,
-propagating composite identity for each interface the composite claims, where the interface is
-comparable to the link field's interface. Each pass does constant work per part per claimed interface
-(an identity check for cycle detection, a constant-time scope comparison, and no allocation).
-Wrapping an already-linked composite re-propagates its subtree, so total wiring cost grows with
-delegation depth, which is small in practice. None of this lies on the dispatch path, so the per-call
-cost is unchanged.
+Wiring is paid once, at construction, off the dispatch path. Each link assignment
+involving a part calls \code{\$linkPartToSelf}
+(Figure~\ref{fig:linkPartToSelf-listing}), which sets the part's claimed slots and
+recurses through its link fields: work linear in a part's interface surface, and
+re-propagation on each wrap makes a chain of $n$ composites $O(n^2)$ overall.
+Both are off the dispatch path and small for the shallow chains measured, so the
+per-call cost is unchanged.
 
 \subsection{Example: Teaching Assistant}
 
@@ -1163,8 +1142,8 @@ Parts addresses several longstanding limitations of implementation inheritance:
         capability of abstract classes without coupling their implementation and hierarchy.
 \end{itemize}
 
-Implementation inheritance's power is open recursion. Its fragility is the surface that power ranges over---every accessible
-member. Parts retains open recursion but bounds the surface to the declared interface contract. Self-calls still reach the
+Implementation inheritance's power is open recursion. Its fragility is the surface that power ranges over: \emph{every accessible
+member}. Parts retains open recursion but bounds the surface to the declared interface contract. Self-calls still reach the
 composite's overrides, while the internals that make base classes fragile are never exposed.
 
 Implementation inheritance and Parts are, essentially, two bindings of the same open recursion: implementation inheritance
