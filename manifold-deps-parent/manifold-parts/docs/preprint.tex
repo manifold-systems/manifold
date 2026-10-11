@@ -972,8 +972,8 @@ self-call through the composite root, issued from a concrete part method and fro
 an inherited interface default routed through the generated \code{invokedynamic}
 override of Section~\ref{subsec:default}. Because both variants share the $d$
 hops, the delta (Table~\ref{tab:bench}) is the added self-call. It is bounded
-(0.55--0.84\,ns) and grows by only about 0.06,ns per hop, small beside the
-roughly 0.35,ns per hop the traversal itself costs, so the self-call does not
+(0.55--0.84\,ns) and grows by only about 0.06\,ns per hop, small beside the
+roughly 0.35\,ns per hop the traversal itself costs, so the self-call does not
 meaningfully add to depth scaling. Its receiver comes from a dynamically wired
 \code{\$selves} slot, so it is not statically known and the dispatch does not
 fold away; the delta's margin above the 0.43\,ns single dispatch, and the slight
@@ -1258,9 +1258,9 @@ reconfiguration of module objects. Its open recursion derives from mixin
 inheritance~\cite{bracha1990}: classes are applied to superclasses and fused
 into a single object. Composed module objects are instead held by reference
 and reached through ordinary message sends, so self-calls do not route through
-the composition. Newspeak therefore combines dynamic composition with open
-recursive inheritance, but does not provide open recursion across independently
-composed runtime objects in the Parts sense.
+the composition. Newspeak therefore offers both dynamic composition and
+open-recursive inheritance, but not open recursion across independently
+composed runtime objects.
 
 \paragraph{Delegation.}
 Several research systems have explored delegation as a way to retain independent
@@ -1287,14 +1287,16 @@ to topology (a)~(\S\ref{subsec:topologies}). Parts instead associates each
 interface with a specific composite through \code{@link}, permitting the
 multi-rooted and multi-source topologies induced by partial delegation.
 
-DelphJ~\cite{gerakios2013} is a Java-based research language that augments its MorphJ metaprogramming DSL with delegation
-features (\emph{access-paths}) as a means for open recursion. Its runtime-supplied \emph{subobjects} generally support late-bound
-self-calls, but the access-path mechanism is designed around a single-rooted delegation structure, which incurs substantial
-runtime costs from constructing and merging access paths for stack-held references and traversing them on self-calls. Crucially, the
-access-path strategy does not provide the per-interface identity required by arbitrary composition. In particular, the model
-cannot correctly resolve cross-interface self-calls to methods common to separately claimed interfaces, as required by topologies
-(b),(d) (Figure~\ref{fig:overlapCall-listing}). Additionally, access paths cannot support cross-interface self-calls at all
-with topology~(c) (\S\ref{subsec:topologies}). Its composition is therefore limited to topology~(a).
+DelphJ~\cite{gerakios2013} extends the Java metaprogramming DSL MorphJ with
+delegation through \emph{access-paths}, supplying runtime \emph{subobjects} with
+late-bound self-calls. As with DARWIN and IFJ, its dispatch is caller-side: each self-call reconstructs
+the composite context by traversing an access path, so its cost grows with the
+delegation structure rather than staying constant, and it establishes no
+per-interface identity. A self-call to a method shared by two separately claimed
+interfaces therefore cannot be routed to the composite claiming each
+(topologies~(b),(d), Figure~\ref{fig:overlapCall-listing}), and the multi-source
+case (topology~(c)) is not expressible. DelphJ's composition is accordingly
+confined to topology~(a) (\S\ref{subsec:topologies}).
 
 Delegation models that emulate inheritance's tree-shaped hierarchies through caller-side dispatch are generally bound to
 topology~(a). Multi-rooted topologies ultimately require the identity of the composite that claims the interface,
