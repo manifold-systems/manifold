@@ -93,7 +93,7 @@ unmet challenge.
 We present \emph{Parts}, a general delegation model that unifies independent runtime components, arbitrary composition,
 and open recursion. Its enabling mechanism, interface-scoped dispatch (ISD), assigns composite identity per interface at
 construction, allowing self-calls to dynamically dispatch through overriding composites. Parts is realized as a compiler
-plugin for Java 8--27 with IDE integration. It achieves $O(1)$ dispatch cost that is empirically equivalent to a standard
+plugin for Java 8--27 with IDE integration. It achieves $O(1)$ self-dispatch cost that is empirically equivalent to a standard
 vtable call, providing open recursion through composition without sacrificing the independence and flexibility that make
 object composition attractive.
 \end{abstract}
@@ -166,7 +166,7 @@ The core contributions are:
         assigns composite identity per interface at construction, allowing
         open recursion under arbitrary composition through partial delegation,
         where a composite may claim a proper subset of a part's interfaces,
-        with self-calls resolved in $O(1)$ time.
+        with self-dispatch resolved in $O(1)$ time.
 
   \item \textbf{An implementation}: an open-source compiler plugin~\cite{mckinney2026}
         for Java 8--27 that realizes Parts with $O(1)$ self-dispatch at vtable speed,
@@ -337,7 +337,7 @@ the receiver's runtime type.
 
 \begin{description}
   \item[claim] an interface of a part is claimed when a composite links that interface, making the composite its exclusive
-  identity within the part.
+  identity within the part. A composite loses a claim when another composite later claims the same interface of that part.
 
   \item[component] a class nominally implementing one or more interfaces, available for delegation if the class is a part
   and for forwarding otherwise.
@@ -356,10 +356,11 @@ the receiver's runtime type.
 
   \item[part] a component annotated with \code{@part}, enabling compiler plugin support for open recursion.
 
-  \item[partial delegation] a requirement for arbitrary compositions, where a composite may claim only some of a part's
-  delegation surface.
+  \item[partial delegation] a natural property of ordinary forwarding, allowing a composite to claim only some of a part's
+  delegation surface and leaving the remaining interfaces available for other composites to claim. This is the basis of
+  arbitrary composition (Section~\ref{subsec:topologies}).
 
-  \item[root (of an interface)] the linking composite claiming an interface of a part.
+  \item[root (of an interface)] the composite currently holding the claim on an interface of a part.
 \end{description}
 
 When a composite links an interface to a part, the part is directly wired to the composite. It records a \emph{composite
@@ -546,7 +547,7 @@ Partial delegation permits a composite to claim only the interfaces it needs fro
 remaining interfaces for other composites to claim. This freedom gives rise to the four composition topology primitives
 shown in Figure~\ref{fig:topologies} and classified over two dimensions: the number of roots a part maintains and the number
 of sources the composition has. A root is an outermost node claiming one or more interfaces of a part's delegation surface;
-a source is a node with no incoming link edges.
+a source is a root with no incoming link edges.
 
 \begin{enumerate}
 \item[(a)] \textbf{Single-root, single-source.}
@@ -588,8 +589,8 @@ the essential properties that make the topology distinct. Topologies (a) and (b)
 (c) is multi-root and multi-source; (d) is multi-root and sourceless. Topology (d) is structurally cyclic but behaviorally
 acyclic over distinct interfaces.
 
-These four are exhaustive over the two dimensions. Of the six combinations the dimensions admit, two cannot occur: a
-single-rooted part forces a single source, and a sourceless graph is necessarily multi-root. This leaves (a)–(d).
+These four are exhaustive over the two dimensions. Of the six combinations the dimensions admit, two cannot occur: in reduced
+form, a single-rooted part forces a single source, and a sourceless graph is necessarily multi-root. This leaves (a)–(d).
 
 Forwarding admits these topologies, so by definition a general delegation model must as well. The topologies therefore provide
 a basis for verifying whether a delegation model supports arbitrary composition: does its treatment of open recursion remain
@@ -895,6 +896,7 @@ provide. Letting one escape could only split a single logical object in two, rei
 that ISD otherwise eliminates.
 
 \paragraph{Ambiguous self-calls.}
+\label{paragraph:ambiguous}
 A bare self-call in a part is ambiguous when its method is carried by two or more mutually unrelated interfaces (neither
 assignable to the other), including when both inherit it from a common super-interface. The receiver must then be cast-qualified
 as the intended interface (Figure~\ref{fig:overlapCall-listing}). Casting is otherwise optional. When a sub-interface and
@@ -938,62 +940,65 @@ interface. Here, part \code{AB} reaches both implementations of \code{z()} by se
 \label{sec:eval}
 %% ─────────────────────────────────────────────────────────────────────────────
 
-\subsection{Dispatch Performance}
+\subsection{Self-Dispatch Performance}
 
-A self-call through a composite compiles to a fixed sequence: an array-indexed
+Self-dispatch through a composite compiles to a fixed sequence: an array-indexed
 load of \code{\$selves[IDX\_I]} (constant index), a cast to $I$, and an
-\code{invokeinterface}. The operation count is constant and independent of
-composition depth, so the self-call is $O(1)$; the sequence has the same shape as
-a vtable call, an indexed slot load followed by an indirect call. We measure the
-cost with JMH~\cite{jmh} (average-time mode; 10 forks, 5 warmup and 10 measurement
-iterations per fork; $\pm$ is the 99.9\% CI half-width), run on an Intel Core
-i7-1365U under Windows~11 with OpenJDK~21. Results are from a single machine,
-which we note as a limitation given the sub-nanosecond magnitudes; the equivalence
-below rests on measured indistinguishability rather than exact figures.
+\code{invokeinterface}. This reaches the composite claiming the interface in
+$O(1)$, independent of composition depth, with the same shape as a vtable call.
+We measure with JMH~\cite{jmh} (average-time mode; 10 forks, 5 warmup and 10
+measurement iterations per fork; $\pm$ is the 99.9\% CI half-width), run on an
+Intel Core i7-1365U under Windows~11 with OpenJDK~21. Results are from a single
+machine, which we note as a limitation given the sub-nanosecond magnitudes; the
+claims below rest on measured bounds on the differences rather than exact
+figures.
 
-\paragraph{The self-call costs one interface dispatch.}
+\paragraph{Self-dispatch costs one interface call.}
 Holding a target method non-inlinable so a real call occurs, we compare three
 depth-0 forms over the same receiver: \code{invokevirtual}, the
 \code{invokeinterface} it compiles to, and the plugin's emitted
 \code{((I)\,\$selves[IDX\_I]).m()} (an \code{Object[]} load, a cast, and
 \code{invokeinterface}). The plugin emits \code{invokeinterface}, so that is the
-comparison that isolates ISD: the two are statistically indistinguishable
-($0.03\pm0.09$\,ns, the interval spanning zero), meaning the array load and cast
-add nothing. Both lie within $0.10\pm0.05$\,ns of \code{invokevirtual} --- the
-ordinary interface-versus-virtual dispatch gap, not a cost of ISD. The self-call
-therefore costs a single interface dispatch, within 0.15\,ns of a vtable call at
-99.9\% confidence.
+comparison that isolates ISD: the two differ by $0.03\pm0.09$\,ns, bounding the
+array load and cast to at most 0.12\,ns at 99.9\% confidence.
+Measured directly against \code{invokevirtual}, the emitted form differs by
+$0.10\pm0.05$\,ns: the ordinary interface-versus-virtual dispatch gap, not a cost
+of ISD. Self-dispatch therefore costs a single interface call, within 0.15\,ns of
+a vtable call at 99.9\% confidence.
 
-\paragraph{The cost does not scale with depth.}
-To check that the self-call does not grow with composition depth, we sweep chain
+\paragraph{Self-dispatch does not drive depth scaling.}
+To check how self-dispatch cost varies with composition depth, we sweep chain
 depth $d$ (1--6). The \emph{baseline} traverses $d$ delegation hops to a leaf
 that returns directly; the \emph{concrete} and \emph{default} variants add one
 self-call through the composite root, issued from a concrete part method and from
 an inherited interface default routed through the generated \code{invokedynamic}
 override of Section~\ref{subsec:default}. Because both variants share the $d$
-hops, the delta (Table~\ref{tab:bench}) is the added self-call. It is bounded
+hops, the delta (Table~\ref{tab:bench}) is the added self-dispatch. It is bounded
 (0.55--0.84\,ns) and grows by only about 0.06\,ns per hop, small beside the
 roughly 0.35\,ns per hop the traversal itself costs, so the self-call does not
 meaningfully add to depth scaling. Its receiver comes from a dynamically wired
 \code{\$selves} slot, so it is not statically known and the dispatch does not
-fold away; the delta's margin above the 0.43\,ns single dispatch, and the slight
-drift, plausibly reflect the small body the self-call invokes and less complete
-inlining at greater depth. The \emph{default} column tracks \emph{concrete} to
-within 3\% at every depth, so the \code{invokedynamic} default path adds no
-measurable cost over a concrete self-call; its one-time site bootstrap is
-absorbed during warmup.
+fold away; the delta's size, and its slight upward drift, plausibly reflect the
+small body the self-call invokes and less complete inlining at greater depth. The
+\emph{default} column tracks \emph{concrete} to within 3\% at every depth, so the
+\code{invokedynamic} default path adds no measurable cost over a concrete
+self-call; its one-time site bootstrap is absorbed during warmup.
 
 \begin{table}[htbp]
 \centering
-\caption{Self-call cost by delegation depth (JMH, average-time mode; ns/op,
+\caption{Self-dispatch cost by delegation depth (JMH, average-time mode; ns/op,
 $\pm$\,99.9\% CI half-width). \emph{Baseline} traverses the $d$ delegation hops
 to a leaf that returns directly, with no self-call. \emph{Concrete} and
 \emph{Default} traverse the same hops and add one self-call through the composite
 root, issued from a concrete part method and from an inherited interface default
 (via \code{invokedynamic}), respectively. The delta (Concrete minus Baseline) is
-the added cost of one self-call over plain delegation (its dispatch plus the small
-body it invokes); it is bounded and grows by about 0.06\,ns per hop, consistent
-with $O(1)$ scaling. Values are rounded from measured means and intervals; the
+the cost of one self-dispatch over plain
+delegation: resolving the composite root through \code{\$selves} and issuing the
+call to it. It is an upper bound on the dispatch increment, since it also
+includes executing the invoked method, which is a small fixed body at every
+depth and not a cost introduced by ISD. The delta is bounded and grows by about
+0.06\,ns per hop, far below traversal's roughly 0.35\,ns per hop.
+Values are rounded from measured means and intervals; the
 delta is computed from the unrounded means (half-widths combined in quadrature)
 and may differ from the rounded column difference by~0.01\,ns.}
 \label{tab:bench}
@@ -1016,7 +1021,7 @@ Depth & Baseline (ns) & Concrete (ns) & Default (ns) & Delta (ns) \\
 We measure the delta against Parts' own forwarding path rather than a competing
 system: that path is semantically equivalent to Kotlin \code{by} and Scala~3's
 \code{export} (Section~\ref{sec:related}), so the delta prices exactly the
-self-call routing those mechanisms cannot express. A cross-system benchmark would
+self-dispatch routing those mechanisms cannot express. A cross-system benchmark would
 price implementation-strategy differences rather than this dispatch, so that
 comparison is analytic (Section~\ref{sec:related}).
 
@@ -1024,10 +1029,10 @@ comparison is analytic (Section~\ref{sec:related}).
 Wiring is paid once, at construction, off the dispatch path. Each link assignment
 involving a part calls \code{\$linkPartToSelf}
 (Figure~\ref{fig:linkPartToSelf-listing}), which sets the part's claimed slots and
-recurses through its link fields: work linear in a part's interface surface, and
-re-propagation on each wrap makes a chain of $n$ composites $O(n^2)$ overall.
-Both are off the dispatch path and small for the shallow chains measured, so the
-per-call cost is unchanged.
+recurses through its link fields: work bounded by the part's interface surface,
+which is small in practice, and re-propagation on each wrap makes a chain of $n$
+composites $O(n^2)$ overall. Both are off the dispatch path and small for the
+shallow chains typical of composition, so the per-call cost is unchanged.
 
 \subsection{Example: Teaching Assistant}
 
@@ -1097,10 +1102,10 @@ transitively claims \code{Person} throughout the composite.
 \subsection{Partial delegation and part identity}
 \label{subsec:identity}
 
-\emph{Partial delegation} is a requirement for arbitrary composition, where a composite may claim only some of a part's
-delegation surface. \emph{Multi-rooted parts} result from this condition: a part's interfaces may be rooted at two or more
-distinct identities, including the part itself and one or more composites, via any combination of the multi-rooted topologies
-in Section~\ref{subsec:topologies}.
+\emph{Partial delegation} is the basis of arbitrary composition, where a composite may claim only some of a part's delegation
+surface, as forwarding naturally allows. \emph{Multi-rooted parts} result from this condition: a part's interfaces may be
+rooted at two or more distinct identities, including the part itself and one or more composites, via any combination of
+the multi-rooted topologies in Section~\ref{subsec:topologies}.
 
 The possession example in Section~\ref{sec:model} demonstrates an extended version of topology (b): \code{Demon} claims
 only \code{Actor} from \code{Wizard}. Through delegation propagation, \code{Hero} consequently has separate roots for \code{Actor}
@@ -1281,22 +1286,29 @@ Incomplete Featherweight Java (IFJ)~\cite{bettini2011} similarly provides
 static typing, independent runtime objects, and open recursion through
 \emph{incomplete objects} completed by other objects at run time. Its
 delegation is structural and per method, however, with a single \code{this}
-binding for the delegation chain. A component therefore cannot root different
-interfaces at different composites. Its composition is consequently confined
-to topology (a)~(\S\ref{subsec:topologies}). Parts instead associates each
-interface with a specific composite through \code{@link}, permitting the
-multi-rooted and multi-source topologies induced by partial delegation.
+binding for the delegation chain~\cite[\S1, Fig.~1]{bettini2011}. As we read it,
+a component therefore cannot root different interfaces at different composites. Its
+composition is consequently confined to topology (a)~(\S\ref{subsec:topologies}).
+Parts instead associates each interface with a specific composite through
+\code{@link}, permitting the multi-rooted and multi-source topologies induced
+by partial delegation.
 
 DelphJ~\cite{gerakios2013} extends the Java metaprogramming DSL MorphJ with
 delegation through \emph{access-paths}, supplying runtime \emph{subobjects} with
-late-bound self-calls. As with DARWIN and IFJ, its dispatch is caller-side: each self-call reconstructs
-the composite context by traversing an access path, so its cost grows with the
-delegation structure rather than staying constant, and it establishes no
-per-interface identity. A self-call to a method shared by two separately claimed
-interfaces therefore cannot be routed to the composite claiming each
-(topologies~(b),(d), Figure~\ref{fig:overlapCall-listing}), and the multi-source
-case (topology~(c)) is not expressible. DelphJ's composition is accordingly
-confined to topology~(a) (\S\ref{subsec:topologies}).
+late-bound self-calls. As with DARWIN and IFJ, its dispatch is caller-side: a
+self-call recovers its composite context by traversing an access path. The path
+is carried with the call, bound to \code{this} at invocation, built and merged
+during field reads, and looked up on dispatch~\cite[\S3]{gerakios2013}, so every
+invocation pays to maintain the path and to traverse it, and the cost grows with
+its length. The mechanism has no per-interface identity, so as we read it, a
+self-call to a method shared by two separately claimed interfaces cannot be
+routed between the composites claiming them (topologies~(b),(d);
+\S\ref{paragraph:ambiguous}), and the multi-source case (topology~(c),
+Figure~\ref{fig:topology-c-listing}) cannot dispatch self-calls correctly
+between separately claimed interfaces. DelphJ's composition is consequently
+confined to topology~(a) (\S\ref{subsec:topologies}). ISD instead records
+identity once at construction, off the dispatch path, and resolves it from a
+single slot.
 
 Delegation models that emulate inheritance's tree-shaped hierarchies through caller-side dispatch are generally bound to
 topology~(a). Multi-rooted topologies ultimately require the identity of the composite that claims the interface,
