@@ -117,7 +117,7 @@ loses the dynamic self-dispatch that makes inheritance effective for extensible 
 The challenge is to recover open recursion without giving up the essential properties of object composition. A model
 that fully meets this challenge must provide three properties: \emph{independent components}, meaning late-bound objects
 supplied at construction; \emph{arbitrary composition}, meaning unrestricted composition topologies (Section~\ref{subsec:topologies}); and
-\emph{open recursion}, meaning self-calls that remain late-bound through the composite. Existing composition
+\emph{open recursion}, meaning self-calls that remain late-bound through the composite. The surveyed composition
 approaches achieve at most two of these three properties (Section~\ref{sec:related}).
 
 The composition mechanisms of conventional languages differ in syntax and implementation but reduce to forwarding.
@@ -896,7 +896,6 @@ provide. Letting one escape could only split a single logical object in two, rei
 that ISD otherwise eliminates.
 
 \paragraph{Ambiguous self-calls.}
-\label{paragraph:ambiguous}
 A bare self-call in a part is ambiguous when its method is carried by two or more mutually unrelated interfaces (neither
 assignable to the other), including when both inherit it from a common super-interface. The receiver must then be cast-qualified
 as the intended interface (Figure~\ref{fig:overlapCall-listing}). Casting is otherwise optional. When a sub-interface and
@@ -1303,7 +1302,7 @@ invocation pays to maintain the path and to traverse it, and the cost grows with
 its length. The mechanism has no per-interface identity, so as we read it, a
 self-call to a method shared by two separately claimed interfaces cannot be
 routed between the composites claiming them (topologies~(b),(d);
-\S\ref{paragraph:ambiguous}), and the multi-source case (topology~(c),
+Figure~\ref{fig:overlapCall-listing}), and the multi-source case (topology~(c),
 Figure~\ref{fig:topology-c-listing}) cannot dispatch self-calls correctly
 between separately claimed interfaces. DelphJ's composition is consequently
 confined to topology~(a) (\S\ref{subsec:topologies}). ISD instead records
