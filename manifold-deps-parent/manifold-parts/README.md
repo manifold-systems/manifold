@@ -6,36 +6,16 @@
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21514973-blue)](https://doi.org/10.5281/zenodo.21514973)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
-*The **"Favor object composition over class inheritance"** mantra came with an unspoken cost: object composition gives up
-**open recursion**, a defining feature that keeps inheritance as a **practical** choice over composition.* 
-
-***Parts** offers an uncompromising resolution: **delegation** with independent runtime objects that retain open recursion
-without sacrificing the performance of inheritance or the flexibility of composition.*
-                                         
----
-
-# Overview
-
-Statically typed object-oriented languages have traditionally separated two properties of implementation reuse:
-
-* **Open recursion** is a natural consequence of *inheritance*: the type hierarchy fuses into a single runtime object,
-with inherited methods executing as part of that object, so self-calls can reach overrides supplied by a subclass.
-* **Independent runtime components** are the defining property of *object composition*: objects remain distinct at runtime
-and can be linked dynamically into a composite, allowing implementations and behavior to be configured at runtime in arbitrary
-compositions. But a component's self-calls remain local to the component and cannot reach overrides supplied by the composite.
-
-Combining these two properties in a general-purpose model without compromising either or sacrificing performance has remained
-an open problem.
-
-*Parts* introduces a new compositional model that resolves this gap. It provides ***the flexibility of runtime composition
-and the polymorphism of inheritance*** while preserving the independence of its components and eliminating the hazards
-of inheritance. Use Parts in place of inheritance or alongside it.
+*Parts* is "self-aware" composition. It combines ***the flexibility of runtime composition and the polymorphism of inheritance***
+while preserving the independence of its components and eliminating the hazards of inheritance. Use Parts in place of inheritance
+or alongside it.
 
 * `@part` provides [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973): self-calls from a part **dispatch to overrides in the composite**
 * Parts are **independent objects supplied at construction**, making composition fully runtime-configurable
 * `@link` connects objects to a composite, automatically implementing interfaces through forwarding
 * Parts preserves **self-call dispatch at vtable speed** (see [Performance](#performance))
 
+A simple example:
 
 ```java
 interface Actor {
@@ -66,8 +46,9 @@ the self-call dispatches to `Wizard.attack()`, so the output is:
 ```
 Cast spell!
 ```
-With ordinary object composition, Hero's own `attack()` implementation `Swing club!` would result instead. This late-bound
-self-call across a runtime-injected part is the fundamental capability that Parts adds. 
+With ordinary object composition via forwarding, Hero's own `attack()` implementation `Swing club!` would result instead.
+This late-bound self-call across a runtime-injected part is the fundamental capability that Parts adds. The capability is
+more generally known as *open recursion*.
 
 By supplying Hero as a runtime component instead of fusing it into Wizard's hierarchy, Wizard depends only on the Actor
 contract, not on Hero's implementation structure. Parts delegates the interface implementation while preserving the
@@ -88,6 +69,10 @@ Parts gives you both:**
 <sub>*Independent components*: composition consists of separate runtime objects, assembled and
 configured at construction.<br>*Open recursion*: a component's self-calls
 reach overrides supplied by the composite.</sub>
+
+Parts fills a long-standing gap in composition models. It combines all the flexibility of forwarding (arbitrary composition
+at runtime) plus the superpower of inheritance (open recursion) with self-dispatch empirically equivalent to a standard
+vtable call.
                                               
 ### Wait...
 
@@ -97,21 +82,18 @@ reach overrides supplied by the composite.</sub>
  Open recursion, but not independent runtime components.
 
 > ***Doesn't Kotlin do this?***<br>
- Kotlin's `by` and Scala's `export` are examples of ordinary *object composition*. They provide independent components
- (the first column), but not open recursion: ordinary composition results in the "Swing club!" result above.
-
-**Parts provides both in arbitrary compositions.**
+ Kotlin's `by` and Scala's `export` are examples of ordinary *object composition* (forwarding). They provide independent
+ components (the first column), but not open recursion: ordinary composition produces the "Swing club!" result above.
 
 ---
 
 <!-- TOC -->
 * [_Parts_](#_parts_)
-* [Overview](#overview)
     * [Wait...](#wait)
 * [The Self problem](#the-self-problem)
 * [`@part`](#part)
 * [`@link`](#link)
-  * [](#-1)
+  * [](#)
 * [Default methods](#default-methods)
 * [Abstract parts](#abstract-parts)
 * [Inheritance](#inheritance)
@@ -337,7 +319,7 @@ Output:
 
 Composition integrity rests on component identity: if a part exposes itself as its concrete type, a reference to that type
 can bypass the composite and compromise integrity. To prevent this, a part may use `this` only as one of its implemented
-interfaces or as `Object`.
+interfaces.
 
 The compile error is: `'this' in a part class must be used as an interface here`.
 
@@ -526,9 +508,9 @@ know where to dispatch self-calls?
 The conventional assumption has been that this requires additional dispatch machinery that either sacrifices performance,
 compromises arbitrary compositions, or some of both.
 
-Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). The interfaces a component
-implements comprise its delegation surface; a composite can link to that surface selectively, by interface. Each link directly
-wires the composite to its component, allowing a component's self-calls on the link's interface to resolve directly
+Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). The interfaces a component implements are its delegation
+surface (minus `@internal` marked interfaces). A composite can link to that surface selectively, by interface. Each link
+directly wires the composite to its component, allowing a component's self-calls on the link's interface to resolve directly
 to the composite's implementation. The resulting dispatch is O(1): performance equivalent to a conventional virtual call
 (see [5.1 Dispatch Performance](https://doi.org/10.5281/zenodo.21514973)).
 
