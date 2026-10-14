@@ -1312,8 +1312,8 @@ Incomplete Featherweight Java (IFJ)~\cite{bettini2011} similarly provides
 static typing, independent runtime objects, and open recursion through
 \emph{incomplete objects} completed by other objects at run time. Its
 delegation is structural and per method, however, with a single \code{this}
-binding for the delegation chain~\cite[\S1, Fig.~1]{bettini2011}. As we read it,
-a component therefore cannot root different interfaces at different composites. Its
+binding for the delegation chain~\cite[\S1, Fig.~1]{bettini2011}. A component
+therefore cannot root different interfaces at different composites. Its
 composition is consequently confined to topology (a)~(\S\ref{subsec:topologies}).
 Parts instead associates each interface with a specific composite through
 \code{@link}, permitting the multi-rooted and multi-source topologies induced
@@ -1326,15 +1326,14 @@ self-call recovers its composite context by traversing an access path. The path
 is carried with the call, bound to \code{this} at invocation, built and merged
 during field reads, and looked up on dispatch~\cite[\S3]{gerakios2013}, so every
 invocation pays to maintain the path and to traverse it, and the cost grows with
-its length. The mechanism has no per-interface identity, so as we read it, a
-self-call to a method shared by two separately claimed interfaces cannot be
-routed between the composites claiming them (topologies~(b),(d);
-Figure~\ref{fig:overlapCall-listing}), and the multi-source case (topology~(c),
-Figure~\ref{fig:topology-c-listing}) cannot dispatch self-calls correctly
-between separately claimed interfaces. DelphJ's composition is consequently
-confined to topology~(a) (\S\ref{subsec:topologies}). ISD instead records
-identity once at construction, off the dispatch path, and resolves it from a
-single slot.
+its length. The mechanism has no per-interface identity, so a self-call to a
+method shared by two separately claimed interfaces cannot be routed between the
+composites claiming them (topologies~(b),(d); Figure~\ref{fig:overlapCall-listing}),
+and the multi-source case (topology~(c), Figure~\ref{fig:topology-c-listing})
+cannot dispatch self-calls correctly between separately claimed interfaces.
+DelphJ's composition is consequently confined to topology~(a) (\S\ref{subsec:topologies}).
+ISD instead records identity once at construction, off the dispatch path, and
+resolves it from a single slot.
 
 Delegation models that emulate inheritance's tree-shaped hierarchies through caller-side dispatch are generally bound to
 topology~(a). Multi-rooted topologies ultimately require the identity of the composite that claims the interface,
@@ -1402,8 +1401,8 @@ The closest prior systems are therefore the delegation models. DARWIN
 deliberately excludes multiple delegation~\cite[\S6.5.1]{kniesel2000}; IFJ
 binds a single \code{this} across its delegation structure; and DelphJ's
 access-path mechanism, the most capable of the three, still limits composition
-to only the simplest single-rooted case. Of the three properties, arbitrary
-composition is the practically unobtainable one under these caller-side delegation models.
+the single-rooted case. Of the three properties, arbitrary composition is the
+practically unobtainable one under these caller-side delegation models.
 
 Parts unifies the three properties through interface-scoped dispatch. By assigning composite identity per interface at construction,
 ISD allows a single component to participate in the topologies that forwarding already permits while preserving late-bound
