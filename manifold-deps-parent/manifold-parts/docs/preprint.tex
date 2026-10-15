@@ -889,11 +889,10 @@ so a callee observes the same composition an external client would. Callbacks th
 analog of \code{super}, are likewise permitted. Every other occurrence, whether direct, inferred, or captured, is rejected,
 including passing or assigning \code{this} as its concrete part type and casting it to \code{Object}.
 
-A caller holding the bare part could invoke methods off the composite dispatch path and violate Invariant~\ref{prop:dispatch},
-so the escape must be prevented and no legitimate use should require it. A part has no outward identity beyond its interfaces, so
-a reference to the raw component, rather than to an interface it satisfies, adds nothing the composite does not already
-provide. Letting one escape could only split a single logical object in two, reintroducing the Object Schizophrenia
-that ISD otherwise eliminates.
+A caller holding the bare part could invoke methods off the composite dispatch path, so the escape must be prevented and
+no legitimate use should require it. A part has no outward identity beyond its interfaces, so a reference to the raw component,
+rather than to an interface it satisfies, adds nothing the composite does not already provide. Letting one escape could
+only split a single logical object in two, giving callers a second identity that bypasses the composite.
 
 \paragraph{Ambiguous self-calls.}
 A bare self-call in a part is ambiguous when its method is carried by two or more mutually unrelated interfaces (neither
@@ -1133,8 +1132,8 @@ Parts addresses several longstanding limitations of implementation inheritance:
   \item \textbf{Hierarchy-bound}: implementation inheritance binds behavior to a class hierarchy and a single object identity,
         making independently rooted compositions of the same component impossible. Parts permits arbitrary topologies by
         assigning composite identity per interface.
-  \item \textbf{The \emph{Object Schizophrenia} problem~\cite{sekharaiah2002}}: a hazard with forwarding
-        where self-calls remain within the component rather than routing through the composite; resolved by ISD.
+  \item \textbf{The \emph{Object Schizophrenia} problem~\cite{sekharaiah2002}}: a hazard with forwarding where self-calls
+        remain within the component rather than routing through the composite; resolved by interface-scoped dispatch.
   \item \textbf{Diamond ambiguity}: Parts provides explicit \code{@link(share=I.class)} resolution; ambiguous diamonds left
         unresolved are compile errors rather than being silently merged.
   \item \textbf{Unintended interface exposure}: a composite may implement a subset of its parts' interfaces; those it does
@@ -1374,8 +1373,8 @@ The closest prior systems are therefore the delegation models. DARWIN
 deliberately excludes multiple delegation~\cite[\S6.5.1]{kniesel2000}; IFJ
 binds a single \code{this} across its delegation structure; and DelphJ's
 access-path mechanism, the most capable of the three, still limits composition
-the single-rooted case. Of the three properties, arbitrary composition is the
-practically unobtainable one under these caller-side delegation models.
+to the single-rooted case. Of the three properties, arbitrary composition is
+the one effectively out of reach under these caller-side delegation models.
 
 Parts unifies the three properties through interface-scoped dispatch. By assigning composite identity per interface at construction,
 ISD allows a single component to participate in the topologies that forwarding already permits while preserving late-bound
@@ -1457,7 +1456,7 @@ M.~Odersky and M.~Zenger.
 
 \bibitem{fanparreaux2023}
 A.~Fan and L.~Parreaux.
-\newblock super-charging object-oriented programming through precise typing of open recursion.
+\newblock Super-charging object-oriented programming through precise typing of open recursion.
 \newblock In {\em Proceedings of ECOOP}, LIPIcs 263, pages 11:1--11:28, 2023.
 \newblock DOI: \href{https://doi.org/10.4230/LIPIcs.ECOOP.2023.11}{10.4230/LIPIcs.ECOOP.2023.11}.
 

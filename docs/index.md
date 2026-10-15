@@ -345,7 +345,7 @@ A template file *abc/example/UserSample.html.mtl*
 
 Sampling of companies using Manifold:
 
-<img width="80%" src="./docs/images/companies.png">
+<img width="80%" height="80%" src="http://manifold.systems/images/companies.png">
 
 ---
 
