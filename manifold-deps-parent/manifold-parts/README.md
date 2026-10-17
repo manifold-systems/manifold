@@ -3,14 +3,13 @@
 
 ![latest](https://img.shields.io/badge/latest-v2026.1.15-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
-[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21514973-blue)](https://doi.org/10.5281/zenodo.21514973)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
-*Parts* is "self-aware" composition. It combines ***the flexibility of runtime composition and the polymorphism of inheritance***
-while preserving the independence of its components and eliminating the hazards of inheritance. Use Parts in place of inheritance
-or alongside it.
+*Parts* is "self-aware" composition. It resolves a long-standing dilemma in object-oriented programming by reconciling
+**independent runtime components** and **late-bound self-calls** while preserving the flexibility of composition and
+eliminating the hazards of inheritance. Use Parts in place of inheritance or alongside it.
 
-* `@part` provides [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973): self-calls from a part **dispatch to overrides in the composite**
+* `@part` provides [interface-scoped dispatch](anonymous): self-calls from a part **dispatch to overrides in the composite**
 * Parts are **independent objects supplied at construction**, making composition fully runtime-configurable
 * `@link` connects objects to a composite, automatically implementing interfaces through forwarding
 * Parts preserves **self-call dispatch at vtable speed** (see [Performance](#performance))
@@ -59,31 +58,28 @@ polymorphic behavior normally associated with inheritance.
 **Other mainstream ways to reuse behavior give you one of these two properties,<br> 
 Parts gives you both:**
 
-|                                      | Independent components | Open recursion |
-|:-------------------------------------|:----------------------:|:--------------:|
-| Implementation inheritance           |           —            |       ✓        |
-| Trait/mixin composition (flattening) |           —            |       ✓        |
-| Object composition (forwarding)      |           ✓            |       —        |
-| **Parts**                            |         **✓**          |     **✓**      |
+|                                      | Independent <br> components | Open <br> recursion |
+|:-------------------------------------|:---------------------------:|:-------------------:|
+| Trait/mixin composition (flattening) |              —              |          ✓          |
+| Object composition (forwarding)      |              ✓              |          —          |
+| **Parts**                            |            **✓**            |        **✓**        |
 
 <sub>*Independent components*: composition consists of separate runtime objects, assembled and
 configured at construction.<br>*Open recursion*: a component's self-calls
 reach overrides supplied by the composite.</sub>
 
-Parts fills a long-standing gap in composition models. It combines all the flexibility of forwarding (arbitrary composition
-at runtime) plus the superpower of inheritance (open recursion) with self-dispatch empirically equivalent to a standard
-vtable call.
-                                              
 ### Wait...
 
-> ***Isn't this traits?***<br>
- Traits provide open recursion, but at the price of adopting inheritance's single-object model: they are folded into
- the hosting class at *compile-time*, sacrificing both runtime-configured compositions and independent runtime identity.
- Open recursion, but not independent runtime components.
+> ***Isn't this traits?***
 
-> ***Doesn't Kotlin do this?***<br>
- Kotlin's `by` and Scala's `export` are examples of ordinary *object composition* (forwarding). They provide independent
- components (the first column), but not open recursion: ordinary composition produces the "Swing club!" result above.
+Traits gain open recursion only by keeping to the single-object model of inheritance. They are statically merged into the
+hosting class, sacrificing independent runtime identity and runtime-configured composition. Open recursion, but not independent
+runtime components.
+
+> ***Doesn't Kotlin do this?***
+
+Kotlin's `by` and Scala's `export` are examples of ordinary forwarding. They provide independent components (the first column),
+but not open recursion: forwarding produces the `"Swing club!"` result above.
 
 ---
 
@@ -508,11 +504,11 @@ know where to dispatch self-calls?
 The conventional assumption has been that this requires additional dispatch machinery that either sacrifices performance,
 compromises arbitrary compositions, or some of both.
 
-Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). The interfaces a component implements are its delegation
+Parts avoids that cost through [interface-scoped dispatch](anonymous). The interfaces a component implements are its delegation
 surface (minus `@internal` marked interfaces). A composite can link to that surface selectively, by interface. Each link
 directly wires the composite to its component, allowing a component's self-calls on the link's interface to resolve directly
 to the composite's implementation. The resulting dispatch is O(1): performance equivalent to a conventional virtual call
-(see [5.1 Dispatch Performance](https://doi.org/10.5281/zenodo.21514973)).
+(see [5.1 Dispatch Performance](anonymous)).
 
 ---
 
@@ -696,15 +692,6 @@ rootProject.name = 'MyProject'
 
 `manifold-parts-rt`:<br>
 [![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-parts-rt/2026.1.15/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-parts-rt/2026.1.15)
-
----
-
-# Paper
-
-The dispatch model, its correctness argument, and benchmarks are written up here:
-[*Interface-Scoped Dispatch: Independent Components with O(1) Self-Calls*](https://doi.org/10.5281/zenodo.21514973)
-
-To cite Parts, use that DOI.
 
 ---
 

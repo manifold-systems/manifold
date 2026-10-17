@@ -41,15 +41,15 @@ Works with JDK LTS releases 8 - 25 + latest, plus comprehensive IDE support in *
 
 ## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) (*self-aware* composition)
 
-*Parts* is a compositional model that resolves a long-standing dilemma in statically typed object-oriented programming:
-**independent runtime components** and **internal polymorphism** remain unreconciled in general-purpose languages.
+*Parts* is "self-aware" composition. It resolves a long-standing dilemma in object-oriented programming by reconciling
+**independent runtime components** and **open recursion** (late-bound self-calls) while preserving the flexibility of
+composition and eliminating the hazards of inheritance. Use Parts in place of inheritance or alongside it.
 
-|                                      | Independent components | Internal polymorphism |
-| :----------------------------------- | :--------------------: | :-------------------: |
-| Implementation inheritance           |            —           |           ✓           |
-| Trait/mixin composition (flattening) |            —           |           ✓           |
-| Object composition (forwarding)      |            ✓           |           —           |
-| ***Parts***                          |          **✓**         |         **✓**         |
+|                                      | Independent <br> components | Open <br> recursion |
+| :----------------------------------- |:---------------------------:|:-------------------:|
+| Trait/mixin composition (flattening) |              —              |          ✓          |
+| Object composition (forwarding)      |              ✓              |          —          |
+| ***Parts***                          |            **✓**            |        **✓**        |
 
 *Parts* provides both properties in arbitrary compositions without sacrificing component independence, limiting polymorphism,
 or compromising performance.
@@ -62,16 +62,20 @@ interface Actor {
 
 @part class Hero implements Actor {
   public void takeAction() {
-    attack();   // self-call is dynamically dispatched through the composite
+    attack();  // self-call is dynamically dispatched through the composite
   }
- 
+
   public void attack() {println("Swing club!");}
 }
 
 class Wizard implements Actor {
   @link Actor actor;  // dynamically links an independent Actor object
   Wizard(Actor actor) {this.actor = actor;}
+
+  // overrides the linked Actor's attack() method
   public void attack() {println("Cast spell!");}
+
+  // unimplemented Actor methods automtaically forward to the linked Actor
 }
 
 Actor hero = createActor(); // independent Actor supplied at runtime (factory, DI, etc.)
@@ -85,9 +89,9 @@ Cast spell!
 ```
 With ordinary object composition, Hero's own `attack()` would be called and `Swing club!` would result instead.
 
-This **internal polymorphism across a runtime-injected part** is the defining capability of Parts, and it comes at **vtable speed**:
-dispatch is O(1), performance equivalent to a conventional virtual call. See the [Parts README](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts/README.md)
-for a deeper dive, or the [formal paper](https://doi.org/10.5281/zenodo.21514973) for the underlying model and supporting analysis.
+Late-bound self-calls (or *open recursion*) across a runtime-injected part is the defining capability of Parts, and it comes
+at **vtable speed**: performance empirically equivalent to a conventional virtual call. See the [Parts README](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts/README.md)
+for a deeper dive, or the [formal paper](anonymous) for the underlying model and supporting analysis.
 
 ---
 
