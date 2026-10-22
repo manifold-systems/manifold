@@ -696,12 +696,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
 
     private void generateDefaultMethodForwarder( JCClassDecl classDecl, ClassType implIface, ClassType delegatedIface, NamedMethodType namedMt )
     {
-      Type csr = namedMt.getType();
-      while( csr instanceof Type.DelegatedType )
-      {
-        csr = ((Type.DelegatedType)csr).qtype;
-      }
-      MethodType mt = (MethodType)csr;
+      Type mt = namedMt.getType();
 
       TreeMaker make = getTreeMaker();
       make.pos = classDecl.pos;
@@ -715,17 +710,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       List<JCExpression> thrown = make.Types( mt.getThrownTypes() );
 
       // Type params
-      List<JCTypeParameter> typeParams;
-      if( namedMt.getType() instanceof Type.ForAll )
-      {
-        typeParams = make.TypeParams( namedMt.getType().getTypeArguments() );
-      }
-      else
-      {
-        List<Type> typeParamTypes = List.from( namedMt.getMethodSymbol().getTypeParameters().stream().map( tp -> tp.type )
-          .collect( Collectors.toList() ) );
-        typeParams = make.TypeParams( typeParamTypes );
-      }
+      List<JCTypeParameter> typeParams = make.TypeParams( namedMt.getType().getTypeArguments() );
 
       // Params
       List<Type> parameterTypes = mt.getParameterTypes();
@@ -880,7 +865,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
         {
           if( li._provided.stream().anyMatch( t -> isSameType( t, iface ) ) )
           {
-            // overlapping interface is forwarded through a different link
+            // overlapping interface (from a diamond) is forwarded through a different link
             continue;
           }
 
@@ -1100,9 +1085,8 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       ArrayList<MethodSymbol> unimplementedMethods = findUnimplementedInterfaceMethods( classDeclOwner.sym );
       for( MethodSymbol m: unimplementedMethods )
       {
-        Type type = getTypes().memberType( classDecl.sym.type, m );
-        MethodType mt = (MethodType)type;
-        implDefs = implDefs.append( generateDeferredStub( m, mt ) );
+        Type mt = getTypes().memberType( classDecl.sym.type, m );
+        implDefs = implDefs.append( generateDeferredStub( m.name, mt ) );
       }
 
       // generate forwarding constructors mirroring super's constructors
@@ -1178,23 +1162,13 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       return unimplemented;
     }
 
-    private JCMethodDecl generateDeferredStub( MethodSymbol m, MethodType mt )
+    private JCMethodDecl generateDeferredStub( Name name, Type mt )
     {
       TreeMaker make = getTreeMaker();
       make.pos = _classInfoStack.peek()._classDecl.pos;
       Names names = getNames();
 
-      List<JCTypeParameter> typeParams;
-      if( m.type instanceof Type.ForAll )
-      {
-        typeParams = make.TypeParams( m.type.getTypeArguments() );
-      }
-      else
-      {
-        List<Type> typeParamTypes = List.from( m.getTypeParameters().stream()
-          .map( tp -> tp.type ).collect( Collectors.toList() ) );
-        typeParams = make.TypeParams( typeParamTypes );
-      }
+      List<JCTypeParameter> typeParams = make.TypeParams( mt.getTypeArguments() );
 
       ArrayList<JCVariableDecl> params = new ArrayList<>();
       for( int i = 0; i < mt.getParameterTypes().size(); i++ )
@@ -1208,11 +1182,11 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
 
       JCExpression errorClass = JCTreeUtil.memberAccess( make, names, DelegationLinkageError.class.getTypeName() );
       JCNewClass newError = make.NewClass( null, List.nil(), errorClass,
-      List.of( make.Literal( "Abstract method '" + m.name + mt + "' called on unlinked part or on unimplemented method of late-bound part." ) ), null );
+      List.of( make.Literal( "Abstract method '" + name + mt + "' called on unlinked part or on unimplemented method of late-bound part." ) ), null );
 
       return make.MethodDef(
         make.Modifiers( PUBLIC ),
-        m.name,
+        name,
         make.Type( mt.getReturnType() ),
         typeParams,
         List.from( params ),
@@ -1436,16 +1410,9 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
           }
         }
       }
-      Type csr = namedMt.getType();
-      while( csr instanceof Type.DelegatedType )
-      {
-        csr = ((Type.DelegatedType)csr).qtype;
-      }
-      MethodType mt = (MethodType)csr;
 
       TreeMaker make = getTreeMaker();
       make.pos = linkField.pos;
-
 
       // Method name & modifiers
       JCExpression generated = memberAccess( make, Generated.class.getName() );
@@ -1453,21 +1420,22 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       Names names = getNames();
       Name name = namedMt.getName();
 
+      Type mt = namedMt.getType();
+
+      List<Type> oldTvars = mt.getTypeArguments();
+      TypeVarScrubber scrubber = new TypeVarScrubber( oldTvars );
+
       // Throws
-      List<JCExpression> thrown = make.Types( mt.getThrownTypes() );
+      List<JCExpression> thrown = scrubber.scrub( make.Types( mt.getThrownTypes() ) );
 
       // Type params
-      List<JCTypeParameter> typeParams;
-      if( namedMt.getType() instanceof Type.ForAll )
+      ListBuffer<JCTypeParameter> tpb = new ListBuffer<>();
+      for( Type tv : oldTvars )
       {
-        typeParams = make.TypeParams( namedMt.getType().getTypeArguments() );
+        List<JCExpression> bounds = scrubber.scrub( make.Types( getTypes().getBounds( (Type.TypeVar)tv ) ) );
+        tpb.append( make.TypeParameter( tv.tsym.name, bounds ) );
       }
-      else
-      {
-        List<Type> typeParamTypes = List.from( namedMt.getMethodSymbol().getTypeParameters().stream().map( tp -> tp.type )
-          .collect( Collectors.toList() ) );
-        typeParams = make.TypeParams( typeParamTypes );
-      }
+      List<JCTypeParameter> typeParams = tpb.toList();
 
       // Params
       List<Type> parameterTypes = mt.getParameterTypes();
@@ -1476,22 +1444,20 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       {
         Type pt = parameterTypes.get( i );
         Name paramName = names.fromString( "$param" + i );
-        JCExpression paramType = make.Type( pt );
-        JCVariableDecl param = make.VarDef( make.Modifiers( FINAL | Flags.PARAMETER ), paramName, paramType, null );
-        params.add( param );
+        JCExpression paramType = scrubber.scrub( make.Type( pt ) );
+        params.add( make.VarDef( make.Modifiers( FINAL | Flags.PARAMETER ), paramName, paramType, null ) );
       }
 
       // Return type
-      JCExpression resType = make.Type( mt.getReturnType() );
+      JCExpression resType = scrubber.scrub( make.Type( mt.getReturnType() ) );
 
-      // Forward call statement
+      // Forward call
       JCExpression link = make.Ident( linkField );
-      JCTree.JCFieldAccess forwardRef = IDynamicJdk.instance().Select( make, link, namedMt.getMethodSymbol() );
-      forwardRef.type = mt.getReturnType();
-      java.util.List<JCExpression> args = params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toList() );
-      JCTree.JCMethodInvocation forwardCall = make.Apply( List.nil(), forwardRef, List.from( args ) );
-      forwardCall.type = forwardRef.type;
-      ((JCTree.JCFieldAccess)forwardCall.meth).sym = namedMt.getMethodSymbol();
+      JCTree.JCFieldAccess forwardRef = make.Select( link, namedMt.getMethodSymbol().name );
+      java.util.List<JCExpression> args = params.stream()
+        .map( p -> (JCExpression)make.Ident( p.name ) )
+        .collect( Collectors.toList() );
+      JCMethodInvocation forwardCall = make.Apply( List.nil(), forwardRef, List.from( args ) );
 
       JCStatement forwardStmt;
       if( isSameType( mt.getReturnType(), getSymtab().voidType ) )
@@ -1889,12 +1855,13 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
       if( parent instanceof JCTypeCast )
       {
         JCTypeCast cast = (JCTypeCast)parent;
-        if( cast.type.isInterface() )
+        Type type = erasure( cast.type );
+        if( type.isInterface() )
         {
           JCClassDecl classDecl = findClassDecl( tree.type );
-          result = getSelf( tree, classDecl, cast.type );
+          result = getSelf( tree, classDecl, type );
         }
-        else if( !isObjectAndPermitObjectEscape( cast.type ) )
+        else if( !isObjectAndPermitObjectEscape( type ) )
         {
           reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
@@ -2645,21 +2612,6 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
     return make.TypeCast( iface, arrayAccessExpr );
   }
 
-  // hasSelf tests if `iface` is "claimed": `selves[<index of `iface>] != this` means `iface` is dispatched through a delegating class
-  private JCExpression hasSelf( JCExpression tree, JCClassDecl receiverType, Type iface )
-  {
-    TreeMaker make = getTreeMaker();
-    make.pos = tree.pos;
-
-    JCExpression getSelf = getSelf( tree, receiverType, iface );
-    JCBinary hasSelf = make.Binary( Tag.NE, getSelf, make.QualThis( receiverType.sym.type ) );
-
-    Env<AttrContext> classEnv = Enter.instance( getContext() ).getClassEnv( receiverType.sym );
-    Attr.instance( getContext() ).attribExpr( hasSelf, classEnv );
-
-    return hasSelf;
-  }
-
   private JCVariableDecl getField( JCClassDecl classDecl, Symbol sym )
   {
     return (JCVariableDecl)classDecl.defs.stream()
@@ -3055,7 +3007,7 @@ public class PartsProcessor implements ICompilerComponent, TaskListener
     boolean hasMethodType( Name name, Type mt )
     {
       Set<NamedMethodType> methodTypes = _methodTypes.computeIfAbsent( name, k -> new HashSet<>() );
-      return methodTypes.stream().anyMatch( m -> getTypes().hasSameArgs( m.getType(), mt ) );
+      return methodTypes.stream().anyMatch( m -> getTypes().overrideEquivalent( m.getType(), mt ) );
     }
 
     public boolean shares( ClassType iface )

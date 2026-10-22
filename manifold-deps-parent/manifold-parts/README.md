@@ -3,13 +3,14 @@
 
 ![latest](https://img.shields.io/badge/latest-v2026.1.15-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21514973-blue)](https://doi.org/10.5281/zenodo.21514973)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
-*Parts* is "self-aware" composition. It resolves a long-standing dilemma in object-oriented programming by reconciling
-**independent runtime components** and **late-bound self-calls** while preserving the flexibility of composition and
-eliminating the hazards of inheritance. Use Parts in place of inheritance or alongside it.
+*Parts* is high-performance late-bound runtime composition. It resolves a long-standing dilemma in object-oriented programming
+by reconciling **independent runtime components** and **late-bound self-calls** while preserving the flexibility of composition
+and eliminating the hazards of inheritance. Use Parts in place of inheritance or alongside it.
 
-* `@part` provides [interface-scoped dispatch](anonymous): self-calls from a part **dispatch to overrides in the composite**
+* `@part` provides [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973): self-calls from a part **dispatch to overrides in the composite**
 * Parts are **independent objects supplied at construction**, making composition fully runtime-configurable
 * `@link` connects objects to a composite, automatically implementing interfaces through forwarding
 * Parts preserves **self-call dispatch at vtable speed** (see [Performance](#performance))
@@ -119,12 +120,12 @@ but not open recursion: forwarding produces the `"Swing club!"` result above.
 
 # The Self problem
 
-Consider the Hero example without `@part`:
+Consider the Hero example *without* `@part`:
 
 ```java
 /*@part*/ class Hero implements Actor {
   public void takeAction() {
-    attack();
+    attack(); // behaves statically without @part
   }
   
   public void attack() {println("Swing club!");}
@@ -167,7 +168,7 @@ interface Actor {
 
 @part class Hero implements Actor {
   public void takeAction() { 
-    attack(); 
+    attack(); // self-call reaches composite 
   }
   
   public void attack() {
@@ -230,7 +231,7 @@ Suppose the `takeAction()` implementation is moved from Hero into the Actor inte
 ```java
 interface Actor {
   default void takeAction() {
-    attack();
+    attack(); // with @part, self-calls reach composite
   }
 
   void attack();
@@ -249,8 +250,8 @@ the composite that claims Actor.
 
 # Abstract parts
 
-To use an abstract `@part` class, it must be constructed using an `asLink()` static method. These are compile-time generated
-static methods that match the signatures of the part's constructors.
+An `abstract` `@part` class is constructed using its `asLink()` static method, a compile-time generated static method that
+matches the signatures of the part's constructors.
 
 ```java
 interface Actor {
@@ -272,7 +273,8 @@ class Wizard implements Actor {
 }
 ```
 
-Wizard must implement abstract methods in AbstractHero or declare itself `abstract`.
+As with extending abstract classes with inheritance, Wizard must implement abstract methods in AbstractHero or declare itself
+`abstract`.
 
 ---
 
@@ -314,10 +316,10 @@ Output:
 # Self-preservation
 
 Composition integrity rests on component identity: if a part exposes itself as its concrete type, a reference to that type
-can bypass the composite and compromise integrity. To prevent this, a part may use `this` only as one of its implemented
-interfaces.
+can bypass the composite and compromise integrity. To prevent this, the compiler enforces that a part may use `this` only
+in the context of it implemented interfaces.
 
-The compile error is: `'this' in a part class must be used as an interface here`.
+The compiler error is: `'this' in a part class must be used as an interface here`.
 
 ```java
 @part
@@ -328,8 +330,7 @@ class MyPart implements MyInterface {
     MyPart y = this; // compile error
     Object z = this; // ok
     myMethod(this); // compile error
-    println(this); // ok, prints MyPart
-    println((MyInterface)this); // ok, prints MyInterface composite
+    System.out.println((MyInterface)this); // ok
   }
 
   private MyPart myMethod(MyPart a) {
@@ -342,8 +343,8 @@ class MyPart implements MyInterface {
 }
 ```
 
-The same compiler logic that makes self-calls reach the composite also rewrites `this` references as references to the composite
-when they are used through an interface.
+The same compiler logic that makes self-calls reach the composite also rewrites `this` references to the composite claiming
+the interface in context or the part itself if the interface is unclaimed, eliminating the Object Schizophrenia problem.
 
 **A word about identity:**<br>
 Unlike a superclass or a trait, a part is an independent object with *runtime identity*: within a composite each part is
@@ -497,18 +498,18 @@ indicates the overlap with Person.
 
 # Performance
 
-The challenging problem with arbitrary composition is *partial delegation*: when a composite links only a subset of a component's
-delegation surface, leaving portions of the surface unclaimed and/or claimed by two or more composites. How does the component
-know where to dispatch self-calls?
+The flexibility of arbitrary composition is a product of *partial delegation*: when a composite links only a subset of a component's
+delegation surface, leaving portions of the surface unclaimed and/or claimed by two or more composites. This presents a
+challenge: How does the component resolve `this` as a receiver of a late-bound call?
 
-The conventional assumption has been that this requires additional dispatch machinery that either sacrifices performance,
+The conventional assumption has been that it requires additional dispatch machinery that either sacrifices performance,
 compromises arbitrary compositions, or some of both.
 
-Parts avoids that cost through [interface-scoped dispatch](anonymous). The interfaces a component implements are its delegation
+Parts avoids that cost through [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973). The interfaces a component implements are its delegation
 surface (minus `@internal` marked interfaces). A composite can link to that surface selectively, by interface. Each link
 directly wires the composite to its component, allowing a component's self-calls on the link's interface to resolve directly
 to the composite's implementation. The resulting dispatch is O(1): performance equivalent to a conventional virtual call
-(see [5.1 Dispatch Performance](anonymous)).
+(see [5.1 Dispatch Performance](https://doi.org/10.5281/zenodo.21514973)).
 
 ---
 

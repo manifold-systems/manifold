@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use manifold's Parts module, please cite it as below."
+authors:
+  - family-names: "McKinney"
+    given-names: "Robert Scott"
+    orcid: "https://orcid.org"
+title: "Parts"
+version: "2026.1.15"
+date-released: "2026-10-20"
+repository-code: "https://github.com"
+url: "https://github.com"
+
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "McKinney"
+      given-names: "Robert Scott"
+  title: "Interface-Scoped Dispatch: General Delegation with O(1) Self-Calls"
+  doi: "10.5281/zenodo.21514973" # Concept DOI (always points to the latest version)
+  year: 2026
+  journal: "Zenodo"
+  url: "https://doi.org"

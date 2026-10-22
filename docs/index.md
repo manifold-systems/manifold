@@ -16,7 +16,7 @@ Java compiler and without additional build steps.
 * [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
 
 **Language enhancements** improve developer productivity. Such as:
-* [Parts (*self-aware* composition)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) _**(New!)**_
+* [Parts (late-bound runtime composition)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) _**(New!)**_
 * [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 * [Optional parameters](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params)
@@ -32,11 +32,11 @@ Works with JDK LTS releases 8 - 25 + latest, plus comprehensive IDE support in *
 
 # What can you do with Manifold?
 
-## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) (*self-aware* composition)
+## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts): High-performance late-bound runtime composition
 
-*Parts* is "self-aware" composition. It resolves a long-standing dilemma in object-oriented programming by reconciling
-**independent runtime components** and **open recursion** (late-bound self-calls) while preserving the flexibility of
-composition and eliminating the hazards of inheritance. Use Parts in place of inheritance or alongside it.
+*Parts* resolves a long-standing dilemma in object-oriented programming by reconciling **independent runtime components**
+and **open recursion** (late-bound self-calls) while preserving the flexibility of composition and eliminating the hazards
+of inheritance. Use Parts in place of inheritance or alongside it.
 
 <style>
   table {
@@ -105,7 +105,7 @@ With ordinary object composition, Hero's own `attack()` would be called and `Swi
 
 Open recursion (late-bound self-calls) across a runtime-injected part is the defining capability of Parts, and it comes
 at **vtable speed**: performance empirically equivalent to a conventional virtual call. See the [Parts README](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts/README.md)
-for a deeper dive, or the [formal paper](anonymous) for the underlying model and supporting analysis.
+for a deeper dive, or the [formal paper](https://doi.org/10.5281/zenodo.21514973) for the underlying model and supporting analysis.
 
 ---
 
