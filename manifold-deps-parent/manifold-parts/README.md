@@ -571,20 +571,25 @@ plugins {
 group 'systems.manifold'
 version '1.0-SNAPSHOT'
 
-targetCompatibility = 17
-sourceCompatibility = 17
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
 
 repositories {
     mavenCentral()
     mavenLocal()
 }
 
+ext {
+    manifoldVersion = '2026.1.16'
+}
+
 dependencies {
-     implementation 'systems.manifold:manifold-parts-rt:2026.1.16'
-     testImplementation 'junit:junit:4.12'
-     // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-parts:2026.1.16'
-     testAnnotationProcessor 'systems.manifold:manifold-parts:2026.1.16'
+    implementation "systems.manifold:manifold-parts-rt:${manifoldVersion}"
+    // Add manifold to -processorpath for javac
+    annotationProcessor "systems.manifold:manifold-parts:${manifoldVersion}"
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
