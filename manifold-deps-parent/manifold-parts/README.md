@@ -601,8 +601,8 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
         options.fork = true
         //!! Add these ONLY for Java 26+
         options.forkOptions.jvmArgs += [
-                '--add-exports=java.base/jdk.internal.access=ALL-UNNAMED',
-                '--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED'
+                '--add-exports=java.base/jdk.internal.access=manifold.util',
+                '--add-opens=jdk.compiler/com.sun.tools.javac.comp=manifold.util'
         ]
     }
 } else {
