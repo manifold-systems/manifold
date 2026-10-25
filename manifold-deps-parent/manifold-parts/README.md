@@ -7,13 +7,15 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 *Parts* is high-performance late-bound runtime composition. It resolves a long-standing dilemma in object-oriented programming
-by reconciling **independent runtime components** and **late-bound self-calls** while preserving the flexibility of composition
-and eliminating the hazards of inheritance. Use Parts in place of inheritance or alongside it.
+by reconciling **independent runtime components** and **late-bound self-calls** while preserving arbitrary composition and
+eliminating the hazards of inheritance.
 
-* `@part` provides [interface-scoped dispatch](https://doi.org/10.5281/zenodo.21514973): self-calls from a part **dispatch to overrides in the composite**
-* Parts are **independent objects supplied at construction**, making composition fully runtime-configurable
-* `@link` connects objects to a composite, automatically implementing interfaces through forwarding
-* Parts preserves **self-call dispatch at vtable speed** (see [Performance](#performance))
+* `@link` connects objects together at runtime, automatically delegating interface implementation
+* `@part` classes reach overrides in linking objects, cleanly resolving the **_Self_ problem**
+* Links are ordinary objects that may be **supplied at construction**: composition is fully runtime-configurable
+* Self-dispatch at **vtable speed** enables composition as a *practical* alternative to inheritance/traits/mixins (see [Performance](#performance))
+
+Use Parts in place of inheritance or alongside it.
 
 A simple example:
 
@@ -37,27 +39,26 @@ class Wizard implements Actor {
   public void attack() {println("Cast spell!");}
 }
 
-Actor hero = createActor(); // independent Actor supplied at runtime (factory, DI, etc.)
+Actor hero = new Hero(); // any independent Actor can be supplied here (factory, DI, etc.)
 Wizard wizard = new Wizard(hero);
-wizard.takeAction();
+wizard.takeAction(); // "Cast spell!"
 ```
 `Hero.takeAction()` calls `attack()` on itself (a self-call). Because Hero is a linked part of the Wizard composite,
 the self-call dispatches to `Wizard.attack()`, so the output is:
 ```
 Cast spell!
 ```
-With ordinary object composition via forwarding, Hero's own `attack()` implementation `Swing club!` would result instead.
-This late-bound self-call across a runtime-injected part is the fundamental capability that Parts adds. The capability is
-more generally known as *open recursion*.
 
-By supplying Hero as a runtime component instead of fusing it into Wizard's hierarchy, Wizard depends only on the Actor
-contract, not on Hero's implementation structure. Parts delegates the interface implementation while preserving the
-polymorphic behavior normally associated with inheritance.
+Wizard depends only on the Actor contract, not on Hero's implementation, so Hero can be supplied as an independent component
+at runtime rather than fused into Wizard's hierarchy as inheritance would require. Parts forwards `takeAction()`
+to the linked Hero, and Hero's self-call to `attack()` still reaches Wizard’s override. This late-bound self-dispatch, known
+as *open recursion*, is a capability normally associated with inheritance. Parts provides it across independent objects
+linked at runtime, so they behave as a composite.
 
 ---
 
-**Other mainstream ways to reuse behavior give you one of these two properties,<br> 
-Parts gives you both:**
+Other mainstream ways to reuse behavior give you one of these two properties, <br> 
+*Parts gives you both:*
 
 |                                      | Independent <br> components | Open <br> recursion |
 |:-------------------------------------|:---------------------------:|:-------------------:|
@@ -65,22 +66,21 @@ Parts gives you both:**
 | Object composition (forwarding)      |              ✓              |          —          |
 | **Parts**                            |            **✓**            |        **✓**        |
 
-<sub>*Independent components*: composition consists of separate runtime objects, assembled and
-configured at construction.<br>*Open recursion*: a component's self-calls
-reach overrides supplied by the composite.</sub>
+<sub>*Independent components*: composition consists of separate runtime objects, assembled and configured at construction.<br>
+*Open recursion*: a component's self-calls reach overrides supplied by the composite.</sub>
 
 ### Wait...
 
 > ***Isn't this traits?***
 
-Traits gain open recursion only by keeping to the single-object model of inheritance. They are statically merged into the
-hosting class, sacrificing independent runtime identity and runtime-configured composition. Open recursion, but not independent
-runtime components.
+No. Traits gain open recursion only by keeping to the single-object model of *inheritance*. They are flattened into the
+hosting class, so a trait has no independent runtime identity, and composition can't be configured at runtime. Open recursion,
+but not independent components: traits can't supply Hero as a constructor argument as in the example above.
 
 > ***Doesn't Kotlin do this?***
 
-Kotlin's `by` and Scala's `export` are examples of ordinary forwarding. They provide independent components (the first column),
-but not open recursion: forwarding produces the `"Swing club!"` result above.
+No. Kotlin's `by`, Scala's `export`, and Go's struct embedding are examples of ordinary *forwarding*. They provide independent
+components, but not open recursion: forwarding produces the `"Swing club!"` result above.
 
 ---
 
@@ -149,7 +149,7 @@ Although `takeAction()` is invoked on `wizard`, it executes inside Hero. Without
 on the Hero instance, not on the composite. Wizard's override is never reached.
 
 This is the fundamental limitation of ordinary object composition. Self-calls remain trapped within the delegated object.
-This limitation is known as the **Self problem**.
+This limitation is known as the *Self* problem.
 
 ---
 
@@ -326,15 +326,14 @@ The compiler error is: `'this' in a part class must be used as an interface here
 class MyPart implements MyInterface {
   @override
   public void interfaceMethod() {
+    MyPart y = this; // error
     MyInterface x = this; // ok
-    MyPart y = this; // compile error
-    Object z = this; // ok
-    myMethod(this); // compile error
+    myMethod(this); // error
     System.out.println((MyInterface)this); // ok
   }
 
   private MyPart myMethod(MyPart a) {
-    return this; // compile error
+    return this; // error
   }
 
   private MyInterface otherMethod(MyPart a) {
@@ -343,15 +342,8 @@ class MyPart implements MyInterface {
 }
 ```
 
-The same compiler logic that makes self-calls reach the composite also rewrites `this` references to the composite claiming
-the interface in context or the part itself if the interface is unclaimed, eliminating the Object Schizophrenia problem.
-
-**A word about identity:**<br>
-Unlike a superclass or a trait, a part is an independent object with *runtime identity*: within a composite each part is
-a separate runtime object with its own state, allowing a composite to freely define its structure at runtime. At the same
-time a part's runtime identity is contextual: a part's `this` in the context of an interface type refers to the composite
-that claims the interface, or the part itself if the interface is unclaimed in the composition graph. This contextual identity
-is what enables open recursion.
+The same dispatch mechanism that makes self-calls reach the composite also resolves `this` references when the interface
+in context is claimed by a composite, eliminating the *Self* problem.
 
 ---
 
