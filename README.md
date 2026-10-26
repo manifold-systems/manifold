@@ -8,8 +8,6 @@
 
 ---
 
-# Manifold
-
 **Manifold extends Java at compile time** through the Java compiler plugin API.
 
 It adds language features and type-safe access to external data, APIs, and DSLs *directly* to Java, without leaving the
