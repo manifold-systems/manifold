@@ -16,7 +16,7 @@ Java compiler and without additional build steps.
 * [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
 
 **Language enhancements** improve developer productivity. Such as:
-* [Parts (late-bound runtime composition)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) _**(New!)**_
+* [Parts (*true* delegation)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) _**(New!)**_
 * [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 * [Optional parameters](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params)
@@ -32,7 +32,7 @@ Works with JDK LTS releases 8 - 25 + latest, plus comprehensive IDE support in *
 
 # What can you do with Manifold?
 
-## [Parts](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts): High-performance late-bound runtime composition
+## [Parts composition](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
 
 [*Parts*](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts/README.md) is a *true*
 delegation model that resolves a long-standing dilemma in object-oriented programming. It combines the flexibility of object
