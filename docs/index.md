@@ -3,30 +3,37 @@ layout: default
 ---
 # Manifold
 
-**Manifold extends Java at compile time** through the Java compiler plugin API.
-
-It adds language features and type-safe access to external data, APIs, and DSLs *directly* to Java, without leaving the
-Java compiler and without additional build steps.
+Manifold is a Java compiler plugin. Add it to your Java project for seamless access to modern language features and to type-safely
+access schemas, DSLs, and query languages without additional build steps and without affecting your existing codebase.
 
 **Compile-time metaprogramming** type-safely integrates any kind of schema, metadata, or DSL directly into Java. These include:
-* [SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md) _**(New!)**_
+* [SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md) **(New!)**
 * [JSON & JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
   [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
   [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)
 * [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
+* [CSV](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)
 
-**Language enhancements** improve developer productivity. Such as:
-* [Parts (*true* delegation)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) _**(New!)**_
+Apply *true* schema-first design principles. Type-safely inline native SQL, JSON, and more directly in Java code.
+
+**Language enhancements** improve developer productivity, such as:
+* [Parts (*true* delegation)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) **(New!)**
 * [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
-* [Optional parameters](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params)
+* [Optional parameters & named arguments](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-params)
 * [Operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 * [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
-* [A preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+* [Unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+* [Structural typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
+* [Type-safe Reflection](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-safe-reflection-via-jailbreak)
+* [String templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings)
+* [Checked exception handling](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
+* [A *Java* template engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
+* [An integrated preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 
-Add only the features you want to an existing Java project and keep using ordinary Java, Java libraries, and the JVM.       
+Add only the features you want to an existing Java project and keep using your preferred JDK, Java libraries, and the JVM.
 
-Works with JDK LTS releases 8 - 25 + latest, plus comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
+Works with JDK LTS releases 8 - 25 + latest, with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
 
 ---
 
