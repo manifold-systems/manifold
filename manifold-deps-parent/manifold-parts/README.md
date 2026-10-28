@@ -534,7 +534,7 @@ mvn compile
 ## Using this project
 
 The `manifold-parts` dependency works with all build tooling, including Maven and Gradle. It fully supports Java
-versions 8 - 26.
+versions 8 - 27.
 
 This project consists of two modules:
 * `manifold-parts`
@@ -554,7 +554,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 >Note, if you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired JDK
-LTS release (8 - 26) or latest JDK release, the script takes care of the rest.
+LTS release (8 - 27) or latest JDK release, the script takes care of the rest.
 ```groovy
 plugins {
     id 'java'
