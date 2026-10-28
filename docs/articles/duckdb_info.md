@@ -84,9 +84,11 @@ plugins {
 group 'systems.manifold'
 version '1.0-SNAPSHOT'
 
-// manifold-sql works with any JDK LTS release 8 - 27, plus latest non-LTS release
-targetCompatibility = 21
-sourceCompatibility = 21
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
 
 repositories {
     mavenCentral()
@@ -107,15 +109,28 @@ dependencies {
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
-    sourceSets.main.allJava.files.any {it.name == "module-info.java"}) {
-    tasks.withType(JavaCompile) {
-        // if you DO define a module-info.java file:
-        options.compilerArgs += ['-Xplugin:Manifold', '--module-path', it.classpath.asPath]
+        sourceSets.main.allJava.files.any { it.name == "module-info.java" }) {
+
+    // IF YOU DO DEFINE A MODULE-INFO.JAVA FILE:
+    tasks.withType(JavaCompile).configureEach { task ->
+        options.compilerArgs += ['-Xplugin:Manifold', '--module-path', task.classpath.asPath]
+        options.fork = true
+        //!! Add these ONLY for Java 26+
+        options.forkOptions.jvmArgs += [
+                '--add-exports=java.base/jdk.internal.access=manifold.util',
+                '--add-opens=jdk.compiler/com.sun.tools.javac.comp=manifold.util'
+        ]
     }
 } else {
-    tasks.withType(JavaCompile) {
-        // If you DO NOT define a module-info.java file:
+    // IF YOU DO NOT DEFINE A MODULE-INFO.JAVA FILE:
+    tasks.withType(JavaCompile).configureEach {
         options.compilerArgs += ['-Xplugin:Manifold']
+        options.fork = true
+        //!! Add these ONLY for Java 26+
+        options.forkOptions.jvmArgs += [
+                '--add-exports=java.base/jdk.internal.access=ALL-UNNAMED',
+                '--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED'
+        ]
     }
 }
 ```
@@ -142,8 +157,9 @@ rootProject.name = 'MyProject'
         <manifold.version>2026.1.16</manifold.version>
       
         <!-- use maven.compiler settings for JDK LST release 11 - 25, or latest non-LTS release -->
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     
     <dependencies>
@@ -169,17 +185,21 @@ rootProject.name = 'MyProject'
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.16.0</version>
                 <configuration>
-                  
-<!-- use maven.compiler.source/target properties above if using JDK 11+, otherwise use following JDK 8 setting -->
-<!--                <source>1.8</source>-->
-<!--                <target>1.8</target>-->
-                  
+                    <!-- Add these ONLY for older JDKs -->
+<!--                    <source>17</source>-->
+<!--                    <target>17</target>-->
                     <encoding>UTF-8</encoding>
+                    <fork>true</fork>
                     <compilerArgs>
-                        <!-- Add manifold plugin-->
+                        <!-- Configure manifold plugin-->
                         <arg>-Xplugin:Manifold</arg>
+
+                        <!-- Add these ONLY for Java 26+ -->
+<!--                        <arg>-J&#45;&#45;add-exports=java.base/jdk.internal.access=ALL-UNNAMED</arg>-->
+<!--                        <arg>-J&#45;&#45;add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>-->
+                        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
                     </compilerArgs>
                     <!-- Add the processor path for the plugin -->
                     <annotationProcessorPaths>

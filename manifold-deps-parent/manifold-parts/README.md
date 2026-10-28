@@ -631,6 +631,9 @@ rootProject.name = 'MyProject'
     <properties>
         <!-- set latest manifold version here --> 
         <manifold.version>2026.1.16</manifold.version>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     
     <dependencies>
@@ -638,9 +641,6 @@ rootProject.name = 'MyProject'
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-parts-rt</artifactId>
             <version>${manifold.version}</version>
-            <maven.compiler.source>25</maven.compiler.source>
-            <maven.compiler.target>25</maven.compiler.target>
-            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         </dependency>
     </dependencies>
 

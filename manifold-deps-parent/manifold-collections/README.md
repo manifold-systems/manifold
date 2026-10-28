@@ -168,8 +168,11 @@ plugins {
 group 'systems.manifold'
 version '1.0-SNAPSHOT'
 
-targetCompatibility = 11
-sourceCompatibility = 11
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
 
 repositories {
     mavenCentral()
@@ -192,8 +195,8 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
         options.fork = true
         //!! Add these ONLY for Java 26+
         options.forkOptions.jvmArgs += [
-                '--add-exports=java.base/jdk.internal.access=ALL-UNNAMED',
-                '--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED'
+                '--add-exports=java.base/jdk.internal.access=manifold.util',
+                '--add-opens=jdk.compiler/com.sun.tools.javac.comp=manifold.util'
         ]
     }
 } else {
@@ -238,6 +241,9 @@ rootProject.name = 'MyExtProject'
     <properties>
         <!-- set latest manifold version here --> 
         <manifold.version>2026.1.16</manifold.version>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     
     <dependencies>
@@ -254,10 +260,11 @@ rootProject.name = 'MyExtProject'
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.16.0</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <!-- Add these ONLY for older JDKs -->
+<!--                    <source>17</source>-->
+<!--                    <target>17</target>-->
                     <encoding>UTF-8</encoding>
                     <fork>true</fork>
                     <compilerArgs>
@@ -265,8 +272,8 @@ rootProject.name = 'MyExtProject'
                         <arg>-Xplugin:Manifold</arg>
 
                         <!-- Add these ONLY for Java 26+ -->
-                        <arg>-J--add-exports=java.base/jdk.internal.access=ALL-UNNAMED</arg>
-                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+<!--                        <arg>-J&#45;&#45;add-exports=java.base/jdk.internal.access=ALL-UNNAMED</arg>-->
+<!--                        <arg>-J&#45;&#45;add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>-->
                         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
                     </compilerArgs>
                     <!-- Add the processor path for the plugin -->
