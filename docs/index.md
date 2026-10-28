@@ -15,6 +15,8 @@ access schemas, DSLs, and query languages without additional build steps and wit
 * [CSV](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)
 
 Apply *true* schema-first design principles. Type-safely inline native SQL, JSON, and more directly in Java code.
+                                                                                       
+---
 
 **Language enhancements** improve developer productivity, such as:
 * [Parts (*true* delegation)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts) **(New!)**
