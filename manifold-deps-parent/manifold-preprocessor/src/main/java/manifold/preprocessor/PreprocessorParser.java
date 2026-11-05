@@ -28,6 +28,7 @@ import manifold.internal.javac.JavacPlugin;
 import manifold.preprocessor.expression.EmptyExpression;
 import manifold.preprocessor.expression.Expression;
 import manifold.preprocessor.expression.Identifier;
+import manifold.preprocessor.expression.NotExpression;
 import manifold.preprocessor.expression.StringLiteral;
 import manifold.preprocessor.statement.DefineStatement;
 import manifold.preprocessor.statement.EmptyStatement;
@@ -117,7 +118,9 @@ public class PreprocessorParser
         return parseIssueStatement( tokenType == Error );
 
       case If:
-        return parseIfStatement();
+      case Ifdef:
+      case Ifndef:
+        return parseIfStatement( tokenType );
 
       case Elif:
       {
@@ -156,13 +159,18 @@ public class PreprocessorParser
             : ifState.ordinal() >= tokenType.ordinal());
   }
 
-  private IfStatement parseIfStatement()
+  private IfStatement parseIfStatement( TokenType tokenType )
   {
-    pushParsingIf( If );
+    pushParsingIf( tokenType );
     try
     {
       int ifStart = _tokenizer.getTokenStart();
       Expression ifExpr = _tokenizer.getExpression();
+
+      if ( tokenType == Ifndef ) {
+        ifExpr = new NotExpression( ifExpr, ifExpr.getStartOffset(), ifExpr.getEndOffset() );
+      }
+      
       _tokenizer.advance();
       addErrors( ifExpr );
       ArrayList<Statement> ifBlock = new ArrayList<>();
@@ -179,12 +187,12 @@ public class PreprocessorParser
       IfStatement ifStmt;
       if( _tokenizer.getTokenType() == Endif )
       {
-        ifStmt = new IfStatement( If, ifStart, _tokenizer.getTokenEnd(), ifExpr, ifBlock, elifs, elseBlock, elseStart );
+        ifStmt = new IfStatement( tokenType, ifStart, _tokenizer.getTokenEnd(), ifExpr, ifBlock, elifs, elseBlock, elseStart );
         _tokenizer.advance();
       }
       else
       {
-        ifStmt = new IfStatement( If, ifStart, _tokenizer.getTokenStart(), ifExpr, ifBlock, elifs, elseBlock, elseStart );
+        ifStmt = new IfStatement( tokenType, ifStart, _tokenizer.getTokenStart(), ifExpr, ifBlock, elifs, elseBlock, elseStart );
         addError( "Expecting '#endif' to close '#if'" );
       }
 
@@ -192,7 +200,7 @@ public class PreprocessorParser
     }
     finally
     {
-      popParsingIf( If );
+      popParsingIf( tokenType );
     }
   }
 
@@ -429,6 +437,8 @@ public class PreprocessorParser
     switch( ifType )
     {
       case If:
+      case Ifdef:
+      case Ifndef:
       case Elif:
       case Else:
         _ifState.push( ifType );
@@ -444,6 +454,8 @@ public class PreprocessorParser
     switch( ifType )
     {
       case If:
+      case Ifdef:
+      case Ifndef:
       case Elif:
       case Else:
         if( ifType != _ifState.peek() )
