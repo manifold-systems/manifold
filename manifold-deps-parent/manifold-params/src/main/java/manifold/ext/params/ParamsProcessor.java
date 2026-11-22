@@ -498,6 +498,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
             ReflectUtil.method( MemberEnter.instance( getContext() ), "memberEnter", JCTree.class, Env.class )
               .invoke( addedDef, Enter.instance( getContext() ).getClassEnv( tree.sym ) );
           }
+          organizeTypeAnnotations( tree, addedDefs );
         }
       }
       finally
@@ -505,6 +506,22 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         markProcessed( tree );
         _newDefs.pop();
       }
+    }
+
+    private void organizeTypeAnnotations( JCClassDecl classDecl, ArrayList<JCTree> generatedDefs )
+    {
+      Env<AttrContext> classEnv = Enter.instance( getContext() ).getClassEnv( classDecl.sym );
+
+      // A shell class holding only the generated defs. Empty mods, typarams, extends and implements keep
+      // class-level annotations from being processed a second time.
+      TreeMaker make = getTreeMaker().at( classDecl.pos );
+      JCClassDecl shell = make.ClassDef( make.Modifiers( 0L ), classDecl.name, List.nil(), null, List.nil(),
+        List.from( generatedDefs ) );
+      shell.sym = classDecl.sym;
+      shell.type = classDecl.type;
+
+      // queues the work via Annotate.afterTypes(), so it runs after the queued annotations are attributed
+      TypeAnnotations.instance( getContext() ).organizeTypeAnnotationsSignatures( classEnv, shell );
     }
 
     private void markProcessed( JCClassDecl tree )
@@ -863,6 +880,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
           {
             // default param "xxx" requires an "isXxx" param indicating whether the "xxx" should assume the default value
             Name isXxx = getNames().fromString( "$is" + ManStringUtil.capitalize( methParam.name.toString() ) );
+            make.at( targetMethod.pos );
             JCVariableDecl isParam = make.VarDef( make.Modifiers( Flags.PARAMETER ), isXxx, memberAccess( make, getNames(), bool.class.getTypeName() ), null );
             params = params.append( isParam );
 
@@ -883,8 +901,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         if( i <= lastOptParamToKeep )
         {
           JCExpression type = (JCExpression)copier.copy( methParam.getType() );
-          JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), methParam.name, type, null );
-          param.pos = make.pos;
+          JCVariableDecl param = makeParam( make, copier, methParam, type, targetMethod.pos );
           params = params.append( param );
         }
       }
@@ -1009,14 +1026,14 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       ArrayList<JCExpression> args = new ArrayList<>();
       for( JCVariableDecl reqParam : reqParams )
       {
-        params.add( make.VarDef( make.Modifiers( Flags.PARAMETER ), reqParam.name, reqParam.vartype, null ) );
+        params.add( makeParam( make, copier, reqParam, reqParam.vartype, targetMethod.pos ) );
         args.addAll( makeTupleArg( make, reqParam.name ) );
       }
       for( int i = 0; i < optParamsInSig; i++ )
       {
         JCVariableDecl optParam = optParams.get( i );
         int index = targetParams.indexOf( optParam.name );
-        params.add( index, make.VarDef( make.Modifiers( Flags.PARAMETER ), optParam.name, optParam.vartype, null ) );
+        params.add( index, makeParam( make, copier, optParam, optParam.vartype, targetMethod.pos ) );
         args.addAll( index * 2, makeTupleArg( make, optParam.name ) );
       }
       if( args.stream().anyMatch( Objects::isNull ) )
@@ -1154,6 +1171,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         {
           // default param "xxx" requires an "isXxx" param indicating whether the "xxx" should assume the default value
           Name isXxx = getNames().fromString( "$is" + ManStringUtil.capitalize( methParam.name.toString() ) );
+          make.at( targetMethod.pos );
           JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), isXxx, memberAccess( make, getNames(), bool.class.getTypeName() ), null );
           param.pos = make.pos;
           params = params.append( param );
@@ -1180,8 +1198,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         optArgs = optArgs.append( make.Ident( methParam.name ) );
 
         JCExpression type = (JCExpression)copier.copy( methParam.getType() );
-        JCVariableDecl param = make.VarDef( make.Modifiers( Flags.PARAMETER ), methParam.name, type, null );
-        param.pos = make.pos;
+        JCVariableDecl param = makeParam( make, copier, methParam, type, targetMethod.pos );
         params = params.append( param );
       }
 
@@ -1354,6 +1371,13 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       }
       return null;
     }
+
+    private JCVariableDecl makeParam( TreeMaker make, TreeCopier<?> copier, JCVariableDecl orig, JCExpression vartype, int pos )
+    {
+      JCModifiers mods = copier.copy( orig.mods );  // may move make.pos (to -1 for empty modifiers)
+      make.at( pos );                               // restore a valid position before creating the node
+      return make.VarDef( mods, orig.name, vartype, null );
+    }
   }
 
   // answers: is method overridable by a subtype?
@@ -1392,7 +1416,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     {
       return _classDecls.peek();
     }
-    
+
     @Override
     public void visitClassDef( JCClassDecl tree )
     {
@@ -1455,17 +1479,17 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
                  annoTypeName.equals( param_overload.class.getTypeName() );
         } )
         .findFirst().ifPresent( anno -> {
-            if( methodDecl.sym.isConstructor() )
+          if( methodDecl.sym.isConstructor() )
+          {
+            if( methodDecl.sym.isEnum() )
             {
-              if( methodDecl.sym.isEnum() )
-              {
-                methodDecl.sym.flags_field |= Flags.SYNTHETIC;
-              }
+              methodDecl.sym.flags_field |= Flags.SYNTHETIC;
             }
-            else
-            {
-              methodDecl.sym.flags_field |= Flags.BRIDGE;
-            }
+          }
+          else
+          {
+            methodDecl.sym.flags_field |= Flags.BRIDGE;
+          }
         } );
     }
 
