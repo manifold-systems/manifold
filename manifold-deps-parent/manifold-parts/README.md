@@ -6,9 +6,9 @@
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21514973-blue)](https://doi.org/10.5281/zenodo.21514973)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
-*Parts* is high-performance late-bound runtime composition. It resolves a long-standing dilemma in object-oriented programming
-by reconciling **independent runtime components** and **late-bound self-calls** while preserving arbitrary composition and
-eliminating the hazards of inheritance.
+*Parts* is high-performance polymorphic runtime composition. It resolves a long-standing dilemma in object-oriented programming
+by reconciling **independent runtime components** and **polymorphism** while preserving arbitrary composition and eliminating
+the hazards of inheritance.
 
 * `@link` connects objects together at runtime, automatically delegating interface implementation
 * `@part` classes reach overrides in linking objects, cleanly resolving the **_Self_ problem**

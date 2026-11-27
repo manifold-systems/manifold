@@ -46,12 +46,13 @@ Works with JDK LTS releases 8 - 25 + latest, with comprehensive IDE support in *
 
 # What can you do with Manifold?
 
-## [Parts composition](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
+## [Composition](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts)
 
-[*Parts*](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts/README.md) is a *true*
-delegation model that resolves a long-standing dilemma in object-oriented programming. It combines the flexibility of object
-composition with the polymorphism of inheritance while eliminating the hierarchy and its fragility. Use Parts in place of
-inheritance or alongside it.
+[*Parts*](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-parts/README.md) is high-performance polymorphic runtime composition. It resolves a long-standing dilemma in object-oriented
+programming by reconciling **independent runtime components** and **polymorphism** while preserving arbitrary composition
+and eliminating the hazards of inheritance.
+
+Use Parts in place of inheritance or alongside it.
 
 ---
 
